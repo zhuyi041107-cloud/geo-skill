@@ -21,6 +21,7 @@ def main():
         "templates/诊断与执行明细模板.xlsx", "templates/客户业务方案模板.xlsx",
         "templates/GEO诊断报告版式示例.pdf", "templates/品牌传播与GEO执行方案版式示例.pdf",
         "templates/推荐媒体模板.docx",
+        "templates/推荐媒体模板.xlsx",
         "assets/fonts/NotoSansSC-Regular.ttf", "assets/fonts/OFL.txt",
     }
     files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".otf"})

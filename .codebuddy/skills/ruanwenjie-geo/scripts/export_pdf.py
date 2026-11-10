@@ -19,13 +19,13 @@ import re
 import sys
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from reportlab.platypus import HRFlowable, KeepTogether, LongTable, Paragraph, SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import HRFlowable, KeepTogether, LongTable, PageBreak, Paragraph, SimpleDocTemplate, Table, TableStyle
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,7 +93,7 @@ def styles():
         "meta": ParagraphStyle("meta", fontName=REGULAR, fontSize=9, leading=14, textColor=GRAY, spaceAfter=8, wordWrap="CJK"),
         "h2": ParagraphStyle("h2", fontName=BOLD, fontSize=14, leading=21, textColor=BLUE, spaceBefore=14, spaceAfter=7, keepWithNext=True, wordWrap="CJK"),
         "h3": ParagraphStyle("h3", fontName=BOLD, fontSize=11.1, leading=18, textColor=INK, spaceBefore=7, spaceAfter=3, keepWithNext=True, wordWrap="CJK"),
-        "body": ParagraphStyle("body", fontName=REGULAR, fontSize=10.4, leading=17.5, textColor=INK, spaceAfter=7, wordWrap="CJK", alignment=TA_LEFT, allowWidows=0, allowOrphans=0),
+        "body": ParagraphStyle("body", fontName=REGULAR, fontSize=9.5, leading=15, textColor=INK, spaceAfter=5, wordWrap="CJK", alignment=TA_LEFT, allowWidows=0, allowOrphans=0),
         "small": ParagraphStyle("small", fontName=REGULAR, fontSize=8.7, leading=14, textColor=GRAY, spaceAfter=6, wordWrap="CJK"),
         "cell": ParagraphStyle("cell", fontName=REGULAR, fontSize=9, leading=14, textColor=INK, wordWrap="CJK", spaceAfter=0),
         "head": ParagraphStyle("head", fontName=BOLD, fontSize=9.1, leading=14, textColor=colors.white, wordWrap="CJK"),
@@ -141,17 +141,28 @@ def add_entries(story, values, st):
                 story.append(paragraph(block, st["body"]))
 
 
-def table(headers, rows, widths, st, table_id=""):
+def table(headers, rows, widths, st, table_id="", headerless=False, stage_label=""):
     proportions = {
         "decision_path": [.16, .28, .27, .29],
         "response_layers": [.10, .20, .27, .13, .30],
-        "recognition": [.20, .29, .51],
+        "recognition": [.1283, .1790, .6927],
         "scene_matrix": [.28, .34, .38],
-        "scene_details": [.14, .25, .12, .18, .31],
-        "source_layers": [.18, .19, .26, .37],
+        "scene_details": [.2022, .1674, .1106, .1135, .4063],
+        "source_layers": [.5022, .1266, .1266, .2446],
+        "competitor_basis": [.092, .486, .422],
+        "opportunities": [.134, .205, .594, .067],
+        "content_rules": [.16, .84],
+        "content_types": [.19, .43, .38],
+        "fact_boundaries": [.114, .886],
+        "maintenance_plan": [.198, .592, .210],
+        "client_actions": [.20, .72, .08],
+        "specific_paths": [.22, .69, .09],
+        "target_scenes": [.22, .78],
+        "platform_scenes": [.11, .89],
+        "differentiation": [.22, .78],
         "dimensions": [.15, .17, .22, .24, .22],
         "keyword_matrix": [.18, .36, .46],
-        "stage_plan": [.08, .07, .16, .12, .13, .23, .21],
+        "stage_plan": [.1661, .0523, .2675, .0586, .0597, .2063, .1895],
         "selected_media": [.17, .10, .37, .08, .14, .14],
         "stage_budget": [.12, .20, .10, .10, .16, .16, .16],
         "content_volume": [.12, .09, .09, .35, .35],
@@ -160,23 +171,60 @@ def table(headers, rows, widths, st, table_id=""):
     if table_id == "actions":
         weights = [.08, .22, .70] if len(headers) == 3 else [.07, .20, .09, .64]
     elif table_id == "article_schedule":
-        weights = [.05, .07, .075, .065, .15, .07, .065, .135, .17, .05] if len(headers) == 10 else [.05, .075, .08, .075, .17, .08, .15, .25, .07]
+        weights = [.0599, .1010, .0890, .0906, .1484, .1027, .0897, .1203, .1294, .0691] if len(headers) == 10 else [.05, .075, .08, .075, .17, .08, .15, .25, .07]
     else:
         weights = proportions.get(table_id, [1] * len(headers))
+        if len(weights) != len(headers):
+            weights = [1] * len(headers)
     widths = widths or [WIDTH * w / sum(weights) for w in weights]
     if len(widths) != len(headers) or any(len(row) != len(headers) for row in rows):
         raise ValueError(f"表格 {table_id} 的列宽、表头与内容列数不一致")
     dense = len(headers) >= 7
     padding = 3.5 if dense else 6
-    vertical = 5 if dense else 7
-    cell_style = ParagraphStyle("dense-cell", parent=st["cell"], fontSize=7.1 if dense else 8.7, leading=10.8 if dense else 13.6)
+    vertical = 4
+    cell_style = ParagraphStyle("dense-cell", parent=st["cell"], fontSize=7.1 if dense else 8.7, leading=10.8 if dense else 12.5)
     head_style = ParagraphStyle("dense-head", parent=st["head"], fontSize=7.2 if dense else 8.8, leading=11 if dense else 13.5)
-    data = [[paragraph(c, head_style) for c in headers]]
+    if table_id == "article_schedule":
+        head_style = ParagraphStyle("schedule-head", parent=head_style, textColor=INK)
+    data = [] if headerless else [[paragraph(c, head_style) for c in headers]]
+    if stage_label:
+        data.append([paragraph(stage_label, cell_style)] + [""] * (len(headers) - 1))
     data.extend([[paragraph(c, cell_style) for c in row] for row in rows])
-    header_height = max(cell.wrap(width - padding * 2, 10000)[1] for cell, width in zip(data[0], widths)) + vertical * 2
+    extra_styles = []
+    if table_id == "article_schedule":
+        extra_styles.append(("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E5EEF8")))
+    if stage_label:
+        extra_styles.extend([("SPAN", (0, 1), (-1, 1)), ("BACKGROUND", (0, 1), (-1, 1), PALE)])
+    if table_id == "scene_matrix":
+        data[0] = [paragraph(c, cell_style) for c in headers]
+    if headerless or table_id == "scene_matrix":
+        extra_styles.extend([("BACKGROUND", (0, 0), (-1, -1), colors.white), ("BOX", (0, 0), (-1, -1), .4, LINE), ("INNERGRID", (0, 0), (-1, -1), .3, LINE)])
+    if table_id in {"scene_matrix", "scene_details", "source_layers", "recognition"}:
+        palette = {**dict.fromkeys(("已出现", "已提及", "有", "高", "是"), ("#E7F4ED", "#168568")), **dict.fromkeys(("未出现", "未提及", "无", "否"), ("#FDEBE8", "#C24C40")), **dict.fromkeys(("部分出现", "部分", "中"), ("#FFF4DB", "#AA7A25"))}
+        for row_index, row in enumerate(rows, 0 if headerless else 1):
+            for column, value in enumerate(row):
+                if text(value) in palette:
+                    background, foreground = palette[text(value)]
+                    data[row_index][column] = paragraph(value, ParagraphStyle("status", parent=cell_style, alignment=TA_CENTER, textColor=colors.HexColor(foreground)))
+                    extra_styles.append(("BACKGROUND", (column, row_index), (column, row_index), colors.HexColor(background)))
+    header_height = 0 if headerless else max(cell.wrap(width - padding * 2, 10000)[1] for cell, width in zip(data[0], widths)) + vertical * 2
     available_height = A4[1] - 42 - 49 - header_height
-    oversized_row = any(max(cell.wrap(width - padding * 2, 10000)[1] for cell, width in zip(row, widths)) + vertical * 2 > available_height for row in data[1:])
-    result = LongTable(data, colWidths=widths, repeatRows=1, splitByRow=1, splitInRow=int(oversized_row), hAlign="LEFT", spaceBefore=6, spaceAfter=10)
+    first_body = 0 if headerless else 2 if stage_label else 1
+    row_heights = [max(cell.wrap(width - padding * 2, 10000)[1] for cell, width in zip(row, widths)) + vertical * 2 for row in data[first_body:]]
+    if table_id == "article_schedule":
+        for column in range(len(headers) - 1):
+            if column == 4:
+                continue
+            start = 0
+            while start < len(rows):
+                end = start + 1
+                while end < len(rows) and text(rows[end][0]) == text(rows[start][0]) and text(rows[end][column]) == text(rows[start][column]):
+                    end += 1
+                if end - start > 1 and text(rows[start][column]) and sum(row_heights[start:end]) < available_height - (24 if stage_label else 0):
+                    extra_styles.append(("SPAN", (column, start + first_body), (column, end - 1 + first_body)))
+                start = end
+    oversized_row = any(height > available_height for height in row_heights)
+    result = LongTable(data, colWidths=widths, repeatRows=first_body, splitByRow=1, splitInRow=int(oversized_row), hAlign="LEFT", spaceBefore=5, spaceAfter=8)
     result.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), BLUE),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, PALE]),
@@ -186,6 +234,7 @@ def table(headers, rows, widths, st, table_id=""):
         ("LINEBELOW", (0, 0), (-1, 0), 0.6, BLUE),
         ("LINEBELOW", (0, 1), (-1, -1), 0.35, LINE),
     ]))
+    result.setStyle(TableStyle(extra_styles))
     return result
 
 
@@ -220,6 +269,19 @@ def decision_cards(table_id, rows, st):
         card.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), PALE), ("LINEBEFORE", (0, 0), (0, -1), 2, accent), ("BOX", (0, 0), (-1, -1), .35, LINE), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("LEFTPADDING", (0, 0), (-1, -1), 8), ("RIGHTPADDING", (0, 0), (-1, -1), 7), ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
         result.append(card)
     return [KeepTogether(result)]
+
+
+def recognition_cards(rows, st):
+    cards = []
+    for title, row in zip(("能否被识别", "能否讲清业务", "品类问句下的位置"), rows):
+        card = Table([[paragraph(title, st["small"])], [paragraph(row[1], st["h3"])]], colWidths=[(WIDTH - 16) / 3])
+        card.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), PALE), ("BOX", (0, 0), (-1, -1), .4, LINE), ("LEFTPADDING", (0, 0), (-1, -1), 7), ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
+        cards.append(card)
+    if len(cards) != 3:
+        return []
+    result = Table([[cards[0], "", cards[1], "", cards[2]]], colWidths=[(WIDTH - 16) / 3, 8, (WIDTH - 16) / 3, 8, (WIDTH - 16) / 3], spaceAfter=7)
+    result.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0)]))
+    return [KeepTogether([result])]
 
 
 def report_date(analysis, report):
@@ -297,8 +359,11 @@ def validate_document(report, kind):
         if len(found) != 1:
             raise ValueError(f"缺少必需章节：{kind}.{spec['key']}")
         section = found[0]
-        if not entries(section.get("paragraphs")):
-            raise ValueError(f"章节 {spec['key']} 缺少业务情况与分析 paragraphs")
+        entries(section.get("paragraphs"))
+        if report.get("template_profile") == "platform" and kind == "execution" and spec["key"] == "budget":
+            card = section.get("quote_card", {})
+            if not isinstance(card, dict) or any(not isinstance(card.get(key), str) or text(card[key]) in EMPTY for key in ("name", "focus", "suitability")):
+                raise ValueError("原费用报价卡须填写 quote_card.name/focus/suitability；金额和媒体配置从计划生成")
         supplied = section.get("tables", [])
         if not isinstance(supplied, list) or any(not isinstance(t, dict) for t in supplied):
             raise ValueError(f"章节 {spec['key']} 的 tables 须为对象列表")
@@ -480,7 +545,7 @@ def automatic_rows(table_id, analysis, plan):
     if table_id == "article_schedule":
         rows = []
         for c in sorted(contents, key=lambda c: (c["scheduled_date"], c["content_id"])):
-            row = [f"第{content_week(c, project)}周", text(c["source_layer"]), joined(p.get("media_type" if analysis.get("_template_profile") == "platform" else "media_name") for p in by_placement[c["content_id"]]), text(c["content_form"]), text(c["title"]), text(c["platform"])]
+            row = [f"第{content_week(c, project)}周", text(c["source_layer"]), joined(p.get("media_type") for p in by_placement[c["content_id"]]), text(c["content_form"]), text(c["title"]), text(c["platform"])]
             if analysis.get("_template_profile") == "platform":
                 row.append(text(c["observation_port"]))
             target = text(c.get("target_question")) or "；".join(questions[q] for q in c.get("question_ids", []) if q in questions)
@@ -495,7 +560,9 @@ def automatic_rows(table_id, analysis, plan):
             for c in cs:
                 weeks[content_week(c, project)].append(c)
             ps = [p for c in cs for p in by_placement[c["content_id"]]]
-            counts = "；".join(f"W{week}：{len(items)}篇" for week, items in sorted(weeks.items()))
+            weekly_counts = [len(weeks.get(week, [])) for week in range(min(weeks), max(weeks) + 1)]
+            low, high = min(weekly_counts), max(weekly_counts)
+            counts = f"每周{low}篇" if low == high else f"每周{low}-{high}篇"
             stage = stages[name]
             rows.append([name, f"第{min(weeks)}-{max(weeks)}周", text(stage["objective"]), counts, f"{len(cs)}篇独立内容\n{sum(int(Decimal(str(p['quantity']))) for p in ps)}次刊发", text(stage["deliverables"]), text(stage["effect_target"])])
         return rows
@@ -551,6 +618,25 @@ def quotation_note(placements):
     return "报价口径：" + (bases or "价格依据未注明") + "。报价日期：" + (dates or "未注明") + "。本表为建议媒体投放包，执行价格以当次确认条件为准。"
 
 
+def budget_card(analysis, plan, section, st):
+    budget, card = analysis["budget"], section["quote_card"]
+    counts = defaultdict(int)
+    for placement in selected_plan(plan)[1]:
+        counts[text(placement.get("media_type"))] += int(Decimal(str(placement["quantity"])))
+    rows = [
+        [paragraph(card["name"], st["h3"])],
+        [paragraph(money(budget["client"]["total"], budget["currency"]), st["title"])],
+        [paragraph(f"{budget['content_count']}篇独立内容 / {budget['publication_count']}次刊发，按本期已列费用测算", st["small"])],
+    ]
+    for label, detail in [("测算口径", "逐项单价×刊发次数，加已列其他费用"), ("媒体配置", " / ".join(f"{kind}{count}次" for kind, count in counts.items())), ("配置重点", card["focus"]), ("适用考虑", card["suitability"])]:
+        inner = Table([[paragraph(label, st["small"]), paragraph(detail, st["cell"])]], colWidths=[60, WIDTH - 88])
+        inner.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0), ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]))
+        rows.append([inner])
+    result = Table(rows, colWidths=[WIDTH], hAlign="LEFT", spaceAfter=8)
+    result.setStyle(TableStyle([("BOX", (0, 0), (-1, -1), .4, LINE), ("LINEABOVE", (0, 0), (-1, 0), 1.5, BLUE), ("LEFTPADDING", (0, 0), (-1, -1), 14), ("RIGHTPADDING", (0, 0), (-1, -1), 14), ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4)]))
+    return result
+
+
 def document_story(kind, analysis, plan, report, st):
     sections = validate_document(report, kind)
     budget = verify_budget(analysis, plan)
@@ -568,9 +654,20 @@ def document_story(kind, analysis, plan, report, st):
         project = analysis["project"]
         scope = f"执行周期：{text(project.get('start_date'))} 至 {text(project.get('end_date'))}；{budget['content_count']}篇独立内容、{budget['publication_count']}次刊发；建议已知费用{money(budget['client']['known_subtotal'], budget['currency'])}。"
         story.append(paragraph(scope, st["meta"]))
-    for spec, section in sections:
-        story.append(paragraph(spec["title"], st["h2"] if spec["level"] == 1 else st["h3"]))
-        add_entries(story, section["paragraphs"], st)
+    for index, (spec, section) in enumerate(sections):
+        if spec["key"] == "decision_journey" or (index and sections[index - 1][0]["key"] == "decision_journey"):
+            story.append(PageBreak())
+        if spec["level"] == 1:
+            heading = Table([[paragraph(spec["title"], st["h3"])]], colWidths=[WIDTH], spaceBefore=10, spaceAfter=6)
+            heading.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), PALE), ("LINEBEFORE", (0, 0), (0, 0), 2.5, BLUE), ("LEFTPADDING", (0, 0), (-1, -1), 10), ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5)]))
+            heading.keepWithNext = True
+            if spec["key"] == "budget" and report["template_profile"] == "platform":
+                story.append(KeepTogether([heading, budget_card(analysis, plan, section, st)]))
+            else:
+                story.append(heading)
+        else:
+            story.append(paragraph(spec["title"], st["h3"]))
+        add_entries(story, section.get("paragraphs"), st)
         for definition in spec["tables"]:
             if definition.get("source") == "plan":
                 rows = automatic_rows(definition["id"], analysis, plan)
@@ -581,16 +678,28 @@ def document_story(kind, analysis, plan, report, st):
             if definition["id"] in {"decision_path", "response_layers"}:
                 story.extend(decision_cards(definition["id"], rows, st))
             else:
-                story.append(table(definition["columns"], rows, None, st, table_id=definition["id"]))
+                if definition["id"] == "recognition" and report["template_profile"] == "platform":
+                    story.extend(recognition_cards(rows, st))
+                columns = definition["columns"]
+                if definition["id"] == "article_schedule" and report["template_profile"] == "platform":
+                    platforms = list(dict.fromkeys(text(c["platform"]) for c in selected_plan(plan)[0]))
+                    columns = [" / ".join(platforms) + "端口" if col == "豆包端口" else col for col in columns]
+                if definition["id"] == "article_schedule":
+                    contents = sorted(selected_plan(plan)[0], key=lambda c: (c["scheduled_date"], c["content_id"]))
+                    start = 0
+                    while start < len(contents):
+                        end = start + 1
+                        while end < len(contents) and contents[end]["stage"] == contents[start]["stage"]:
+                            end += 1
+                        story.append(table(columns, rows[start:end], None, st, table_id="article_schedule", stage_label=text(contents[start]["stage"])))
+                        start = end
+                else:
+                    story.append(table(columns, rows, None, st, table_id=definition["id"], headerless=definition.get("headerless", False)))
         if spec["key"] == "budget":
             client, currency = budget["client"], budget["currency"]
             story.append(paragraph(quotation_note(selected_plan(plan)[1]), st["small"]))
-            lines = f"建议媒体费用：{money(client.get('media'), currency)}；其他已列费用：{money(client.get('fees'), currency)}；合计：{money(client.get('total'), currency)}。"
-            if budget.get("target") is not None:
-                lines += f"建议预算目标：{money(budget['target'], currency)}。"
-            if budget.get("limit") is not None:
-                lines += f"建议费用上限：{money(budget['limit'], currency)}。"
-            story.append(paragraph(lines, st["body"]))
+            if report["template_profile"] != "platform":
+                story.append(paragraph(f"建议媒体费用：{money(client.get('media'), currency)}；其他已列费用：{money(client.get('fees'), currency)}；合计：{money(client.get('total'), currency)}。", st["body"]))
             for fee in selected_plan(plan)[2]:
                 story.append(paragraph(text(fee.get("description") or fee.get("category")) + "：" + money(fee.get("client_amount"), currency), st["small"]))
             if not selected_plan(plan)[2]:

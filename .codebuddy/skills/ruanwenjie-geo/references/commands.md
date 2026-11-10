@@ -6,7 +6,7 @@
 
 以下命令由WorkBuddy内部执行。报告生成前完整读template-generation.md，并按客户类型读取template-contract.json对应profile；report-thinking.md约束证据判断。替换“技能目录”为安装路径，“工作目录”为客户独立文件夹；使用当前环境的Python，路径加引号。先检查 `python -c "import openpyxl, reportlab, pypdf, docx"`；按环境权限使用requirements.txt安装所需依赖。
 
-默认客户成品只有诊断PDF、执行方案PDF和推荐媒体Word。内部JSON、判读和核算放.work，不作为正式输出或聊天附件。已有原件可以原位读取，不搬动。步骤5只重算内部analysis，默认流程不运行export-excel。
+默认客户成品只有诊断PDF、执行方案PDF和一个推荐媒体.xlsx（sheet1网络媒体、sheet2自媒体）。内部JSON、判读和核算放.work，不作为正式输出或聊天附件。已有原件可以原位读取，不搬动。步骤5只重算内部analysis，默认流程不运行export-excel。
 
 下面输出目录是示意。旧成品已存在时保留旧文件，直接选择新版本目录（例如正式输出/修订1），不要求用户清空文件或重复确认覆盖。
 
@@ -97,9 +97,10 @@ python "技能目录/scripts/media.py" --query "职场" --region "山西" --kind
 
 - `stages`：每项name、objective、deliverables、effect_target。name与每篇已选contents.stage准确对应，写实际阶段目标、刚性交付和希望观察的变化。
 - `contents`补全keywords、source_layer、content_form、key_facts、observation_port、checkpoint；target_question可写真实目标问题，否则由question_ids对应project.questions.text。周次从start_date与计划日期计算，阶段的周量/篇数/次数与费用自动汇总。
-- `placements`保留media_type、source_sheet、source_row、media_id、category、region、entry_type、editorial_note及报价依据，只用于实际执行媒体明细与预算；推荐Word另读media_recommendations。
-- `media_recommendations`是独立的宽推荐池，Word只读此数组。每项至少media_id、media_name、source_sheet，保留目录字段与六档原价；可加recommendation_reason，status为推荐/候选/需核实（省略默认推荐）。它不需要placement_id、刊发次数或执行金额，不回退使用placements。网络、自媒体归属按来源sheet。
+- `placements`保留media_type、source_sheet、source_row、media_id、category、region、entry_type、editorial_note及报价依据，只用于实际执行媒体明细与预算；推荐媒体Excel另读media_recommendations。
+- `media_recommendations`是独立的宽推荐池，推荐媒体Excel只读此数组。每项至少media_id、media_name、source_sheet，保留目录字段与六档原价；可加recommendation_reason，status为推荐/候选/需核实（省略默认推荐）。它不需要placement_id、刊发次数或执行金额，不回退使用placements。网络、自媒体归属按来源sheet。
 - `logic_links`按template-generation.md写诊断优先项/建议标签与事实依据、希望形成的选择理由、实际文章或客户动作、媒体角色、阶段、检查日期。执行PDF会检查覆盖、引用和时点；语义与费用承诺由WorkBuddy逐项核对。
+- 平台型report执行budget节填写`quote_card`的name、focus、suitability，其余金额与配置从同源plan计算；不重建已删除的阶段/季度预算和实际媒体组合表。目标场景按三块两列写，服务型排期第三列亦为媒体类型。表格足以说明时paragraphs可空，避免重复。
 - 初期集中建设与后期维护应在同一年度计划中明确日期、内容、次数和计费范围；另期未计费维护不能写成全年已经包含。
 
 使用内置目录时，`unit_price`保留null；将所选资源的`market_reference_price`填入`client_unit_price`计算建议预算，同时保留`price_tier=市场价格`、`quotation_date`与`price_basis=市场参考价，用于建议预算，执行价格另行确认`。只有已有明确客户报价时才用该报价替换对客单价。不要把全部价格留空，也不要凭空加价或补内部成本。
@@ -108,9 +109,9 @@ python "技能目录/scripts/media.py" --query "职场" --region "山西" --kind
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --plan "工作目录/.work/plan.json" --out "工作目录/.work/analysis-final.json"
 ```
 
-WorkBuddy先按原模板推导业务与选择理由，完成广泛推荐池，再配置执行子集和阶段投入。analysis预算只核placements与fees，media_recommendations不计费用。Word仅借analysis.project识别客户，不要求analysis.budget存在、匹配或达到2万元。内部底稿不交客户；未报价服务不列为已含交付。
+WorkBuddy先按原模板推导业务与选择理由，完成广泛推荐池，再配置执行子集和阶段投入。analysis预算只核placements与fees，media_recommendations不计费用。推荐媒体Excel仅借analysis.project识别客户，不要求analysis.budget存在、匹配或达到2万元。内部底稿不交客户；未报价服务不列为已含交付。
 
-重算后的budget含target、target_source、limit。执行PDF检查实际执行费用至少达到明确目标90%且不超上限；这不限制推荐Word数量或资源总标价。检查失败时调整真实执行配置，不篡改单价、目标或增加虚构差额。
+重算后的budget含target、target_source、limit。执行PDF检查实际执行费用至少达到明确目标90%且不超上限；这不限制推荐媒体Excel数量或资源总标价。检查失败时调整真实执行配置，不篡改单价、目标或增加虚构差额。
 
 ## 6. 客户PDF
 
@@ -122,19 +123,19 @@ WorkBuddy先按原模板推导业务与选择理由，完成广泛推荐池，�
 python "技能目录/scripts/export_pdf.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --output-dir "工作目录/正式输出/客户PDF"
 ```
 
-## 7. 推荐媒体Word
+## 7. 推荐媒体Excel
 
-按 [原媒体表对应规范](media-word-output.md) 使用随包Word模板生成：
+按 [原媒体表对应规范](media-word-output.md) 使用随包templates/推荐媒体模板.xlsx生成一个Excel，sheet1放网络媒体、sheet2放自媒体：
 
 ```text
-python "技能目录/scripts/export_media_word.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --output "工作目录/正式输出/推荐媒体.docx"
+python "技能目录/scripts/export_media_word.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --output "工作目录/正式输出/推荐媒体.xlsx"
 ```
 
-三件成品实际生成并检查后交付。只给两份PDF和推荐媒体Word，不把内部JSON/明细工作表当客户成品，也不列补平台、模式或时间的待办。
+三件成品实际生成并检查后交付。只给两份PDF和推荐媒体Excel，不把内部JSON/明细工作表当客户成品，也不列补平台、模式或时间的待办。
 
-## 8. 按需Excel（不属于默认客户交付）
+## 8. 按需诊断/执行明细Excel（不属于默认客户交付）
 
-仅当用户明确要求Excel时调用。`--audience internal`导内部核算，存.work；`--audience client`导用户明确需要的客户明细；`--audience both`仅用于明确要求两种版本的情况。默认是internal，不自动生成客户工作簿。
+仅当用户明确要求诊断/执行明细Excel时调用；推荐媒体.xlsx使用上一步，不调用此命令。`--audience internal`导内部核算，存.work；`--audience client`导用户明确需要的客户明细；`--audience both`仅用于明确要求两种版本的情况。默认是internal，不自动生成客户诊断/执行明细工作簿。
 
 ```text
 python "技能目录/scripts/geo_data.py" export-excel --project "工作目录/.work/project.json" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --audience internal --out-dir "工作目录/.work/核算"

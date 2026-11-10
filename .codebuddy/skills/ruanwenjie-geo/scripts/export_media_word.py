@@ -1,9 +1,9 @@
-"""Fill the retained two-list Word template from an independent recommendation pool."""
+"""Export the independent media pool to the original Excel template; retain Word compatibility."""
 
 from __future__ import annotations
 
 import argparse
-from copy import deepcopy
+from copy import copy, deepcopy
 import csv
 from datetime import date
 import gzip
@@ -11,8 +11,11 @@ from io import BytesIO
 import json
 from pathlib import Path
 import sys
+from math import ceil
+from unicodedata import east_asian_width
 
 from docx import Document
+from openpyxl import load_workbook
 
 from geo_data import money
 from media import TIER_FIELDS, TIERS as PRICE_TIERS, restriction
@@ -20,6 +23,7 @@ from media import TIER_FIELDS, TIERS as PRICE_TIERS, restriction
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "templates/推荐媒体模板.docx"
+XLSX_TEMPLATE = ROOT / "templates/推荐媒体模板.xlsx"
 CATALOG = ROOT / "references/media-catalog.csv.gz"
 TIERS = ("超级代理", "核心代理", "高级代理", "普通代理", "普通会员")
 HEADERS = {
@@ -28,6 +32,7 @@ HEADERS = {
 }
 SHEET_NAMES = {"网络媒体清单": "网络媒体报价", "自媒体清单": "自媒体报价"}
 SHEET_LABELS = {"网络媒体报价": "网络媒体清单", "自媒体报价": "自媒体清单"}
+XLSX_SHEETS = {"网络媒体报价": "sheet1", "自媒体报价": "sheet2"}
 
 
 def text(value):
@@ -197,16 +202,79 @@ def export_docx(analysis, plan, output):
     return output
 
 
+def build_xlsx(analysis, plan, template=XLSX_TEMPLATE, catalog_path=CATALOG):
+    rows = selected_rows(plan, catalog_records(catalog_path))
+    project = analysis.get("project", {})
+    brand = text((project.get("brand_names") or [project.get("client_name")])[0])
+    if not brand:
+        raise ValueError("项目缺少客户品牌名称")
+    book = load_workbook(template)
+    if book.sheetnames != list(XLSX_SHEETS.values()):
+        raise ValueError("推荐媒体Excel模板必须严格保留sheet1和sheet2")
+    for source_sheet, sheet_name in XLSX_SHEETS.items():
+        sheet = book[sheet_name]
+        headers = HEADERS[source_sheet]
+        if sheet.max_row != 4 or sheet.max_column != len(headers) or tuple(c.value for c in sheet[3]) != headers or any(c.value is not None for c in sheet[4]):
+            raise ValueError("推荐媒体Excel模板的表头、列序或空数据行被更改，请恢复随包模板")
+        sheet["A1"] = brand + "媒体投放计划表（" + SHEET_LABELS[source_sheet] + "）"
+        sheet["A1"].data_type = "s"
+        styles = [copy(cell._style) for cell in sheet[4]]
+        for index, values in enumerate(rows[source_sheet], 4):
+            height = sheet.sheet_format.defaultRowHeight or 15
+            for column, header in enumerate(headers, 1):
+                cell = sheet.cell(index, column)
+                cell._style = copy(styles[column - 1])
+                value = index - 3 if header == "序号" else values.get(header, "")
+                if header in PRICE_TIERS:
+                    value = float(value) if value not in (None, "") else None
+                cell.value = value
+                if isinstance(value, str):
+                    cell.data_type = "s"
+                    alignment = copy(cell.alignment)
+                    alignment.wrap_text = True
+                    cell.alignment = alignment
+                    width = next((d.width for d in sheet.column_dimensions.values() if d.min <= column <= d.max), sheet.sheet_format.defaultColWidth or 9)
+                    lines = sum(max(1, ceil(sum(2 if east_asian_width(c) in {"W", "F"} else 1 for c in line) / max(1, width - 2))) for line in value.split("\n"))
+                    height = max(height, (lines + (lines > 1)) * (cell.font.sz or 11) * 1.4 + 6)
+            # shortcut: row heights are estimated at retained fonts; native AutoFit is needed if fonts change.
+            sheet.row_dimensions[index].height = min(409, height)
+        start = 4
+        for index in range(5, 4 + len(rows[source_sheet]) + 1):
+            if index == 4 + len(rows[source_sheet]) or rows[source_sheet][index - 4]["媒体类别"] != rows[source_sheet][start - 4]["媒体类别"]:
+                if index - start > 1:
+                    sheet.merge_cells(start_row=start, start_column=2, end_row=index - 1, end_column=2)
+                start = index
+    book.properties.title = brand + "推荐媒体"
+    target = BytesIO()
+    book.save(target)
+    book.close()
+    return target.getvalue()
+
+
+def export_xlsx(analysis, plan, output):
+    output = Path(output)
+    if output.suffix.lower() != ".xlsx":
+        raise ValueError("输出路径须为推荐媒体.xlsx等.xlsx文件")
+    if output.exists():
+        raise FileExistsError("目标文件已存在，拒绝覆盖：" + str(output))
+    content = build_xlsx(analysis, plan)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("xb") as stream:
+        stream.write(content)
+    return output
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--analysis", type=Path, required=True)
     parser.add_argument("--plan", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=Path, default=Path("推荐媒体.xlsx"))
     args = parser.parse_args()
     try:
         analysis = json.loads(args.analysis.read_text(encoding="utf-8-sig"))
         plan = json.loads(args.plan.read_text(encoding="utf-8-sig"))
-        path = export_docx(analysis, plan, args.output)
+        exporter = export_docx if args.output.suffix.lower() == ".docx" else export_xlsx
+        path = exporter(analysis, plan, args.output)
         print(json.dumps({"output": str(path)}, ensure_ascii=False))
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(str(exc), file=sys.stderr)

@@ -89,7 +89,7 @@
               "id": "competitor_basis",
               "columns": [
                 "对标主体",
-                "AI引用依据",
+                "AI引用依据（可核验）",
                 "本主体对应情况"
               ],
               "source": "report"
@@ -310,70 +310,7 @@
           "title": "三、费用预估",
           "level": 1,
           "source": "report",
-          "tables": [
-            {
-              "id": "media_costs",
-              "columns": [
-                "媒体类型",
-                "刊发次数",
-                "单价范围",
-                "媒体费用"
-              ],
-              "source": "plan"
-            },
-            {
-              "id": "stage_budget",
-              "columns": [
-                "阶段",
-                "计划周期",
-                "独立内容篇数",
-                "刊发次数",
-                "媒体费用",
-                "其他费用",
-                "阶段合计"
-              ],
-              "source": "plan"
-            },
-            {
-              "id": "quarterly_budget",
-              "columns": [
-                "自然季度",
-                "独立内容篇数",
-                "刊发次数",
-                "建议费用"
-              ],
-              "source": "plan"
-            }
-          ]
-        },
-        {
-          "key": "media_mix",
-          "title": "3.1 实际媒体组合",
-          "level": 2,
-          "source": "report",
-          "tables": [
-            {
-              "id": "media_roles",
-              "columns": [
-                "媒体类型",
-                "作用说明",
-                "内容选择理由"
-              ],
-              "source": "report"
-            },
-            {
-              "id": "selected_media",
-              "columns": [
-                "媒体名称",
-                "媒体类型",
-                "承载选题",
-                "刊发次数",
-                "参考单价",
-                "媒体费用"
-              ],
-              "source": "plan"
-            }
-          ]
+          "tables": []
         },
         {
           "key": "client_actions",
@@ -411,20 +348,28 @@
               "id": "target_scenes",
               "columns": [
                 "场景类别",
-                "具体问句",
-                "希望形成的选择理由",
-                "观察节点"
+                "问句"
               ],
-              "source": "report"
+              "source": "report",
+              "headerless": true
+            },
+            {
+              "id": "platform_scenes",
+              "columns": [
+                "平台",
+                "优先场景"
+              ],
+              "source": "report",
+              "headerless": true
             },
             {
               "id": "differentiation",
               "columns": [
                 "对比型问句",
-                "本品牌对应事实",
                 "期望呈现逻辑"
               ],
-              "source": "report"
+              "source": "report",
+              "headerless": true
             }
           ]
         },
@@ -443,7 +388,7 @@
                 "内容形态",
                 "拟发标题",
                 "平台",
-                "观察端口",
+                "豆包端口",
                 "对应目标问句",
                 "核心卖点或可核验事实",
                 "节点"
@@ -832,7 +777,7 @@
               "columns": [
                 "周次",
                 "信源层",
-                "具体媒体",
+                "媒体类型",
                 "内容形态",
                 "拟发标题",
                 "平台",

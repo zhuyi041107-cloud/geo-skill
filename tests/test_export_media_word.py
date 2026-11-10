@@ -1,12 +1,17 @@
 import copy
-from io import BytesIO
+from contextlib import redirect_stdout
+from io import BytesIO, StringIO
+import json
+import os
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from docx import Document
 from docx.oxml.ns import qn
+from openpyxl import load_workbook
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / ".codebuddy/skills/ruanwenjie-geo/scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -163,6 +168,11 @@ class ExportMediaWordTests(unittest.TestCase):
                 self.assertTrue(all(t.cell(3, 5).text == "10000.00" for t in document.tables))
                 names = [r.cells[3].text for t in document.tables for r in t.rows[3:]]
                 self.assertNotIn("虚构媒体1", names)
+                workbook = load_workbook(BytesIO(media_word.build_xlsx(changed_analysis, p)))
+                self.assertEqual(workbook.sheetnames, ["sheet1", "sheet2"])
+                self.assertEqual([sheet.max_row - 3 for sheet in workbook], [9, 9])
+                self.assertTrue(all(sheet["F4"].value == 10000 for sheet in workbook))
+                workbook.close()
         self.assertEqual(len(p["placements"]), 3)
 
     def test_exclusions_dedup_and_unverified_conditions_are_kept_separate(self):
@@ -222,6 +232,81 @@ class ExportMediaWordTests(unittest.TestCase):
             changed["media_recommendations"][0][field] = value
             with self.assertRaisesRegex(ValueError, "名称与目录"):
                 media_word.selected_rows(changed, catalog)
+
+    def test_xlsx_template_keeps_original_two_tables_and_source_format(self):
+        template = load_workbook(media_word.XLSX_TEMPLATE)
+        self.assertEqual(template.sheetnames, ["sheet1", "sheet2"])
+        for sheet, headers in zip(template, media_word.HEADERS.values()):
+            self.assertEqual(sheet.max_column, len(headers))
+            self.assertEqual(tuple(cell.value for cell in sheet[3]), headers)
+            self.assertEqual(sheet.max_row, 4)
+            self.assertTrue(all(cell.value is None for cell in sheet[4]))
+            self.assertFalse(any("维晏" in str(cell.value or "") for row in sheet for cell in row))
+        source_path = Path(__file__).resolve().parents[2] / "维晏艺术中心开业前媒体投放计划表2026_10_16.xlsx"
+        if source_path.exists():
+            source = load_workbook(source_path)
+            for original, blank in zip(source, template):
+                self.assertEqual({k: (v.min, v.max, v.width) for k, v in original.column_dimensions.items()}, {k: (v.min, v.max, v.width) for k, v in blank.column_dimensions.items()})
+                self.assertEqual(sorted(str(r) for r in original.merged_cells.ranges if r.max_row < 4), sorted(str(r) for r in blank.merged_cells.ranges))
+                for row in range(1, 5):
+                    for column in range(1, original.max_column + 1):
+                        self.assertEqual(original.cell(row, column)._style, blank.cell(row, column)._style)
+            source.close()
+        template.close()
+
+    def test_xlsx_six_numeric_prices_blank_unknown_and_literal_text(self):
+        a, p = self.fixture()
+        item = p["media_recommendations"][0]
+        item.update(media_name="=1+1", editorial_note="长备注" * 60,
+                    tier_prices={"超级代理": "0.00", "核心代理": "51.20", "高级代理": "63.00", "普通会员": "75.00"}, tier_price_source="虚构报价，五档原值")
+        workbook = load_workbook(BytesIO(media_word.build_xlsx({"project": a["project"]}, p)))
+        sheet = workbook["sheet1"]
+        self.assertEqual([sheet.cell(4, c).value for c in range(6, 12)], [80, 0, 51.2, 63, None, 75])
+        self.assertTrue(all(sheet.cell(4, c).data_type == "n" for c in [6, 7, 8, 9, 11]))
+        self.assertEqual(sheet["D4"].value, "=1+1")
+        self.assertEqual(sheet["D4"].data_type, "s")
+        self.assertTrue(sheet["O4"].alignment.wrap_text)
+        self.assertGreater(sheet.row_dimensions[4].height, sheet.sheet_format.defaultRowHeight)
+        self.assertIn("B4:B5", {str(r) for r in sheet.merged_cells.ranges})
+        blank = load_workbook(media_word.XLSX_TEMPLATE)
+        self.assertEqual(copy.copy(sheet["I4"].fill), copy.copy(blank["sheet1"]["I4"].fill))
+        self.assertEqual(copy.copy(sheet["I4"].font), copy.copy(blank["sheet1"]["I4"].font))
+        blank.close()
+        workbook.close()
+
+    def test_xlsx_missing_pool_and_overwrite_preserve_original(self):
+        a, p = self.fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "推荐媒体.xlsx"
+            with self.assertRaisesRegex(ValueError, "media_recommendations"):
+                media_word.export_xlsx(a, {"placements": p["placements"]}, output)
+            self.assertFalse(output.exists())
+            output.write_bytes(b"existing-user-workbook")
+            with self.assertRaises(FileExistsError):
+                media_word.export_xlsx(a, p, output)
+            self.assertEqual(output.read_bytes(), b"existing-user-workbook")
+
+    def test_cli_defaults_to_excel_and_preserves_explicit_word_output(self):
+        a, p = self.fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            analysis_path, plan_path = folder / "analysis.json", folder / "plan.json"
+            analysis_path.write_text(json.dumps({"project": a["project"]}, ensure_ascii=False), encoding="utf-8")
+            plan_path.write_text(json.dumps(p, ensure_ascii=False), encoding="utf-8")
+            previous = Path.cwd()
+            try:
+                os.chdir(folder)
+                argv = ["export_media_word.py", "--analysis", str(analysis_path), "--plan", str(plan_path)]
+                with patch.object(sys, "argv", argv), redirect_stdout(StringIO()):
+                    self.assertEqual(media_word.main(), 0)
+                workbook = load_workbook(folder / "推荐媒体.xlsx")
+                self.assertEqual(workbook.sheetnames, ["sheet1", "sheet2"])
+                workbook.close()
+                with patch.object(sys, "argv", argv + ["--output", str(folder / "兼容推荐媒体.docx")]), redirect_stdout(StringIO()):
+                    self.assertEqual(media_word.main(), 0)
+                self.assertEqual(len(Document(folder / "兼容推荐媒体.docx").tables), 2)
+            finally:
+                os.chdir(previous)
 
 
 if __name__ == "__main__":

@@ -35,6 +35,8 @@ class ExportPdfTests(unittest.TestCase):
                 if spec['source'] == 'diagnosis':
                     continue
                 section = {'key': spec['key'], 'title': spec['title'], 'paragraphs': [copy.deepcopy(entry)], 'tables': []}
+                if profile == 'platform' and kind == 'execution' and spec['key'] == 'budget':
+                    section['quote_card'] = {'name': '建议媒体投放方案', 'focus': '优先解释服务责任', 'suitability': '适用需要核对上线与维护分工的团队'}
                 for definition in spec['tables']:
                     if definition['source'] != 'plan':
                         section['tables'].append({'id': definition['id'], 'columns': definition['columns'], 'rows': [['演示业务说明' for _ in definition['columns']]]})
@@ -74,7 +76,7 @@ class ExportPdfTests(unittest.TestCase):
                     self.assertIn('市场参考价', text)
                     self.assertIn('2次刊发', text.replace('\n', ''))
                     self.assertEqual(text.count('报价口径'), 1)
-                    self.assertIn('观察端口' if profile == 'platform' else '拟发标题', text)
+                    self.assertIn('演示平台A端口' if profile == 'platform' else '拟发标题', text.replace('\n', ''))
                 embedded = []
                 for page in reader.pages:
                     for item in page['/Resources']['/Font'].values():
@@ -143,7 +145,7 @@ class ExportPdfTests(unittest.TestCase):
         _, text = self.pdf_text('execution', analysis, plan, report)
         self.assertIn('¥960.00', text)
         schedule = export_pdf.automatic_rows('article_schedule', analysis, plan)
-        self.assertEqual(schedule[0][2], '示例技术观察网（虚构）')
+        self.assertEqual(schedule[0][2], '技术媒体')
         rows = export_pdf.automatic_rows('content_volume', analysis, plan)
         self.assertEqual(rows[0][1:3], ['1', '2'])
         self.assertIn('企业知识库怎样验收', rows[0][-1])
@@ -261,6 +263,48 @@ class ExportPdfTests(unittest.TestCase):
         self.pdf_text('diagnosis', analysis, plan, report)
         with self.assertRaisesRegex(ValueError, '须有 plan.logic_links'):
             export_pdf.build_pdf('execution', analysis, plan, report)
+
+    def test_platform_restores_quote_card_and_two_column_scene_blocks(self):
+        analysis, plan, report = self.fixture()
+        for section in report['execution']['sections']:
+            section['paragraphs'] = []
+        _, text = self.pdf_text('execution', analysis, plan, report)
+        self.assertIn('¥960.00', text)
+        self.assertIn('建议媒体投放方案', text)
+        self.assertIn('演示平台A端口', text.replace('\n', ''))
+        self.assertNotIn('承载选题', text)
+        self.assertNotIn('阶段合计', text)
+        self.assertNotIn('自然季度', text)
+        scenes = next(s for s in export_pdf.template_contract('platform', 'execution') if s['key'] == 'target_scenes')
+        self.assertEqual(len(scenes['tables']), 3)
+        self.assertTrue(all(len(t['columns']) == 2 and t['headerless'] for t in scenes['tables']))
+        budget = next(s for s in report['execution']['sections'] if s['key'] == 'budget')
+        del budget['quote_card']['focus']
+        with self.assertRaisesRegex(ValueError, 'quote_card'):
+            export_pdf.build_pdf('execution', analysis, plan, report)
+
+    def test_original_column_proportions_and_headerless_rows(self):
+        export_pdf.register_fonts()
+        st = export_pdf.styles()
+        source = export_pdf.table(['信源层级', '覆盖状态', '覆盖质量', '引用'], [['客户自有来源', '有', '中', '部分']], None, st, 'source_layers')
+        self.assertAlmostEqual(source._argW[0] / export_pdf.WIDTH, .5022)
+        note = export_pdf.table(['事项', '边界'], [['权限核验', '按角色核对']], None, st, 'fact_boundaries')
+        self.assertLess(note._argW[0] / export_pdf.WIDTH, .12)
+        scene = export_pdf.table(['场景', '问句'], [['平台初筛', '如何选择知识平台']], None, st, 'target_scenes', headerless=True)
+        self.assertEqual(len(scene._cellvalues), 1)
+        self.assertEqual(scene.repeatRows, 0)
+        self.assertEqual(scene._cellvalues[0][0].getPlainText(), '平台初筛')
+
+    def test_stage_weekly_rate_is_compact_and_includes_idle_weeks(self):
+        analysis, plan, _ = self.fixture()
+        self.assertEqual(export_pdf.automatic_rows('stage_plan', analysis, plan)[0][3], '每周1篇')
+        content = copy.deepcopy(plan['contents'][0])
+        content.update(content_id='C002', scheduled_date='2027-01-29')
+        placement = copy.deepcopy(plan['placements'][0])
+        placement.update(placement_id='P002', content_id='C002', scheduled_date='2027-01-29')
+        plan['contents'].append(content)
+        plan['placements'].append(placement)
+        self.assertEqual(export_pdf.automatic_rows('stage_plan', analysis, plan)[0][3], '每周0-1篇')
 
 
 if __name__ == '__main__':
