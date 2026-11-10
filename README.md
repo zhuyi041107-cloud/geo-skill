@@ -6,11 +6,11 @@
 
 ## 从 GitHub 安装
 
-私有仓库需要安装者的 GitHub 账号具有读取权限，本机 Git 也需要正常登录。不要将凭据写入提示词、仓库URL或配置文件。
+本仓库公开，下载和安装无需 GitHub 私库授权。真实客户资料、AI实采回答和媒体报价仍由使用者在自己的工作目录单独提供。
 
 可把下面这段发给 WorkBuddy：
 
-> 请从私有仓库 https://github.com/zhuyi041107-cloud/geo-skill 安装技能 ruanwenjie-geo 到当前项目。先检查本机Git是否能读取该仓库，保留SKILL.md、references、scripts和templates。使用项目级.codebuddy/skills目录，不覆盖已有不同内容的同名技能。检查Python 3.10+及requirements.txt依赖，缺失时说明并按本环境权限安装；不要输出凭据。安装完成后告诉我实际技能路径，再等我上传客户素材表开始第一阶段。
+> 请从公开GitHub仓库 https://github.com/zhuyi041107-cloud/geo-skill 安装技能 ruanwenjie-geo 到当前项目，保留SKILL.md、references、scripts和templates。使用项目级.codebuddy/skills目录，不覆盖已有不同内容的同名技能。检查Python 3.10+及requirements.txt依赖，缺失时说明并按本环境权限安装。安装完成后告诉我实际技能路径，再等我上传客户素材表开始第一阶段。
 
 如果 WorkBuddy 有可用终端和 Node.js，可使用 [Vercel Skills CLI](https://github.com/vercel-labs/skills/blob/main/docs/commands.md) 安装到当前项目：
 
@@ -21,7 +21,7 @@ npx skills add zhuyi041107-cloud/geo-skill --skill ruanwenjie-geo -a codebuddy -
 
 `codebuddy` 是安装目标目录选项，WorkBuddy 官方项目配置兼容 `.codebuddy/skills/`；无需猜测一个 `workbuddy` CLI参数。CLI版本与Node要求以其官方说明为准。
 
-也可克隆本仓库后，在 WorkBuddy 中以该目录作为项目使用；项目技能已经放在正确路径。[ZIP备用包](dist/ruanwenjie-geo-0.1.0.zip)可在「专家·技能·连接器 → 技能 → 添加技能 → 上传技能」导入。完成安装后新建项目会话；私库URL不是无需认证的一键安装保证。
+也可克隆本仓库后，在 WorkBuddy 中以该目录作为项目使用；项目技能已经放在正确路径。[ZIP备用包](dist/ruanwenjie-geo-0.1.0.zip)可在「专家·技能·连接器 → 技能 → 添加技能 → 上传技能」导入。完成安装后新建项目会话；若对话无法自动安装，使用上述CLI或上传ZIP。
 
 官方依据：[WorkBuddy 项目技能目录](https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project)、[技能安装及上传入口](https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market)。
 
