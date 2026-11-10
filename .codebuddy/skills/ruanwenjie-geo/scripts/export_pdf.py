@@ -59,6 +59,21 @@ def customer_text(value):
         raise ValueError("客户正文包含内部编号、本机路径或未替换标记，请改为业务语言")
     if re.search(r"normalize|SKILL\.md|采样范围与方法|采样教程|怎么诊断", result, re.I):
         raise ValueError("客户正文包含处理流程或诊断教程，请改为现状、分析与执行内容")
+    meta_patterns = (
+        r"(?:本轮|本次|本报告|本诊断)[^。；\n]{0,75}(?:观察基础|采样|样本|回传|网页端联网)",
+        r"(?:以|基于|依据)[^。；\n]{0,65}(?:回答|问答|截图)[^。；\n]{0,12}(?:为|作为)(?:观察|分析|诊断|判断)(?:基础|依据)",
+        r"(?:观察|采样|样本|采集)(?:范围|数量|方法|口径)[：:]|(?:样本(?:量|数量)?|采样数量|回答数量)(?:不足|有限|偏少|不够)",
+        r"(?:本轮|本次)(?:仅|只)(?:覆盖|观察|收到|回传|采集)|(?:尚未|未)(?:收到|回传|采集)[^。；\n]{0,30}(?:其他|其余|更多)(?:平台|模型)",
+        r"(?:按|按照)[^。；\n]{0,20}(?:题型|问题意图)[^。；\n]{0,25}(?:统计|计数|阅读|混算)|(?:问题|问句|回答|提及率)[^。；\n]{0,25}(?:分母|相加当成|混算)",
+        r"(?:同一批|同样)[^。；\n]{0,20}(?:问题|问句)[^。；\n]{0,25}(?:网页端|重新采集|按[^。；\n]{0,10}统计)",
+        r"(?:本轮|本次)[^。；\n]{0,15}(?:把|按|记为)[^。；\n]{0,25}(?:推荐失败|未承接|计数|分母)|(?:两个客群|题型|通用核验|点名题)[^。；\n]{0,35}(?:合成一个提及率|强求点名|混算)",
+        r"(?:采样任务|人工采样|题目数量不是固定|按原模板|历史案例的场景数量|用于展示怎样|以下判定只服务|观察限定|不代表真实(?:平台|检测|客户)|虚构演示情境)",
+        r"(?:演示材料|本轮材料|本例来源|本例回答|本例业务推演)|(?:演示|虚构)[^。；\n]{0,25}(?:不形成真实|不承担真实|不代表真实)",
+        r"(?:观察端口|文章形态)[^。；\n]{0,20}(?:不由|不按|推断|推测|猜测)[^。；\n]{0,15}(?:端口|抓取|机制|形态)|不暂停整套交付",
+        r"(?:达到|满足)[^。；\n]{0,15}(?:目标|预算)[^。；\n]{0,12}(?:九成|90%)|(?:内部采购成本|补差额|凑预算)",
+    )
+    if any(re.search(pattern, result) for pattern in meta_patterns):
+        raise ValueError("客户正文包含观察基础、采样口径或制作说明，请改成品牌具体情况、原因分析与业务影响；事实不确定请在对应事项局部说明")
     return result
 
 
@@ -174,16 +189,6 @@ def table(headers, rows, widths, st, table_id=""):
     return result
 
 
-def sampled_groups(analysis):
-    groups = analysis.get("groups", [])
-    contexts = analysis.get("sampled_contexts")
-    if contexts is not None:
-        key = lambda obj: tuple(str(obj.get(k, "")) for k in ("platform", "mode", "online", "round"))
-        allowed = {key(c) for c in contexts}
-        groups = [g for g in groups if key(g) in allowed]
-    return [g for g in groups if g.get("valid", 0) or g.get("completed", 0)]
-
-
 def decision_cards(table_id, rows, st):
     accents = [colors.HexColor(x) for x in ("#568743", "#C18A2F", "#3B78B9", "#BB4F4D")]
     if table_id == "decision_path":
@@ -221,15 +226,6 @@ def report_date(analysis, report):
     return text(report.get("report_date")) or text((analysis.get("report_scope") or {}).get("report_date")) or date.today().isoformat()
 
 
-def scope_line(analysis):
-    platforms = (analysis.get("report_scope") or {}).get("platforms")
-    if not platforms:
-        platforms = list(dict.fromkeys(g.get("platform") for g in sampled_groups(analysis) if g.get("platform")))
-    completed = analysis.get("counts", {}).get("completed")
-    scope = "、".join(platforms or [])
-    return (f"本轮观察：{scope}" if scope else "") + (f"，{completed}条回答" if completed is not None else "")
-
-
 def add_header(story, kind, analysis, report, st):
     project = analysis.get("project", {})
     brand = text(project.get("brand_names")) or text(project.get("client_name"))
@@ -238,7 +234,7 @@ def add_header(story, kind, analysis, report, st):
     client = text(project.get("client_name"))
     if client and client != brand:
         story.append(paragraph(client, st["client"]))
-    story.append(paragraph(f"报告日期：{report_date(analysis, report)}    {scope_line(analysis)}", st["meta"]))
+    story.append(paragraph(f"报告日期：{report_date(analysis, report)}", st["meta"]))
     story.append(HRFlowable(width="100%", thickness=1.5, color=BLUE, spaceAfter=8))
 
 

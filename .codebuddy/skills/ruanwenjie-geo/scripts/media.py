@@ -12,9 +12,10 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 TIERS = ("市场价格", "超级代理", "核心代理", "高级代理", "普通代理", "普通会员")
+TIER_FIELDS = dict(zip(TIERS, ("market_price", "super_agent_price", "core_agent_price", "senior_agent_price", "regular_agent_price", "member_price")))
 SHEETS = {"network": "网络媒体报价", "self": "自媒体报价"}
 CATALOG = Path(__file__).resolve().parents[1] / "references/media-catalog.csv.gz"
-CATALOG_FIELDS = ("media_id", "media_name", "media_type", "category", "region", "portal", "entry_type", "editorial_note", "market_price", "quotation_date", "source_file", "source_sheet", "source_row")
+CATALOG_FIELDS = ("media_id", "media_name", "media_type", "category", "region", "portal", "entry_type", "editorial_note", *TIER_FIELDS.values(), "quotation_date", "source_file", "source_sheet", "source_row")
 
 
 def public_text(value):
@@ -53,7 +54,7 @@ def build_catalog(source, destination, quotation_date):
                         "media_type": "网络媒体" if kind == "network" else "自媒体", "category": public_text(row.get("媒体分类")),
                         "region": public_text(row.get("地区")), "portal": public_text(row.get("综合门户")),
                         "entry_type": public_text(row.get("入口类型")), "editorial_note": public_text(row.get("备注")),
-                        "market_price": price(row.get("市场价格")), "quotation_date": quotation_date,
+                        **{field: price(row.get(tier)) for tier, field in TIER_FIELDS.items()}, "quotation_date": quotation_date,
                         "source_file": Path(source).name, "source_sheet": name, "source_row": line}
                 writer.writerow(item)
                 counts[name] += 1
@@ -67,7 +68,8 @@ def catalog_rows(path):
             yield row["source_sheet"], int(row["source_row"]), {
                 "软文街id": row["media_id"], "媒体名称": row["media_name"], "媒体分类": row["category"],
                 "地区": row["region"], "综合门户": row["portal"], "入口类型": row["entry_type"], "备注": row["editorial_note"],
-                "市场价格": row["market_price"], "报价日期": row["quotation_date"], "原报价文件": row["source_file"]}
+                **{tier: row.get(field) for tier, field in TIER_FIELDS.items()},
+                "报价日期": row["quotation_date"], "原报价文件": row["source_file"]}
 
 
 def price(value):
@@ -106,8 +108,6 @@ def search_media(path=None, tier="市场价格", query="", region="", kind="all"
         raise ValueError("最低价格不能高于最高价格")
     path = Path(path) if path else CATALOG
     builtin = path.name.endswith(".csv.gz")
-    if builtin and tier != "市场价格":
-        raise ValueError("内置目录仅含市场参考价，代理价格档仅适用于外部原报价.xlsx")
     if not builtin and path.suffix.lower() != ".xlsx":
         raise ValueError("请提供.xlsx报价表或内置.csv.gz目录")
     terms = [s.casefold() for s in query.split() if s]
@@ -146,6 +146,7 @@ def search_media(path=None, tier="市场价格", query="", region="", kind="all"
                 if regions and actual_region and "全国" not in actual_region and not any(r in actual_region for r in regions):
                     continue
                 amount = price(row.get(tier))
+                tier_prices = {name: price(row.get(name)) for name in TIERS}
                 if (lower is not None and (amount is None or Decimal(amount) < lower)) or (upper is not None and (amount is None or Decimal(amount) > upper)):
                     continue
                 stats["matched"] += 1
@@ -174,9 +175,12 @@ def search_media(path=None, tier="市场价格", query="", region="", kind="all"
                     "channel": " / ".join(str(row.get(k) or "") for k in ("渠道类型", "渠道名称")).strip(" /"),
                     "price_tier": tier,
                     "unit_price": amount if tier != "市场价格" else None,
-                    "market_reference_price": amount if tier == "市场价格" else None,
-                    "market_price": amount if tier == "市场价格" else None,
-                    "price_basis": "市场参考价，非采购成本" if tier == "市场价格" else "外部报价档位",
+                    "market_reference_price": tier_prices["市场价格"],
+                    "market_price": tier_prices["市场价格"],
+                    "selected_tier_price": amount,
+                    "tier_prices": tier_prices,
+                    "tier_price_source": f"{row.get('原报价文件') or path.name} / {sheet_name} / 第{row_number}行 / 原表六档报价",
+                    "price_basis": "市场参考价，非采购成本" if tier == "市场价格" else "原表报价档位，非已确认采购成本或客户售价",
                     "quotation_date": str(row.get("报价日期") or ""),
                     "entry_type": str(row.get("入口类型") or ""),
                     "status": state,
@@ -189,7 +193,7 @@ def search_media(path=None, tier="市场价格", query="", region="", kind="all"
     finally:
         if book:
             book.close()
-    candidates.sort(key=lambda item: (item["status"] == "需核实", (item["unit_price"] or item["market_reference_price"]) is None, Decimal(item["unit_price"] or item["market_reference_price"] or "0"), item["media_name"]))
+    candidates.sort(key=lambda item: (item["status"] == "需核实", item["selected_tier_price"] is None, Decimal(item["selected_tier_price"] or "0"), item["media_name"]))
     return {
         "source_file": path.name,
         "price_tier": tier,

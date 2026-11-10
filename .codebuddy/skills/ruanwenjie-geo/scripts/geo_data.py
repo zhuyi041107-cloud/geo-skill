@@ -815,7 +815,9 @@ def customer_workbook(project, analysis, plan, report):
     return wb
 
 
-def export_excel(project, analysis, plan, out_dir, report=None):
+def export_excel(project, analysis, plan, out_dir, report=None, audience="internal"):
+    if audience not in {"internal", "client", "both"}:
+        raise ValueError("Excel导出范围须为internal、client或both；不属于默认客户交付")
     if analysis.get("project", {}).get("project_id") != project["project_id"]:
         raise ValueError("分析文件与项目ID不一致")
     project = dict(project, contexts=analysis.get("project", {}).get("contexts", project.get("contexts", [])))
@@ -823,13 +825,15 @@ def export_excel(project, analysis, plan, out_dir, report=None):
     budget = calculate_budget(project, plan)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    names = ["内部诊断与执行明细.xlsx", "客户诊断与执行明细.xlsx"]
+    outputs = [("internal", "内部诊断与执行明细.xlsx"), ("client", "客户诊断与执行明细.xlsx")]
+    outputs = [(kind, name) for kind, name in outputs if audience == "both" or kind == audience]
+    names = [name for _, name in outputs]
     if any((out_dir / name).exists() for name in names):
         raise ValueError("导出文件已存在，拒绝覆盖；请使用新输出目录")
     validate_delivery_budget(budget)
-    customer = customer_workbook(project, analysis, plan, report or {})
+    customer = customer_workbook(project, analysis, plan, report or {}) if audience in {"client", "both"} else None
     results = {}
-    for audience, name in [("internal", "内部诊断与执行明细.xlsx"), ("client", "客户诊断与执行明细.xlsx")]:
+    for audience, name in outputs:
         if audience == "client":
             target = out_dir / name
             save_new(customer, target)
@@ -905,12 +909,13 @@ def main(argv=None):
     p.add_argument("--context", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--base")
-    p = sub.add_parser("export-excel")
+    p = sub.add_parser("export-excel", help="按需内部留档；不属于默认客户交付")
     p.add_argument("--project", required=True)
     p.add_argument("--analysis", required=True)
     p.add_argument("--plan", required=True)
     p.add_argument("--out-dir", required=True)
     p.add_argument("--report")
+    p.add_argument("--audience", choices=["internal", "client", "both"], default="internal")
     args = parser.parse_args(argv)
     try:
         if args.command == "inspect-client":
@@ -922,7 +927,7 @@ def main(argv=None):
         elif args.command == "analyze":
             write_json(analyze(args.input, read_json(args.plan) if args.plan else None), args.out)
         else:
-            write_json(export_excel(read_json(args.project), read_json(args.analysis), read_json(args.plan), args.out_dir, read_json(args.report) if args.report else None))
+            write_json(export_excel(read_json(args.project), read_json(args.analysis), read_json(args.plan), args.out_dir, read_json(args.report) if args.report else None, audience=args.audience))
     except (ValueError, KeyError, OSError, json.JSONDecodeError) as exc:
         parser.exit(2, f"错误: {exc}\n")
 

@@ -90,6 +90,47 @@ class ExportMediaWordTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "市场价格与目录不一致"):
             media_word.selected_rows(p, catalog)
 
+    def test_catalog_fills_original_tiers_without_plan_prices_and_keeps_unknown_blank(self):
+        a, p = self.fixture()
+        item = p["placements"][0]
+        catalog = {("网络媒体报价", item["media_id"]): {"media_name": item["media_name"], "market_price": "80.00",
+            "super_agent_price": "0.00", "core_agent_price": "51.20", "senior_agent_price": "63.00", "regular_agent_price": "", "member_price": "75.00"}}
+        rows = media_word.selected_rows(p, catalog)
+        row = rows["网络媒体报价"][0]
+        self.assertEqual([row[tier] for tier in media_word.TIERS], ["0.00", "51.20", "63.00", "", "75.00"])
+        self.assertNotIn("tier_prices", item)
+        item.update(tier_prices={"核心代理": "54.00", "高级代理": None}, tier_price_source="虚构更新报价，第2行核心代理档")
+        updated = media_word.selected_rows(p, catalog)["网络媒体报价"][0]
+        self.assertEqual([updated[tier] for tier in media_word.TIERS], ["0.00", "54.00", "63.00", "", "75.00"])
+        item["tier_prices"]["市场价格"] = "81.00"
+        with self.assertRaisesRegex(ValueError, "市场价格.*不一致"):
+            media_word.selected_rows(p, catalog)
+
+    def test_real_catalog_auto_fills_all_six_word_price_columns(self):
+        catalog = media_word.catalog_records(media_word.CATALOG)
+        plan = {"contents": [{"content_id": "C001", "title": "虚构行业说明", "status": "已选"}], "placements": [], "fees": []}
+        expected = []
+        for index, sheet in enumerate(media_word.HEADERS, 1):
+            (source_sheet, mid), source = next((key, row) for key, row in catalog.items() if key[0] == sheet and all(row.get(field) not in (None, "") for field in media_word.TIER_FIELDS.values()))
+            plan["placements"].append({"placement_id": f"P{index}", "content_id": "C001", "media_id": mid, "media_name": source["media_name"], "source_sheet": source_sheet,
+                "client_unit_price": source["market_price"], "unit_price": None, "quantity": 1, "status": "已选", "scheduled_date": "2026-11-20"})
+            expected.append([source[field] for field in media_word.TIER_FIELDS.values()])
+        project = {"client_name": "六档测试虚构客户", "brand_names": ["六档测试（虚构）"], "budget_limit": "1000000.00"}
+        document = self.document({"project": project, "budget": calculate_budget(project, plan)}, plan)
+        for table, prices in zip(document.tables, expected):
+            self.assertEqual([table.cell(3, col).text for col in range(5, 11)], prices)
+
+    def test_explicit_external_row_does_not_fill_unknown_tiers_from_old_catalog(self):
+        a, p = self.fixture()
+        item = p["placements"][0]
+        catalog = {("网络媒体报价", item["media_id"]): {"media_name": item["media_name"], "market_price": "80.00", "source_file": "虚构旧报价.xlsx",
+            "super_agent_price": "50.00", "core_agent_price": "60.00", "senior_agent_price": "65.00", "regular_agent_price": "70.00", "member_price": "75.00"}}
+        item.update(source_file="虚构更新报价.xlsx", quotation_date="2026-11-11", market_price="96.00",
+                    tier_prices={"市场价格": "96.00", "超级代理": "61.00", "高级代理": None}, tier_price_source="虚构更新报价.xlsx，网络媒体报价第2行")
+        updated = media_word.selected_rows(p, catalog)["网络媒体报价"][0]
+        self.assertEqual(updated["市场价格"], "96.00")
+        self.assertEqual([updated[tier] for tier in media_word.TIERS], ["61.00", "", "", "", ""])
+
     def test_budget_mismatch_target_and_overwrite_leave_no_output(self):
         a, p = self.fixture()
         with tempfile.TemporaryDirectory() as tmp:

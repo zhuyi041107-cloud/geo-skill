@@ -8,18 +8,20 @@
 
 章节顺序、标题层级、必需矩阵及原表头以契约文件为准，不能再用七个通用长段落替代。所有必需章节与关键矩阵须有本客户内容；缺章、空表、错表头会拒绝导出。行数随真实业务而变，不套用原案例的问句数、发文数、评分或平台机制。
 
+只替换客户业务内容，原格式不增写采集前言。客户summary直接写品牌情况与差距；采集方式、联网状态、回答数量、观察基础、样本边界和模板制作说明留内部。导出器会拒绝这些元话术，要求改写成业务分析；不会通过静默删句掩盖问题。具体资质、主体关系或服务承诺未确认时，在该事项旁简短说明。原表的单元格值和具体业务风险正常保留。
+
 最小数据形状（仅示意，不足以单独交付；完整虚构示例见 `report.example.json`）：
 
 ```json
 {
   "template_profile": "platform",
   "diagnosis": {
-    "summary": "本轮核心判断及业务影响。",
+    "summary": "品牌定位能够被识别，适用场景与交付责任仍需形成清楚的选择理由。",
     "sections": [{
       "key": "brand_recognition",
       "title": "一、品牌现状",
-      "paragraphs": [{"title": "当前识别位置", "detail": "具体情况、判断及业务影响的连贯分析。", "evidence_ref": ["内部证据索引"]}],
-      "tables": [{"id": "recognition", "columns": ["判定项", "直询结果", "说明"], "rows": [["业务识别", "本轮可见情况", "具体分析"]]}]
+      "paragraphs": [{"title": "当前识别位置", "detail": "品牌服务定位清楚，客户选择前仍需要了解适用范围和双方责任。", "evidence_ref": ["内部证据索引"]}],
+      "tables": [{"id": "recognition", "columns": ["判定项", "直询结果", "说明"], "rows": [["业务识别", "服务定位可识别", "回答能说明主要服务，但适用条件仍需补齐"]]}]
     }]
   },
   "execution": {"summary": "执行主线与投入重点。", "sections": []}
@@ -43,7 +45,7 @@
 示例字段：
 
 ```json
-{"content_id":"C001","title":"适用条件与交付边界","platform":"本轮平台","stage":"基础事实建设","scheduled_date":"2026-11-16","source_layer":"基础信源层","content_form":"专业说明稿","observation_port":"网页端","target_question":"哪些团队适合这项服务？","key_facts":"使用真实服务范围、适用条件及公开事实，不编造案例。","checkpoint":"第5周观察","status":"已选"}
+{"content_id":"C001","title":"适用条件与交付边界","platform":"豆包","stage":"基础事实建设","scheduled_date":"2026-11-16","source_layer":"基础信源层","content_form":"专业说明稿","observation_port":"网页端","target_question":"哪些团队适合这项服务？","key_facts":"服务包含资料入库、权限检索与出处展示，实施范围按项目确认。","checkpoint":"第5周检查","status":"已选"}
 ```
 
 实际媒体只用有效已选记录。文章日期、媒体日期、单价、次数、阶段及自然季度必须与同一plan一致；内容篇数与同稿多次刊发分别统计。修改plan后先重算analysis，PDF再次比对预算。不匹配拒绝输出。
@@ -62,7 +64,7 @@
 python "技能目录/scripts/export_pdf.py" --analysis analysis.json --plan plan.json --report report.json --output-dir outputs/customer-pdf
 ```
 
-默认生成 `GEO诊断报告.pdf` 与 `品牌传播与GEO执行方案.pdf`；可用 `--kind diagnosis` 或 `--kind execution` 单独导出。同名文件已存在拒绝覆盖。只观察本轮回传平台，不列未提供平台或要求补采；范围仅在首页简短一行。
+默认生成 `GEO诊断报告.pdf` 与 `品牌传播与GEO执行方案.pdf`；可用 `--kind diagnosis` 或 `--kind execution` 单独导出。同名文件已存在拒绝覆盖，保留旧文件并换新输出目录。首页只保留原有标题、客户与日期，不自动增加观察范围、回答条数或采集条件。
 
 通用版式示例位于 `templates/GEO诊断报告版式示例.pdf`、`templates/品牌传播与GEO执行方案版式示例.pdf`，来自同一代码和虚构资料。真实媒体及市场参考价来自内置目录，虚构客户与观察不能直接复用于真实业务。A4纵向蓝色报告体，首屏给判断，正文与完整矩阵自然分页，不硬凑原页数。长文自动分页，长表重复表头，超高单行允许跨页，内容不截断。
 

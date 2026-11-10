@@ -425,7 +425,7 @@ class GeoDataTests(unittest.TestCase):
         analysis = geo.analyze(self.path)
         plan = self.plan()
         plan["contents"][0]["title"] = "=HYPERLINK(\"https://example.org\")"
-        result = geo.export_excel(self.project, analysis, plan, Path(self.tmp.name) / "exports")
+        result = geo.export_excel(self.project, analysis, plan, Path(self.tmp.name) / "exports", audience="both")
         wb = openpyxl.load_workbook(result["client"], data_only=False)
         all_values = [c.value for ws in wb for row in ws for c in row if c.value is not None]
         self.assertNotIn("INTERNAL-SOURCE-SECRET.xlsx", all_values)
@@ -466,7 +466,7 @@ class GeoDataTests(unittest.TestCase):
     def test_business_excel_accepts_nested_report_sections(self):
         self.prepare(); self.completed()
         report = {"diagnosis": {"summary": "虚构品牌现状正文", "brand_status": [{"title": "业务认知", "detail": "这是虚构的品牌分析"}], "key_findings": [{"title": "核心发现", "detail": "这是虚构的需求缺口"}]}, "execution": {"keywords": [{"title": "虚构选型词", "detail": "根据客户决策安排内容"}]}}
-        result = geo.export_excel(self.project, geo.analyze(self.path), self.plan(), Path(self.tmp.name)/"nested", report)
+        result = geo.export_excel(self.project, geo.analyze(self.path), self.plan(), Path(self.tmp.name)/"nested", report, audience="client")
         wb = openpyxl.load_workbook(result["client"])
         values = [c.value for s in wb for row in s for c in row if c.value is not None]
         for expected in ["虚构品牌现状正文", "这是虚构的品牌分析", "这是虚构的需求缺口", "虚构选型词", "根据客户决策安排内容"]:
@@ -501,7 +501,7 @@ class GeoDataTests(unittest.TestCase):
         plan["placements"][0].update(price_tier="市场价格", unit_price=None, price_basis="市场参考价（非确认报价）", quotation_date="2026-11-10")
         plan["fees"][0].update(category="撰稿服务", client_amount=None)
         report = {"summary": "虚构业务结论", "findings": [{"title": "品牌场景覆盖", "detail": "Q001 需求选择尚未覆盖"}], "priorities": ["完善公开业务介绍"], "keywords": [{"title": "虚构业务关键词", "evidence_ref": ["Q1"]}]}
-        result = geo.export_excel(self.project, analysis, plan, Path(self.tmp.name) / "business", report)
+        result = geo.export_excel(self.project, analysis, plan, Path(self.tmp.name) / "business", report, audience="client")
         wb = openpyxl.load_workbook(result["client"], data_only=False)
         values = [str(c.value) for ws in wb for row in ws for c in row if c.value is not None]
         self.assertIn("虚构业务结论", values)
@@ -517,7 +517,21 @@ class GeoDataTests(unittest.TestCase):
         plan = self.plan()
         plan["placements"][0]["media_id"] = "TBD-M1"
         with self.assertRaisesRegex(ValueError, "占位"):
-            geo.export_excel(self.project, analysis, plan, Path(self.tmp.name) / "bad")
+            geo.export_excel(self.project, analysis, plan, Path(self.tmp.name) / "bad", audience="client")
+
+    def test_excel_is_internal_by_default_and_customer_export_is_explicit(self):
+        self.prepare(); self.completed()
+        analysis, plan = geo.analyze(self.path), self.plan()
+        folder = Path(self.tmp.name) / ".work"
+        result = geo.export_excel(self.project, analysis, plan, folder)
+        self.assertIn("internal", result)
+        self.assertNotIn("client", result)
+        self.assertEqual([p.name for p in folder.glob("*.xlsx")], ["内部诊断与执行明细.xlsx"])
+        folder = Path(self.tmp.name) / "explicit-customer-excel"
+        result = geo.export_excel(self.project, analysis, plan, folder, audience="client")
+        self.assertIn("client", result)
+        self.assertNotIn("internal", result)
+        self.assertEqual([p.name for p in folder.glob("*.xlsx")], ["客户诊断与执行明细.xlsx"])
 
 
 if __name__ == "__main__":

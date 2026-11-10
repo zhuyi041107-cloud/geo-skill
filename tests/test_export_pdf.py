@@ -26,11 +26,11 @@ class ExportPdfTests(unittest.TestCase):
                                 'client_unit_price': '480.00', 'quantity': 2, 'scheduled_date': '2027-01-15', 'price_tier': '内部成本档位', 'price_basis': '市场参考价', 'quotation_date': '2026-10-28'}], 'fees': []}
         analysis = {'schema_version': 1, 'project': project, 'sampled_contexts': [actual], 'report_scope': {'platforms': [actual['platform']], 'report_date': '2026-11-10'},
                     'counts': {'completed': 2, 'valid': 2}, 'groups': [{**actual, 'valid': 2, 'completed': 2}], 'budget': calculate_budget(project, plan)}
-        entry = {'title': '业务选择缺口', 'detail': '本轮品牌可以被识别，但交付范围与维护责任未进入选择理由。应以真实服务边界和可公开案例承接客户需求，降低初筛的信息不确定性。',
+        entry = {'title': '业务选择缺口', 'detail': '品牌可以被识别，但交付范围与维护责任未进入选择理由。应以真实服务边界和可公开案例承接客户需求，降低初筛的信息不确定性。',
                  'evidence_ref': ['EV-internal-001', 'Q001', r'C:\private\source.json']}
         report = {'template_profile': profile}
         for kind in ('diagnosis', 'execution'):
-            doc = {'summary': '虚构测试资料：品牌识别已有基础，客户决策信息需围绕适用条件与服务责任展开。', 'sections': []}
+            doc = {'summary': '品牌识别已有基础，客户决策信息需围绕适用条件与服务责任展开。', 'sections': []}
             for spec in export_pdf.template_contract(profile, kind):
                 if spec['source'] == 'diagnosis':
                     continue
@@ -157,6 +157,53 @@ class ExportPdfTests(unittest.TestCase):
             matrix = export_pdf.table(columns, [['本案业务说明'] * len(columns)], None, export_pdf.styles(), table_id=table_id)
             self.assertGreater(matrix._argW[-1], export_pdf.WIDTH / 2)
             self.assertLess(matrix._argW[0], export_pdf.WIDTH / 10)
+
+    def test_report_header_does_not_inject_collection_scope_or_example_notice(self):
+        analysis, plan, report = self.fixture()
+        analysis['report_scope']['platforms'] = ['仅作内部采集范围的平台']
+        analysis['counts']['completed'] = 987654
+        report['_example_notice'] = '本轮采样说明和虚构声明只供内部使用，不能渲染。'
+        for kind in ('diagnosis', 'execution'):
+            _, text = self.pdf_text(kind, analysis, plan, report)
+            self.assertIn('报告日期：2026-11-10', text)
+            for private_meta in ('本轮观察', '条回答', '987654', '仅作内部采集范围的平台', '采样说明和虚构声明'):
+                self.assertNotIn(private_meta, text)
+
+    def test_collection_and_authoring_meta_prose_is_rejected_instead_of_silently_deleted(self):
+        examples = [
+            '本轮以豆包网页端联网的十条回答为观察基础。品牌已经被识别。',
+            '本报告基于12份问答样本进行诊断。',
+            '观察范围：豆包与其他平台。',
+            '样本数量有限，暂不判断推荐表现。',
+            '本轮仅覆盖豆包，其他平台尚未回传。',
+            '按问题意图分别统计，分母只用已判样本。',
+            '这份清单不会成为下一轮人工采样任务。',
+            '用同一批问题与网页端条件重新采集并统计。',
+            '信源矩阵按原模板的四类承载角色整理。',
+            '这些题用于展示怎样把问句变成业务判断。',
+            '把两个客群合成一个提及率会掩盖真正的问题。',
+            '通用核验题本来就不该强求点名品牌。',
+        ]
+        for value in examples:
+            with self.subTest(value=value):
+                analysis, plan, report = self.fixture()
+                report['diagnosis']['summary'] = value
+                with self.assertRaisesRegex(ValueError, '改成品牌具体情况'):
+                    export_pdf.build_pdf('diagnosis', analysis, plan, report)
+        analysis, plan, report = self.fixture()
+        report['diagnosis']['sections'][1]['tables'][0]['rows'][0][1] = examples[0]
+        with self.assertRaisesRegex(ValueError, '改成品牌具体情况'):
+            export_pdf.build_pdf('diagnosis', analysis, plan, report)
+
+    def test_local_business_uncertainty_and_risks_remain_in_customer_body(self):
+        analysis, plan, report = self.fixture()
+        finding = '品牌运营主体存在两种说法，许可证与收费规则尚未核验。官网未列明维护责任，可能增加企业采购沟通成本；应先核对主体关系与合同范围。'
+        report['diagnosis']['summary'] = finding
+        _, text = self.pdf_text('diagnosis', analysis, plan, report)
+        self.assertIn('许可证与收费规则尚未核验', text.replace('\n', ''))
+        self.assertIn('增加企业采购沟通成本', text.replace('\n', ''))
+        self.assertEqual(export_pdf.customer_text('网页端'), '网页端')
+        self.assertEqual(export_pdf.customer_text('本轮未出现品牌，官网价格尚未确认。'), '本轮未出现品牌，官网价格尚未确认。')
 
 
 if __name__ == '__main__':

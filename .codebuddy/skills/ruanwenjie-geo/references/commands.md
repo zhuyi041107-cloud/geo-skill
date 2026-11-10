@@ -6,12 +6,14 @@
 
 以下命令由WorkBuddy内部执行。报告生成前完整读template-generation.md，并按客户类型读取template-contract.json对应profile；report-thinking.md约束证据判断。替换“技能目录”为安装路径，“工作目录”为客户独立文件夹；使用当前环境的Python，路径加引号。先检查 `python -c "import openpyxl, reportlab, pypdf, docx"`；按环境权限使用requirements.txt安装所需依赖。
 
+默认客户成品只有诊断PDF、执行方案PDF和推荐媒体Word。内部JSON、判读和核算放.work，不作为正式输出或聊天附件。已有原件可以原位读取，不搬动。步骤5只重算内部analysis，默认流程不运行export-excel。
+
 下面输出目录是示意。旧成品已存在时保留旧文件，直接选择新版本目录（例如正式输出/修订1），不要求用户清空文件或重复确认覆盖。
 
 ## 1. 客户资料与核心问题
 
 ```text
-python "技能目录/scripts/geo_data.py" inspect-client --input "工作目录/软文街_GEO客户素材收集表.xlsx" --out "工作目录/client-fields.json"
+python "技能目录/scripts/geo_data.py" inspect-client --input "工作目录/软文街_GEO客户素材收集表.xlsx" --out "工作目录/.work/client-fields.json"
 ```
 
 WorkBuddy据实际业务维护project.json，参考 [虚构项目格式](project.example.json)。问题先通过工作流程中的真实需求、具体诊断用途和信息增量判断；题数由有效场景决定，不设固定数量，不照搬示例题或按分类凑行业科普问卷。自然需求与点名认知/口碑/对比在内部分类。
@@ -31,13 +33,13 @@ project主要字段：
 单个平台/context：
 
 ```text
-python "技能目录/scripts/geo_data.py" prepare --project "工作目录/project.json" --out "工作目录/豆包-AI回答采集表.xlsx"
+python "技能目录/scripts/geo_data.py" prepare --project "工作目录/.work/project.json" --out "工作目录/豆包-AI回答采集表.xlsx"
 ```
 
 多个平台/context时使用输出目录，脚本按平台/模式分别生成文件：
 
 ```text
-python "技能目录/scripts/geo_data.py" prepare --project "工作目录/project.json" --out-dir "工作目录/待采集"
+python "技能目录/scripts/geo_data.py" prepare --project "工作目录/.work/project.json" --out-dir "工作目录/待采集"
 ```
 
 工作表只有“问题、引用截图、答案”三列，问题预填，另两列空白。向同事提供三句说明：按平台分文件，逐题新对话；粘贴来源截图和完整答案；回传表格与截图附件。没有来源写“未展示”，失败在答案中注明。不要额外要求手抄URL清单或采集条件。
@@ -49,7 +51,7 @@ python "技能目录/scripts/geo_data.py" prepare --project "工作目录/projec
 按对应project和context转成内部工作底表：
 
 ```text
-python "技能目录/scripts/geo_data.py" normalize --input "工作目录/豆包-AI回答采集表.xlsx" --project "工作目录/project.json" --context 1 --out "工作目录/内部判读-豆包.xlsx"
+python "技能目录/scripts/geo_data.py" normalize --input "工作目录/豆包-AI回答采集表.xlsx" --project "工作目录/.work/project.json" --context 1 --out "工作目录/.work/内部判读-豆包.xlsx"
 ```
 
 `import-collection`是同一命令的别名。context采用project.contexts中的1起始序号，也支持唯一平台名。平台从文件名和会话直接识别，无法确认具体名称时用“本次回传平台”继续，不为标签停下追问。
@@ -57,7 +59,7 @@ python "技能目录/scripts/geo_data.py" normalize --input "工作目录/豆包
 收到一个平台就立即分析和导出全部成品。用户之后另行回传其他平台时，才使用上一份内部底表作为base增量更新，不覆盖已采答案：
 
 ```text
-python "技能目录/scripts/geo_data.py" normalize --base "工作目录/内部判读-豆包.xlsx" --input "工作目录/DeepSeek-AI回答采集表.xlsx" --project "工作目录/project.json" --context 2 --out "工作目录/内部判读-全部平台.xlsx"
+python "技能目录/scripts/geo_data.py" normalize --base "工作目录/.work/内部判读-豆包.xlsx" --input "工作目录/DeepSeek-AI回答采集表.xlsx" --project "工作目录/.work/project.json" --context 2 --out "工作目录/.work/内部判读-全部平台.xlsx"
 ```
 
 每次都对当前底表运行analyze并继续导出；只展示实际回传平台。未回传平台不列0、不算缺项，也不催用户补采。
@@ -71,15 +73,15 @@ normalize按题目对应内部ID，保留原文，按问题行关联截图；同
 - 缺少日期或网页条件按本轮约定内部处理；新对话未记录不构成交付缺项。不要额外向用户索取模式、联网、时间、截图修正或其他平台数据。
 
 ```text
-python "技能目录/scripts/geo_data.py" analyze --input "工作目录/内部判读-豆包.xlsx" --out "工作目录/analysis.json"
+python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --out "工作目录/.work/analysis.json"
 ```
 
-analysis保留内部原文与证据，本轮指标只统计已有回传的平台，自然题和点名题分开，小样本显示“出现次数/有效数”。截图可用于来源结构诊断；正文未核验的指标保留未知，但继续完成报告和执行文件。不把来源名拼成想象的URL，不自动开展额外采样。
+analysis在.work保留原文、证据和统计；自然题与点名题分开计数，内部可核对出现次数/有效数。客户按原模板直接说明品牌表现，不追加样本指标页或观察基础段。截图用于来源结构判断，未知事实局部保留确认条件，不拼造URL，也不自动额外采样。
 
 ## 4. 按报价选媒体
 
 ```text
-python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind network --limit 30 --out "工作目录/media-candidates.json"
+python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind network --limit 30 --out "工作目录/.work/media-candidates.json"
 ```
 
 默认读取随包references/media-catalog.csv.gz，支持network/self/all。明确拒收GEO的资源排除；结果带真实媒体、原记录索引、市场参考价、报价日期与脱敏限制。WorkBuddy按业务适配选用并写理由，不将候选排序当AI能力排名。内置market_price用于建议媒体发布预算，内部成本仍未知。
@@ -100,11 +102,10 @@ python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind
 使用内置目录时，`unit_price`保留null；将所选资源的`market_reference_price`填入`client_unit_price`计算建议预算，同时保留`price_tier=市场价格`、`quotation_date`与`price_basis=市场参考价，用于建议预算，执行价格另行确认`。只有已有明确客户报价时才用该报价替换对客单价。不要把全部价格留空，也不要凭空加价或补内部成本。
 
 ```text
-python "技能目录/scripts/geo_data.py" analyze --input "工作目录/内部判读-豆包.xlsx" --plan "工作目录/plan.json" --out "工作目录/analysis-final.json"
-python "技能目录/scripts/geo_data.py" export-excel --project "工作目录/project.json" --analysis "工作目录/analysis-final.json" --plan "工作目录/plan.json" --report "工作目录/report.json" --out-dir "工作目录/正式输出"
+python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --plan "工作目录/.work/plan.json" --out "工作目录/.work/analysis-final.json"
 ```
 
-WorkBuddy先依据现状写report.json，内容与内置媒体选择形成plan，再重算并输出内外Excel。客户版只展示业务分析、关键词与内容排期、实际媒体、费用汇总；内部版保留溯源。内置市场参考价应明确用于建议预算，不自动视为已确认客户报价或内部成本。缺失服务费仅说明边界，不能让整份方案都是空价。
+WorkBuddy写客户业务内容形成report.json，与内置媒体选择形成plan，重算analysis供两个PDF与Word使用。内部底稿不默认导出两份Excel。市场参考价用于建议预算，不自动视为已确认客户售价或内部成本；Word则按原媒体表分别列六档真实价格。缺失服务费仅说明业务费用边界。
 
 重算后的budget含target、target_source、limit。正式导出会检查已知费用至少达到明确目标的90%且不超过上限；默认约2万元方案不得缩水成两千元。检查失败时调整真实内容/媒体配置，不篡改单价、预算目标或增加虚构补差项。
 
@@ -112,8 +113,10 @@ WorkBuddy先依据现状写report.json，内容与内置媒体选择形成plan�
 
 由WorkBuddy按 [原模板完整生成说明](template-generation.md) 撰写结构化report.json，使用 [PDF导出说明](pdf-output.md) 生成两份PDF。report.template_profile选择platform/service，diagnosis/execution各包含summary和完整sections；章节key、层级、原表头与source取对应contract。旧版泛叙述report需重新组织，不能直接套新排版。source=report的业务矩阵逐项写清；source=plan的数量/媒体/排期/预算由脚本计算；source=diagnosis的决策路径复用原诊断。内部编号和处理过程不进入正文。
 
+正文只替换模板中的客户情况、分析与方案，不额外添加“本轮以若干网页端回答为观察基础”、样本说明、题型判读教程或按模板制作等前言。采集条件留analysis内部；原模板已有平台/端口栏只填该栏值。具体资质、主体或收费未确认时，在对应业务事实旁简短说明。
+
 ```text
-python "技能目录/scripts/export_pdf.py" --analysis "工作目录/analysis-final.json" --plan "工作目录/plan.json" --report "工作目录/report.json" --output-dir "工作目录/正式输出/客户PDF"
+python "技能目录/scripts/export_pdf.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --output-dir "工作目录/正式输出/客户PDF"
 ```
 
 ## 7. 推荐媒体Word
@@ -121,7 +124,15 @@ python "技能目录/scripts/export_pdf.py" --analysis "工作目录/analysis-fi
 按 [原媒体表对应规范](media-word-output.md) 使用随包Word模板生成：
 
 ```text
-python "技能目录/scripts/export_media_word.py" --analysis "工作目录/analysis-final.json" --plan "工作目录/plan.json" --output "工作目录/正式输出/推荐媒体.docx"
+python "技能目录/scripts/export_media_word.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --output "工作目录/正式输出/推荐媒体.docx"
 ```
 
-两份PDF、推荐媒体Word和内外Excel实际生成并检查后才交付。聊天只给成品与简短说明，不把内部JSON或方法当成客户分析，也不再列补平台、模式或时间的待办。
+三件成品实际生成并检查后交付。只给两份PDF和推荐媒体Word，不把内部JSON/明细工作表当客户成品，也不列补平台、模式或时间的待办。
+
+## 8. 按需Excel（不属于默认客户交付）
+
+仅当用户明确要求Excel时调用。`--audience internal`导内部核算，存.work；`--audience client`导用户明确需要的客户明细；`--audience both`仅用于明确要求两种版本的情况。默认是internal，不自动生成客户工作簿。
+
+```text
+python "技能目录/scripts/geo_data.py" export-excel --project "工作目录/.work/project.json" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --audience internal --out-dir "工作目录/.work/核算"
+```

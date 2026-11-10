@@ -15,6 +15,7 @@ import sys
 from docx import Document
 
 from geo_data import ACTIVE, calculate_budget, money, validate_delivery_budget
+from media import TIER_FIELDS, TIERS as PRICE_TIERS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,6 +59,11 @@ def selected_rows(plan, catalog):
             raise ValueError("已选媒体必须有media_id与具体媒体名称")
         key = (sheet, media_id)
         source = catalog.get(key, {})
+        tier_prices = placement.get("tier_prices") or {}
+        if not isinstance(tier_prices, dict) or any(k not in PRICE_TIERS for k in tier_prices):
+            raise ValueError("tier_prices须使用原表的六档中文名")
+        if any(value not in (None, "") for value in tier_prices.values()) and not text(placement.get("tier_price_source")):
+            raise ValueError("外部档位报价须提供tier_price_source，禁止用市场价或成本价推算")
         supplied_file = text(placement.get("source_file")).replace("\\", "/").rsplit("/", 1)[-1]
         catalog_file = text(source.get("source_file")).replace("\\", "/").rsplit("/", 1)[-1]
         try:
@@ -74,6 +80,11 @@ def selected_rows(plan, catalog):
         supplied_market = placement.get("market_price")
         if supplied_market in (None, ""):
             supplied_market = placement.get("market_reference_price")
+        tier_market = tier_prices.get("市场价格")
+        if supplied_market not in (None, "") and tier_market not in (None, "") and price(supplied_market) != price(tier_market):
+            raise ValueError("tier_prices市场价格与market_price或market_reference_price不一致")
+        if supplied_market in (None, ""):
+            supplied_market = tier_market
         catalog_market = source.get("market_price")
         if supplied_market not in (None, "") and catalog_market not in (None, "") and price(supplied_market) != price(catalog_market):
             raise ValueError(f"媒体市场价格与目录不一致：{media_id}，请更新同源报价后再导出")
@@ -93,12 +104,7 @@ def selected_rows(plan, catalog):
         note = text(placement.get("editorial_note")) or text(source.get("editorial_note"))
         entry = text(placement.get("entry_type")) or text(source.get("entry_type"))
         row["备注"] = "；".join(v for v in (note, "刊发形态：" + entry if entry and entry not in note else "") if v)
-        tier_prices = placement.get("tier_prices") or {}
-        if not isinstance(tier_prices, dict) or any(k not in TIERS for k in tier_prices):
-            raise ValueError("tier_prices须使用原表的五档中文名")
-        if tier_prices and not text(placement.get("tier_price_source")):
-            raise ValueError("已知代理档报价须提供tier_price_source，禁止用市场价或成本价推算")
-        row.update({tier: price(tier_prices.get(tier)) for tier in TIERS})
+        row.update({tier: price(tier_prices.get(tier) if tier_prices.get(tier) not in (None, "") else source.get(TIER_FIELDS[tier])) for tier in TIERS})
         if key in seen:
             if seen[key] != row:
                 raise ValueError(f"同一媒体存在不同属性或报价：{media_id}，请先统一来源")
