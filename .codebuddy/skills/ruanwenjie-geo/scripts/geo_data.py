@@ -103,8 +103,8 @@ def load_rows(wb, name, headers):
     return result
 
 
-def put_rows(ws, rows):
-    for r, row in enumerate(rows, 2):
+def put_rows(ws, rows, start_row=2):
+    for r, row in enumerate(rows, start_row):
         for c, value in enumerate(row, 1):
             if isinstance(value, str) and len(value) > 32767:
                 raise ValueError(f"{ws.title}!{openpyxl.utils.get_column_letter(c)}{r}: 文本超过Excel单元格32767字符，请使用外部原始证据文件，禁止静默截断")
@@ -163,11 +163,12 @@ def inspect_client(path):
     try:
         ws = wb["客户素材清单"]
         fields = []
-        for row in ws.iter_rows(min_row=3, values_only=False):
+        for row_number, row in enumerate(ws.iter_rows(min_row=1, values_only=False), 1):
             a, b, c, d, e, f = [cell.value for cell in row[:6]]
-            if e not in {"必填", "选填"} or f == "客户填写":
+            if e not in {"必填", "选填"} or f == "客户填写" or b == "所需素材项":
                 continue
-            fields.append({"row": row[0].row, "field": a if row[0].row <= 7 else b,
+            field = a if a and not re.match(r"^[A-Z]\s*[.．、]", text(a)) else b
+            fields.append({"row": row_number, "field": field,
                            "required": e == "必填", "filled": f not in (None, ""),
                            "value": f, "requirement": c})
         return {"fields": fields, "total": len(fields),
@@ -645,7 +646,137 @@ def calculate_budget(project, plan):
     return result
 
 
-def export_excel(project, analysis, plan, out_dir):
+def business_text(value):
+    if isinstance(value, dict):
+        value = value.get("detail") or value.get("description") or value.get("title") or ""
+    if isinstance(value, list):
+        value = "、".join(business_text(v) for v in value)
+    result = text(value)
+    result = re.sub(r"(?<![A-Za-z0-9_])(?:EV-)?Q\d{3,}(?:-C\d+-R\d+)?(?![A-Za-z0-9_])|(?<![A-Za-z0-9_])[CPF]\d{3,}(?![A-Za-z0-9_])", "", result)
+    result = re.sub(r"(?<![A-Za-z0-9])[A-Za-z]:[\\/](?!/)[^\s\n]+", "相关资料", result)
+    return result.strip(" /、，,：:；;-")
+
+
+def customer_workbook(project, analysis, plan, report):
+    """Present supplied judgments and the chosen plan without internal ledger fields."""
+    placements = [p for p in plan.get("placements", []) if p.get("status") in ACTIVE]
+    if not placements:
+        raise ValueError("客户执行方案需要先从媒体目录选用具体媒体，不能导出空投放表")
+    content_by_id = {c["content_id"]: c for c in plan.get("contents", [])}
+    for p in placements:
+        if not text(p.get("media_id")) or re.search(r"TBD|待定|待报价|占位", text(p.get("media_id")) + text(p.get("media_name")), re.I):
+            raise ValueError("客户方案需要具体选用媒体，不能导出占位资源")
+        if money(p.get("client_unit_price"), "客户单价") is None or not p.get("quantity") or not p.get("scheduled_date"):
+            raise ValueError("已选媒体的客户参考单价、数量和计划日期必须齐全")
+    wb = openpyxl.load_workbook(ROOT / "templates/客户业务方案模板.xlsx")
+    diagnosis = report.get("diagnosis") or report
+    execution = report.get("execution") or report
+    brand = (project.get("brand_names") or [project["client_name"]])[0]
+    observations = []
+    if diagnosis.get("summary"):
+        observations.append(["整体判断", business_text(diagnosis["summary"])])
+    for key, label in [("brand_status", "品牌现状"), ("demand_entries", "需求入口"), ("competitors", "竞争比较"), ("fact_consistency", "事实一致性"), ("source_structure", "来源结构")]:
+        items = diagnosis.get(key, [])
+        if not isinstance(items, list):
+            items = [items]
+        for item in items:
+            title = business_text(item.get("title")) if isinstance(item, dict) else ""
+            observations.append([label + ("：" + title if title else ""), business_text(item)])
+    findings = diagnosis.get("key_findings", diagnosis.get("findings", report.get("findings", []))) or []
+    if not isinstance(findings, list):
+        findings = [findings]
+    for finding in findings:
+        observations.append([business_text(finding.get("title")) if isinstance(finding, dict) else "本轮观察", business_text(finding)])
+    for group in analysis.get("groups", []):
+        def rate(label, count, denominator):
+            return f"{label}{count}/{denominator}（{count/denominator:.0%}）" if denominator else f"{label}尚未判读"
+        parts = [rate("品牌提及", group.get("mention_yes", 0), group.get("mention_yes", 0) + group.get("mention_no", 0))]
+        if group.get("intent") == "推荐":
+            parts.append(rate("品牌推荐", group.get("recommendation_yes", 0), group.get("recommendation_yes", 0) + group.get("recommendation_no", 0)))
+        parts.append("支持引用未核验" if group.get("citation_rate") is None else f"支持引用{group['citation_supported_samples']}/{group['citation_known_samples']}（{group['citation_rate']:.0%}）")
+        observations.append([f"{group['platform']}：{group['question_type']} / {group['intent']}", "；".join(parts)])
+    priorities = diagnosis.get("priorities", report.get("priorities", [])) or []
+    if not isinstance(priorities, list):
+        priorities = [priorities]
+    observations += [[f"优先行动{i}", business_text(item)] for i, item in enumerate(priorities, 1)]
+    keyword_items = execution.get("keywords", report.get("keywords", [])) or []
+    if not isinstance(keyword_items, list):
+        keyword_items = [keyword_items]
+    keyword_rows = [[business_text(k.get("title")), business_text(k.get("detail") or k.get("description"))] if isinstance(k, dict) else [business_text(k), ""] for k in keyword_items]
+    contents = [c for c in plan.get("contents", []) if c.get("status") in ACTIVE or c["content_id"] in {p["content_id"] for p in placements}]
+    content_rows = []
+    for c in contents:
+        keywords = c.get("keywords") or [k.get("title", "") for k in keyword_items if isinstance(k, dict) and set(k.get("evidence_ref", [])) & set(c.get("question_ids", []))]
+        media_names = "、".join(p["media_name"] for p in placements if p["content_id"] == c["content_id"])
+        content_rows.append([quarter(c.get("scheduled_date")), business_text(c.get("title")), business_text(keywords), excel_date(c.get("scheduled_date")), business_text(media_names), 1])
+    media_rows = []
+    for p in placements:
+        unit = money(p["client_unit_price"], "客户参考单价")
+        qty = positive_int(p["quantity"], "quantity")
+        basis = p.get("price_basis") or ("市场参考价" if p.get("price_tier") == "市场价格" else "方案提供价格，执行前确认")
+        if p.get("quotation_date"):
+            basis += f"；报价日期{p['quotation_date']}"
+        media_rows.append([quarter(p["scheduled_date"]), business_text(p["media_name"]), business_text(p.get("publication_channel") or p.get("entry_type") or p.get("media_type")), business_text(content_by_id[p["content_id"]].get("title")), float(unit), qty, float(unit * qty), excel_date(p["scheduled_date"]), business_text(basis)])
+    fees = [f for f in plan.get("fees", []) if f.get("status") in ACTIVE]
+    fee_rows = [["建议媒体投放预算", float(sum((money(p["client_unit_price"], "客户单价") * positive_int(p["quantity"], "quantity") for p in placements), Decimal(0))) if placements else None, "按所列媒体、参考单价与刊发次数计算；不含另列服务费用。"]]
+    for f in fees:
+        value = money(f.get("client_amount"), "服务费用")
+        fee_rows.append([business_text(f.get("category") or "服务费用"), float(value) if value is not None else "单独核价", business_text(f.get("description")) + ("；未计入媒体投放预算" if value is None else "")])
+    b = calculate_budget(project, plan)["client"]
+    fee_rows.append(["已知费用合计", float(b["known_subtotal"]), "仅包含已列出明确价格的项目；单独核价项目未计入。"])
+    for q, values in b["quarterly"].items():
+        media_amount = values.get("media")
+        fee_rows.append([q + "媒体投放预算", float(media_amount) if media_amount is not None else None, "按媒体计划刊发日期归属季度。"])
+    sections = {"现状分析": observations, "关键词与内容排期": content_rows, "媒体投放": media_rows, "费用汇总": fee_rows}
+    content_start = 5
+    for name, rows in sections.items():
+        ws = wb[name]
+        ws["A2"] = f"{brand}：{name}"
+        if ws.max_row > 4:
+            ws.delete_rows(5, ws.max_row - 4)
+        start_row = 5
+        extra_rows = []
+        if name == "关键词与内容排期" and keyword_rows:
+            headers = [c.value for c in ws[4]]
+            styles = [copy(c._style) for c in ws[4]]
+            for c in ws[4]:
+                c.value = None
+                if c.column > 2:
+                    c.fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor="FFFFFF")
+            ws["A4"], ws["B4"] = "关键词方向", "布局思路"
+            put_rows(ws, keyword_rows, start_row=5)
+            header_row = 7 + len(keyword_rows)
+            for col, header in enumerate(headers, 1):
+                ws.cell(header_row, col, header)._style = styles[col - 1]
+            ws.row_dimensions[header_row].height = 34
+            start_row = header_row + 1
+            content_start = start_row
+            extra_rows = list(enumerate(keyword_rows, 5))
+        put_rows(ws, rows, start_row=start_row)
+        for r, values in extra_rows + list(enumerate(rows, start_row)):
+            ws.row_dimensions[r].height = max(36, min(360, 18 * max(2, max((len(str(v or "")) // (60 if i == 1 and name == "现状分析" else 24) + str(v or "").count("\n") + 1) for i, v in enumerate(values)))))
+            for col in range(1, len(values) + 1):
+                ws.cell(r, col)._style = copy(wb[name].cell(4, col)._style)
+                ws.cell(r, col).fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor="FFFFFF")
+                ws.cell(r, col).font = openpyxl.styles.Font(name="Arial", size=10, color="17233B")
+                ws.cell(r, col).alignment = openpyxl.styles.Alignment(vertical="center", wrap_text=True)
+    for r in range(5, 5 + len(media_rows)):
+        wb["媒体投放"].cell(r, 7, f'=IF(OR(B{r}="",E{r}="",F{r}=""),"",E{r}*F{r})')
+        for col in (5, 7):
+            wb["媒体投放"].cell(r, col).number_format = '#,##0.00'
+        wb["媒体投放"].cell(r, 8).number_format = 'yyyy-mm-dd'
+    if media_rows:
+        wb["费用汇总"]["B5"] = f"=SUM('媒体投放'!G5:G{4+len(media_rows)})"
+        total_row = 6 + len(fees)
+        wb["费用汇总"].cell(total_row, 2, f"=SUM(B5:B{total_row-1})")
+    for r in range(5, 5 + len(fee_rows)):
+        wb["费用汇总"].cell(r, 2).number_format = '#,##0.00'
+    for r in range(content_start, content_start + len(content_rows)):
+        wb["关键词与内容排期"].cell(r, 4).number_format = 'yyyy-mm-dd'
+    return wb
+
+
+def export_excel(project, analysis, plan, out_dir, report=None):
     if analysis.get("project", {}).get("project_id") != project["project_id"]:
         raise ValueError("分析文件与项目ID不一致")
     project = dict(project, contexts=analysis.get("project", {}).get("contexts", project.get("contexts", [])))
@@ -656,8 +787,15 @@ def export_excel(project, analysis, plan, out_dir):
     names = ["内部诊断与执行明细.xlsx", "客户诊断与执行明细.xlsx"]
     if any((out_dir / name).exists() for name in names):
         raise ValueError("导出文件已存在，拒绝覆盖；请使用新输出目录")
+    customer = customer_workbook(project, analysis, plan, report or {})
     results = {}
     for audience, name in [("internal", "内部诊断与执行明细.xlsx"), ("client", "客户诊断与执行明细.xlsx")]:
+        if audience == "client":
+            target = out_dir / name
+            save_new(customer, target)
+            customer.close()
+            results[audience] = str(target)
+            continue
         wb = openpyxl.load_workbook(ROOT / "templates/诊断与执行明细模板.xlsx")
         selected = {p["content_id"] for p in plan.get("placements", []) if p.get("status") in ACTIVE}
         visible_contents = [c for c in plan.get("contents", []) if audience == "internal" or c["content_id"] in selected]
@@ -689,18 +827,6 @@ def export_excel(project, analysis, plan, out_dir):
         put_rows(wb["预算汇总"], summary)
         for r in [4, 8, 9, 10] + list(range(13, len(summary) + 2)):
             wb["预算汇总"].cell(r, 2).number_format = '#,##0.00'
-        if audience == "client":
-            ws = wb["媒体投放"]
-            ws.data_validations.dataValidation.clear()
-            for col in [12, 10, 9, 8, 7, 6]:
-                ws.delete_cols(col)
-            # Deleting source/cost columns does not reliably rewrite openpyxl formulas.
-            for r in range(2, max(202, len(media_rows) + 2)):
-                ws.cell(r, 8, f'=IF(OR(A{r}="",G{r}="",F{r}=""),"",G{r}*F{r})')
-            wb["其他费用"].delete_cols(4)
-            wb["其他费用"].data_validations.dataValidation.clear()
-            wb["说明"].delete_rows(2, wb["说明"].max_row - 1)
-            put_rows(wb["说明"], [["项目", project.get("client_name")], ["统计口径", "自然需求与品牌认知分开；平台、模式、联网状态与轮次分别统计。"], ["未知值", "空白表示尚不能确定，不等于零。未展示可观察引用不等于没有使用信源。"], ["执行预算", "仅计已选、待执行、已发布项目；未排期费用不分配到已知季度。"]])
         scope = analysis.get("report_scope", {})
         if scope:
             notes = [["本轮采样范围", "、".join(scope.get("platforms", []))], ["采样日期", scope.get("round_date") or "、".join(scope.get("collected_dates", []))], ["本轮约定", scope.get("metadata_note")]]
@@ -744,6 +870,7 @@ def main(argv=None):
     p.add_argument("--analysis", required=True)
     p.add_argument("--plan", required=True)
     p.add_argument("--out-dir", required=True)
+    p.add_argument("--report")
     args = parser.parse_args(argv)
     try:
         if args.command == "inspect-client":
@@ -755,7 +882,7 @@ def main(argv=None):
         elif args.command == "analyze":
             write_json(analyze(args.input, read_json(args.plan) if args.plan else None), args.out)
         else:
-            write_json(export_excel(read_json(args.project), read_json(args.analysis), read_json(args.plan), args.out_dir))
+            write_json(export_excel(read_json(args.project), read_json(args.analysis), read_json(args.plan), args.out_dir, read_json(args.report) if args.report else None))
     except (ValueError, KeyError, OSError, json.JSONDecodeError) as exc:
         parser.exit(2, f"错误: {exc}\n")
 

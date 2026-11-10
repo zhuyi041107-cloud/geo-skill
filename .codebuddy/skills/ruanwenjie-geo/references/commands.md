@@ -4,7 +4,7 @@
 
 业务同事只填写“问题、引用截图、答案”。每个AI平台一份文件，平台放在文件名里；其余字段内部处理。收到任意平台回传后直接完成本轮诊断报告和执行方案文件，不等齐平台、不先停在聊天判读摘要。下面的命令都是内部步骤，不向用户讲解操作流水账。
 
-以下命令由WorkBuddy执行。替换“技能目录”为实际安装路径，“工作目录”为客户独立文件夹；使用当前环境的Python命令，路径加引号。先检查 `python -c "import openpyxl, pptx"`；需要安装依赖时按环境权限使用本包requirements.txt。
+以下命令由WorkBuddy内部执行。它先按report-thinking.md完成业务分析和规划，再用脚本做机械工作。替换“技能目录”为实际安装路径，“工作目录”为客户独立文件夹；使用当前环境的Python命令，路径加引号。先检查 `python -c "import openpyxl, reportlab, pypdf"`；需要安装依赖时按环境权限使用本包requirements.txt。
 
 ## 1. 客户资料与核心问题
 
@@ -77,24 +77,32 @@ analysis保留内部原文与证据，本轮指标只统计已有回传的平台
 ## 4. 按报价选媒体
 
 ```text
-python "技能目录/scripts/media.py" --input "工作目录/最新媒体报价.xlsx" --tier "普通会员" --query "科技" --region "山西" --kind network --limit 30 --out "工作目录/media-candidates.json"
+python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind network --limit 30 --out "工作目录/media-candidates.json"
 ```
 
-支持network/self/all。明确拒收GEO的资源排除；内容形态限制和未知属性标需核实。结果附软文街id、文件、sheet、行号、原价及备注。候选不是已选媒体，也不是AI引用能力排名。
+默认读取随包references/media-catalog.csv.gz，支持network/self/all。明确拒收GEO的资源排除；结果带真实媒体、原记录索引、市场参考价、报价日期与脱敏限制。WorkBuddy按业务适配选用并写理由，不将候选排序当AI能力排名。内置market_price用于建议媒体发布预算，内部成本仍未知。
+
+用户另提供原始更新报价时，可用--input指定.xlsx并以--tier指定其原档位；没有这份文件也能完成选媒，不催用户重复上传。具体媒体、实际刊发形态、数量和参考价写入计划，不能用TBD或类型占位替代。
 
 ## 5. 计划与预算
 
 参见 [虚构计划格式](plan.example.json)。contents记录内容ID、标题、目标问题、事实依据、排期与状态；placements记录媒体、原价来源、单价、刊发次数、对客单价和日期；fees记录其他费用。内部价与对客价分别填，未知为null。已选/待执行/已发布计入预算；候选/取消/排除不计。一个内容多站刊发只计一篇内容，刊发次数独立求和。
 
+使用内置目录时，`unit_price`保留null；将所选资源的`market_reference_price`填入`client_unit_price`计算建议预算，同时保留`price_tier=市场价格`、`quotation_date`与`price_basis=市场参考价，用于建议预算，执行价格另行确认`。只有已有明确客户报价时才用该报价替换对客单价。不要把全部价格留空，也不要凭空加价或补内部成本。
+
 ```text
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/内部判读-豆包.xlsx" --plan "工作目录/plan.json" --out "工作目录/analysis-final.json"
-python "技能目录/scripts/geo_data.py" export-excel --project "工作目录/project.json" --analysis "工作目录/analysis-final.json" --plan "工作目录/plan.json" --out-dir "工作目录/正式输出"
+python "技能目录/scripts/geo_data.py" export-excel --project "工作目录/project.json" --analysis "工作目录/analysis-final.json" --plan "工作目录/plan.json" --report "工作目录/report.json" --out-dir "工作目录/正式输出"
 ```
 
-输出内外两份Excel并继续导出PPT，不以聊天摘要结束。优先使用会话已有报价与预算；缺价项写在文件中，仍给出内容、媒体组合和排期。客户结果只用明确的对客价；缺价时总额未知，known_subtotal显示已知小计，missing_count显示缺项数。修改计划后重算再导出。
+WorkBuddy先依据现状写report.json，内容与内置媒体选择形成plan，再重算并输出内外Excel。客户版只展示业务分析、关键词与内容排期、实际媒体、费用汇总；内部版保留溯源。内置市场参考价应明确用于建议预算，不自动视为已确认客户报价或内部成本。缺失服务费仅说明边界，不能让整份方案都是空价。
 
-## 6. 客户PPT
+## 6. 客户PDF
 
-由WorkBuddy按证据维护report.json叙述，使用 [PPT导出说明](ppt-output.md) 生成两份PPT。统计与预算读取analysis，不在叙述中另填数字。截图支持的观察与网页正文已核验的事实分开标明；没有证据不写全网结论或效果保证。
+由WorkBuddy按 [业务分析思路](report-thinking.md) 撰写report.json，使用 [PDF导出说明](pdf-output.md) 生成两份PDF。诊断为情况说明和分析，执行为具体内容、媒体、排期和预算。统计与金额取同一analysis/plan；内部编号、路径、方法与处理过程不进入客户正文。不得改输出为PPT。
 
-两份PPT与内外两份Excel实际生成并检查后才交付。聊天只给成品文件链接及简短说明，具体不确定事实留在文件中；不展示导入/锚点/内部JSON过程，不再列补平台、模式或时间的待办。
+```text
+python "技能目录/scripts/export_pdf.py" --analysis "工作目录/analysis-final.json" --plan "工作目录/plan.json" --report "工作目录/report.json" --output-dir "工作目录/正式输出/客户PDF"
+```
+
+两份PDF与内外Excel实际生成并检查后才交付。聊天只给成品链接与简短说明，不把内部导入、修图、JSON或方法当成客户分析，也不再列补平台、模式或时间的待办。

@@ -12,13 +12,15 @@ def main():
     skill = repo / ".codebuddy/skills/ruanwenjie-geo"
     required = {
         "SKILL.md", "requirements.txt", "scripts/geo_data.py", "scripts/media.py",
-        "scripts/export_ppt.py", "references/commands.md", "references/ppt-output.md",
+        "scripts/export_pdf.py", "references/commands.md", "references/pdf-output.md",
+        "references/report-thinking.md", "references/media-catalog.csv.gz",
         "references/内部判读底表.xlsx",
         "templates/AI回答采集表.xlsx", "templates/软文街_GEO客户素材收集表.xlsx",
-        "templates/诊断与执行明细模板.xlsx", "templates/GEO诊断报告模板.pptx",
-        "templates/品牌传播与GEO执行方案模板.pptx",
+        "templates/诊断与执行明细模板.xlsx", "templates/客户业务方案模板.xlsx",
+        "templates/GEO诊断报告版式示例.pdf", "templates/品牌传播与GEO执行方案版式示例.pdf",
+        "assets/fonts/NotoSansSC-Regular.ttf", "assets/fonts/OFL.txt",
     }
-    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".xlsx", ".pptx"})
+    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".xlsx", ".pdf", ".gz", ".ttf", ".otf"})
     relative = {p.relative_to(skill).as_posix() for p in files}
     if required - relative:
         raise ValueError("Missing release files: " + ", ".join(sorted(required - relative)))
@@ -37,9 +39,11 @@ def main():
         assert len(archive.namelist()) == len(files)
         for path in files:
             assert archive.read("ruanwenjie-geo/" + path.relative_to(skill).as_posix()) == path.read_bytes()
+        assert not any(name.endswith(".pptx") for name in archive.namelist()), "PPT is no longer a release output"
     digest = hashlib.sha256(target.read_bytes()).hexdigest()
     target.with_suffix(".zip.sha256").write_text(digest + "  " + target.name + "\n", encoding="ascii")
-    print(json.dumps({"archive": str(target), "files": len(files), "bytes": target.stat().st_size, "sha256": digest}, ensure_ascii=False))
+    print(json.dumps({"archive": str(target), "files": len(files), "bytes": target.stat().st_size,
+                      "unpacked_bytes": sum(p.stat().st_size for p in files), "sha256": digest}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

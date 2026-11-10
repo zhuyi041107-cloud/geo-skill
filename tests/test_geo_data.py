@@ -45,8 +45,8 @@ class GeoDataTests(unittest.TestCase):
         self.edit_sample(changes)
 
     def plan(self):
-        return {"contents": [{"content_id": "C1", "title": "内容"}],
-                "placements": [{"placement_id": "P1", "content_id": "C1", "media_name": "测试媒体", "source_file": "INTERNAL-SOURCE-SECRET.xlsx", "price_tier": "超级代理", "unit_price": "0.10", "client_unit_price": "2.10", "quantity": 3, "scheduled_date": "2026-11-10", "status": "已选"}],
+        return {"contents": [{"content_id": "C1", "title": "内容", "question_ids": ["Q1"], "scheduled_date": "2026-11-10"}],
+                "placements": [{"placement_id": "P1", "content_id": "C1", "media_id": "FAKE-MEDIA-001", "media_name": "测试媒体", "source_file": "INTERNAL-SOURCE-SECRET.xlsx", "price_tier": "超级代理", "unit_price": "0.10", "client_unit_price": "2.10", "quantity": 3, "scheduled_date": "2026-11-10", "status": "已选"}],
                 "fees": [{"fee_id": "F1", "amount": "0.20", "client_amount": "1.20", "status": "已选"}]}
 
     def test_blank_templates_have_no_fictitious_client(self):
@@ -412,14 +412,82 @@ class GeoDataTests(unittest.TestCase):
         self.assertNotIn("INTERNAL-SOURCE-SECRET.xlsx", all_values)
         self.assertNotIn("超级代理", all_values)
         self.assertNotIn("内部单价", all_values)
-        self.assertEqual(wb["内容排期"]["B2"].data_type, "s")
-        self.assertEqual(wb["内容排期"]["B2"].value, plan["contents"][0]["title"])
+        self.assertEqual(wb.sheetnames, ["现状分析", "关键词与内容排期", "媒体投放", "费用汇总"])
+        self.assertEqual(wb["关键词与内容排期"]["B5"].data_type, "s")
+        self.assertEqual(wb["关键词与内容排期"]["B5"].value, plan["contents"][0]["title"])
         self.assertFalse(wb["媒体投放"].data_validations.dataValidation)
-        self.assertEqual(wb["媒体投放"]["G2"].value, 2.1)
-        self.assertEqual(wb["媒体投放"]["H2"].value, '=IF(OR(A2="",G2="",F2=""),"",G2*F2)')
-        self.assertEqual(wb["预算汇总"]["B10"].value, 7.5)
+        self.assertEqual(wb["媒体投放"]["E5"].value, 2.1)
+        self.assertEqual(wb["媒体投放"]["G5"].value, '=IF(OR(B5="",E5="",F5=""),"",E5*F5)')
+        self.assertNotIn("FAKE-MEDIA-001", all_values)
+        self.assertEqual(wb["媒体投放"].max_row, 5)
         self.assertTrue(geo.analyze(self.path)["evidence"][0]["answer"])
         wb.close()
+
+    def test_old_client_sheet_uses_labels_instead_of_row_numbers(self):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "客户素材清单"
+        ws.append(["素材分组", "所需素材项", "填写要求", "示例", "必填", "客户填写"])
+        ws.append(["A. 企业身份", "公司全称", "", "", "选填", "虚构公司"])
+        ws.append([None, "统一社会信用代码", "", "", "选填", None])
+        ws.append([None, "品牌名称 / 英文名", "", "", "选填", "虚构品牌"])
+        ws.append([None, "成立时间", "", "", "选填", date(2020, 1, 1)])
+        source = Path(self.tmp.name) / "old-client.xlsx"
+        wb.save(source)
+        wb.close()
+        result = geo.inspect_client(source)
+        self.assertEqual([(f["field"], f["row"]) for f in result["fields"]], [("公司全称", 2), ("统一社会信用代码", 3), ("品牌名称 / 英文名", 4), ("成立时间", 5)])
+        self.assertEqual(result["filled"], 3)
+
+    def test_business_text_keeps_quarters_and_public_links(self):
+        self.assertEqual(geo.business_text("2026Q4"), "2026Q4")
+        self.assertEqual(geo.business_text("Q001需求，2027Q1"), "需求，2027Q1")
+        self.assertEqual(geo.business_text('=HYPERLINK("https://example.org")'), '=HYPERLINK("https://example.org")')
+
+    def test_business_excel_accepts_nested_report_sections(self):
+        self.prepare(); self.completed()
+        report = {"diagnosis": {"summary": "虚构品牌现状正文", "brand_status": [{"title": "业务认知", "detail": "这是虚构的品牌分析"}], "key_findings": [{"title": "核心发现", "detail": "这是虚构的需求缺口"}]}, "execution": {"keywords": [{"title": "虚构选型词", "detail": "根据客户决策安排内容"}]}}
+        result = geo.export_excel(self.project, geo.analyze(self.path), self.plan(), Path(self.tmp.name)/"nested", report)
+        wb = openpyxl.load_workbook(result["client"])
+        values = [c.value for s in wb for row in s for c in row if c.value is not None]
+        for expected in ["虚构品牌现状正文", "这是虚构的品牌分析", "这是虚构的需求缺口", "虚构选型词", "根据客户决策安排内容"]:
+            self.assertIn(expected, values)
+        wb.close()
+
+    def test_business_report_strings_are_not_split_into_characters(self):
+        report = {"diagnosis": {"key_findings": "完整核心发现", "priorities": "完整优先行动"}, "execution": {"keywords": "完整关键词"}}
+        wb = geo.customer_workbook(self.project, {"groups": []}, self.plan(), report)
+        values = [c.value for s in wb for row in s for c in row if c.value is not None]
+        for item in ["完整核心发现", "完整优先行动", "完整关键词"]:
+            self.assertEqual(values.count(item), 1)
+        self.assertNotIn("优先行动2", values)
+        wb.close()
+
+    def test_business_excel_uses_supplied_report_and_separates_unpriced_services(self):
+        self.prepare()
+        self.completed()
+        analysis = geo.analyze(self.path)
+        plan = self.plan()
+        plan["placements"][0].update(price_tier="市场价格", unit_price=None, price_basis="市场参考价（非确认报价）", quotation_date="2026-11-10")
+        plan["fees"][0].update(category="撰稿服务", client_amount=None)
+        report = {"summary": "虚构业务结论", "findings": [{"title": "品牌场景覆盖", "detail": "Q001 需求选择尚未覆盖"}], "priorities": ["完善公开业务介绍"], "keywords": [{"title": "虚构业务关键词", "evidence_ref": ["Q1"]}]}
+        result = geo.export_excel(self.project, analysis, plan, Path(self.tmp.name) / "business", report)
+        wb = openpyxl.load_workbook(result["client"], data_only=False)
+        values = [str(c.value) for ws in wb for row in ws for c in row if c.value is not None]
+        self.assertIn("虚构业务结论", values)
+        self.assertIn("虚构业务关键词", values)
+        self.assertIn("单独核价", values)
+        self.assertFalse(any("Q001" in v or "source_row" in v or "本地路径" in v for v in values))
+        self.assertEqual(wb["媒体投放"]["F5"].value, 3)
+        self.assertIn("市场参考价", wb["媒体投放"]["I5"].value)
+        wb.close()
+
+    def test_customer_execution_does_not_export_placeholder_or_unpriced_media(self):
+        analysis = {"project": self.project, "groups": []}
+        plan = self.plan()
+        plan["placements"][0]["media_id"] = "TBD-M1"
+        with self.assertRaisesRegex(ValueError, "占位"):
+            geo.export_excel(self.project, analysis, plan, Path(self.tmp.name) / "bad")
 
 
 if __name__ == "__main__":
