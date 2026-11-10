@@ -1,0 +1,12 @@
+{
+  "contents": [
+    {"content_id":"C001","title":"中小企业知识库实施验收清单（虚构演示）","question_ids":["Q002"],"platform":"通用","stage":"基础内容","scheduled_date":"2026-11-20","evidence":"演示：真实执行前需提供项目材料","status":"已选"}
+  ],
+  "placements": [
+    {"placement_id":"P001","content_id":"C001","media_id":"DEMO-M1","media_name":"演示媒体甲（虚构）","media_type":"行业媒体","source_file":"演示报价（虚构）","source_sheet":"网络媒体报价","source_row":2,"price_tier":"普通会员","unit_price":"100.00","quantity":1,"client_unit_price":"180.00","scheduled_date":"2026-11-20","status":"已选"},
+    {"placement_id":"P002","content_id":"C001","media_id":"DEMO-M2","media_name":"演示媒体乙（虚构）","media_type":"主流媒体","source_file":"演示报价（虚构）","source_sheet":"网络媒体报价","source_row":3,"price_tier":"普通会员","unit_price":"200.00","quantity":1,"client_unit_price":"320.00","scheduled_date":"2026-12-01","status":"已选"}
+  ],
+  "fees": [
+    {"fee_id":"F001","category":"撰稿","description":"演示：一篇内容撰稿","amount":"300.00","client_amount":"500.00","scheduled_date":"2026-11-15","status":"已选"}
+  ]
+}
