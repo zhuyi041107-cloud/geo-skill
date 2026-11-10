@@ -98,8 +98,8 @@ def restriction(note):
 def search_media(path=None, tier="市场价格", query="", region="", kind="all", limit=30, min_price=None, max_price=None):
     if tier not in TIERS:
         raise ValueError("报价档位无效：" + tier)
-    if kind not in (*SHEETS, "all") or limit < 1 or limit > 500:
-        raise ValueError("kind必须是network/self/all，limit须在1至500之间")
+    if kind not in (*SHEETS, "all") or limit < 0 or limit > 500:
+        raise ValueError("kind必须是network/self/all，limit须在0至500之间，0表示全部匹配")
     bounds = [price(v) if v is not None else None for v in (min_price, max_price)]
     if any(raw is not None and parsed is None for raw, parsed in zip((min_price, max_price), bounds)):
         raise ValueError("价格区间必须为非负确定金额")
@@ -201,10 +201,10 @@ def search_media(path=None, tier="市场价格", query="", region="", kind="all"
         "region": region,
         "price_range": {"min": bounds[0], "max": bounds[1]},
         "stats": stats,
-        "returned": min(len(candidates), limit),
-        "truncated": len(candidates) > limit,
+        "returned": min(len(candidates), limit) if limit else len(candidates),
+        "truncated": bool(limit and len(candidates) > limit),
         "limitation": "仅为报价候选筛选，未验证实时可发、媒体身份、搜索收录或AI引用；候选不等于已选。",
-        "candidates": candidates[:limit],
+        "candidates": candidates[:limit] if limit else candidates,
     }
 
 
@@ -215,7 +215,7 @@ def main():
     parser.add_argument("--query", default="", help="以空格分隔的主题词，全部匹配名称/分类/门户/渠道")
     parser.add_argument("--region", default="", help="多个区域用逗号分隔；地区未知的记录保留并提示")
     parser.add_argument("--kind", choices=("all", "network", "self"), default="all")
-    parser.add_argument("--limit", type=int, default=30)
+    parser.add_argument("--limit", type=int, default=30, help="最多返回条数；0表示全部匹配，推荐池应查询完整相关候选")
     parser.add_argument("--min-price", help="按选用报价档位筛选最低单价，用于分层配置媒体")
     parser.add_argument("--max-price", help="按选用报价档位筛选最高单价")
     parser.add_argument("--out", type=Path, required=True)

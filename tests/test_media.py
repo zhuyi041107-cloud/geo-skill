@@ -146,6 +146,28 @@ class MediaTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "缺少字段"):
                 media.search_media(path, "普通会员", kind="network")
 
+    def test_limit_zero_returns_all_matching_resources_in_existing_order(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "虚构广候选报价.xlsx"
+            book = Workbook()
+            sheet = book.active
+            sheet.title = "网络媒体报价"
+            sheet.append(["媒体名称", "软文街id", "市场价格", "备注", "地区"])
+            for index in range(42):
+                sheet.append([f"虚构机械媒体{index}", f"WIDE-{index}", index + 1, "不发GEO" if index == 41 else "", "全国"])
+            book.save(path); book.close()
+            first = media.search_media(path, query="机械", kind="network")
+            complete = media.search_media(path, query="机械", kind="network", limit=0)
+            self.assertEqual(first["returned"], 30)
+            self.assertTrue(first["truncated"])
+            self.assertEqual(complete["returned"], 41)
+            self.assertFalse(complete["truncated"])
+            self.assertEqual(first["candidates"], complete["candidates"][:30])
+            self.assertEqual(complete["stats"]["excluded_geo"], 1)
+            self.assertEqual(media.search_media(path, kind="network", limit=0, min_price="10", max_price="20")["returned"], 11)
+            with self.assertRaisesRegex(ValueError, "0表示全部匹配"):
+                media.search_media(path, kind="network", limit=-1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -388,6 +388,77 @@ def plan_context(analysis, plan):
     return project, contents, placements, fees, by_content, by_placement, stage_by_name, ordered_stages, question_by_id
 
 
+def validate_logic_links(plan, report):
+    required_tables = [("priority_actions", "actions", 1)]
+    if report.get("template_profile") == "platform":
+        required_tables.append(("competitive_tags", "proposed_tags", 0))
+    diagnosis_items = set()
+    sections = report.get("diagnosis", {}).get("sections", [])
+    for section_key, table_id, item_column in required_tables:
+        tables = [t for s in sections if s.get("key") == section_key for t in s.get("tables", []) if t.get("id") == table_id]
+        if len(tables) != 1 or not tables[0].get("rows"):
+            raise ValueError(f"执行方案缺少诊断来源矩阵 {section_key}.{table_id}，无法核对逻辑映射")
+        for row in tables[0]["rows"]:
+            if not isinstance(row, list) or len(row) <= item_column or not isinstance(row[item_column], str) or text(row[item_column]) in EMPTY:
+                raise ValueError(f"诊断来源矩阵 {table_id} 的优先项或标签名称不能为空")
+            diagnosis_items.add(text(row[item_column]))
+    links = plan.get("logic_links")
+    if not isinstance(links, list) or not links:
+        raise ValueError("执行方案须有 plan.logic_links，将诊断优先项及建议标签关联到实际内容或客户自有动作")
+    contents, placements, _ = selected_plan(plan)
+    by_content = {c["content_id"]: c for c in contents}
+    stages = {text(stage.get("name")) for stage in plan.get("stages", []) if text(stage.get("name"))}
+    by_placement = defaultdict(list)
+    for placement in placements:
+        by_placement[placement["content_id"]].append(placement)
+    covered = set()
+    for index, link in enumerate(links, 1):
+        if not isinstance(link, dict):
+            raise ValueError(f"logic_links 第{index}项须为对象")
+        for field in ("diagnosis_item", "basis", "choice_reason", "media_role", "stage", "check_date"):
+            if not isinstance(link.get(field), str) or text(link[field]) in EMPTY:
+                raise ValueError(f"logic_links 第{index}项的 {field} 须为非空文字")
+        item, stage = text(link["diagnosis_item"]), text(link["stage"])
+        if item not in diagnosis_items:
+            raise ValueError(f"logic_links 的 diagnosis_item 不在实际诊断优先项或建议标签中：{item}")
+        if stage not in stages:
+            raise ValueError(f"logic_links 引用不存在的阶段：{stage}")
+        ids = link.get("content_ids", [])
+        if not isinstance(ids, list) or any(not isinstance(i, str) or not i.strip() for i in ids):
+            raise ValueError("logic_links.content_ids 须为内容编号列表")
+        action = link.get("client_action", "")
+        if not isinstance(action, str):
+            raise ValueError("logic_links.client_action 须为具体客户自有动作的文字说明")
+        if not ids and text(action) in EMPTY:
+            raise ValueError(f"logic_links 的 {item} 须关联实际内容或具体 client_action")
+        try:
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", link["check_date"]):
+                raise ValueError()
+            check_date = date.fromisoformat(link["check_date"])
+        except ValueError as exc:
+            raise ValueError("logic_links.check_date 须为有效 YYYY-MM-DD 日期") from exc
+        for content_id in ids:
+            content = by_content.get(content_id)
+            if content is None:
+                raise ValueError(f"logic_links 引用不存在或未选用的内容：{content_id}")
+            if text(content.get("stage")) != stage:
+                raise ValueError(f"logic_links 内容 {content_id} 不属于声明阶段 {stage}，跨阶段请分行映射")
+            active = by_placement.get(content_id, [])
+            if not active:
+                raise ValueError(f"logic_links 内容 {content_id} 没有有效 placement")
+            for record in [content, *active]:
+                try:
+                    scheduled = date.fromisoformat(record["scheduled_date"])
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise ValueError(f"logic_links 内容 {content_id} 及其有效刊发须有计划日期") from exc
+                if check_date < scheduled:
+                    raise ValueError(f"logic_links 的检查日期早于内容 {content_id} 或其刊发计划日期")
+        covered.add(item)
+    missing = diagnosis_items - covered
+    if missing:
+        raise ValueError("诊断优先项或建议标签缺少 logic_links 映射：" + "、".join(sorted(missing)))
+
+
 def joined(values):
     return "、".join(dict.fromkeys(text(v) for v in values if text(v)))
 
@@ -487,6 +558,7 @@ def document_story(kind, analysis, plan, report, st):
         from geo_data import validate_delivery_budget
         validate_delivery_budget(budget)
         plan_context(analysis, plan)
+        validate_logic_links(plan, report)
     # A private rendering hint on a new dict never changes the analysis source.
     analysis = {**analysis, "_template_profile": report["template_profile"]}
     story = []

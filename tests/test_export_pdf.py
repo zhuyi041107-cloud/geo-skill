@@ -40,6 +40,17 @@ class ExportPdfTests(unittest.TestCase):
                         section['tables'].append({'id': definition['id'], 'columns': definition['columns'], 'rows': [['演示业务说明' for _ in definition['columns']]]})
                 doc['sections'].append(section)
             report[kind] = doc
+        sources = []
+        for section in report['diagnosis']['sections']:
+            for matrix in section['tables']:
+                if section['key'] == 'priority_actions' and matrix['id'] == 'actions':
+                    matrix['rows'][0][1] = '澄清服务责任'
+                    sources.append('澄清服务责任')
+                elif section['key'] == 'competitive_tags' and matrix['id'] == 'proposed_tags':
+                    matrix['rows'][0][0] = '可核验的知识服务'
+                    sources.append('可核验的知识服务')
+        plan['logic_links'] = [{'diagnosis_item': item, 'basis': '客户服务范围与现有内容缺口', 'choice_reason': '按服务责任判断是否适配', 'content_ids': ['C001'],
+                                'media_role': '技术媒体解释可核验的服务边界', 'stage': '基础建设', 'check_date': '2027-01-20'} for item in sources]
         return analysis, plan, report
 
     def pdf_text(self, kind, analysis, plan, report):
@@ -204,6 +215,52 @@ class ExportPdfTests(unittest.TestCase):
         self.assertIn('增加企业采购沟通成本', text.replace('\n', ''))
         self.assertEqual(export_pdf.customer_text('网页端'), '网页端')
         self.assertEqual(export_pdf.customer_text('本轮未出现品牌，官网价格尚未确认。'), '本轮未出现品牌，官网价格尚未确认。')
+
+    def test_logic_links_reject_missing_fabricated_and_mismatched_references(self):
+        analysis, plan, report = self.fixture()
+        missing = copy.deepcopy(plan); missing['logic_links'].pop()
+        with self.assertRaisesRegex(ValueError, '缺少 logic_links 映射'):
+            export_pdf.build_pdf('execution', analysis, missing, report)
+        fabricated = copy.deepcopy(plan); fabricated['logic_links'][0]['diagnosis_item'] = '诊断没有提出的任务'
+        with self.assertRaisesRegex(ValueError, '不在实际诊断'):
+            export_pdf.validate_logic_links(fabricated, report)
+        invalid = copy.deepcopy(plan); invalid['logic_links'][0]['content_ids'] = ['C999']
+        with self.assertRaisesRegex(ValueError, '不存在或未选用的内容'):
+            export_pdf.validate_logic_links(invalid, report)
+        mismatch = copy.deepcopy(plan)
+        mismatch['stages'].append({'name': '后续维护'})
+        mismatch['logic_links'][0]['stage'] = '后续维护'
+        with self.assertRaisesRegex(ValueError, '不属于声明阶段'):
+            export_pdf.validate_logic_links(mismatch, report)
+
+    def test_logic_links_require_active_publication_and_check_after_latest_schedule(self):
+        _, plan, report = self.fixture()
+        no_placement = copy.deepcopy(plan)
+        no_placement['placements'][0]['status'] = '取消'
+        with self.assertRaisesRegex(ValueError, '没有有效 placement'):
+            export_pdf.validate_logic_links(no_placement, report)
+        early = copy.deepcopy(plan)
+        early['logic_links'][0]['check_date'] = '2027-01-14'
+        with self.assertRaisesRegex(ValueError, '早于内容'):
+            export_pdf.validate_logic_links(early, report)
+        after_content_before_publication = copy.deepcopy(plan)
+        after_content_before_publication['placements'][0]['scheduled_date'] = '2027-01-25'
+        with self.assertRaisesRegex(ValueError, '刊发计划日期'):
+            export_pdf.validate_logic_links(after_content_before_publication, report)
+
+    def test_logic_links_allow_unpaid_client_action_and_never_render_internal_mapping(self):
+        analysis, plan, report = self.fixture()
+        _, baseline = self.pdf_text('execution', analysis, plan, report)
+        for link in plan['logic_links']:
+            link.update(content_ids=[], client_action='客户官网负责人于首周更新责任与收费页面', basis='内部核对依据不应印在报告',
+                        choice_reason='内部选择理由映射', media_role='客户自有页面，无付费刊发', check_date='2027-01-05')
+        _, text = self.pdf_text('execution', analysis, plan, report)
+        self.assertEqual(text, baseline)
+        self.assertNotIn('内部核对依据不应印在报告', text)
+        del plan['logic_links']
+        self.pdf_text('diagnosis', analysis, plan, report)
+        with self.assertRaisesRegex(ValueError, '须有 plan.logic_links'):
+            export_pdf.build_pdf('execution', analysis, plan, report)
 
 
 if __name__ == '__main__':

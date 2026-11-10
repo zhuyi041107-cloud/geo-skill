@@ -81,12 +81,13 @@ analysis在.work保留原文、证据和统计；自然题与点名题分开计�
 ## 4. 按报价选媒体
 
 ```text
-python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind network --limit 30 --out "工作目录/.work/media-candidates.json"
+python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind network --limit 0 --out "工作目录/.work/media-network-candidates.json"
+python "技能目录/scripts/media.py" --query "职场" --region "山西" --kind self --limit 0 --out "工作目录/.work/media-self-candidates.json"
 ```
 
 默认读取随包references/media-catalog.csv.gz，支持network/self/all。明确拒收GEO的资源排除；结果带真实媒体、原记录索引、市场参考价、报价日期与脱敏限制。WorkBuddy按业务适配选用并写理由，不将候选排序当AI能力排名。内置market_price用于建议媒体发布预算，内部成本仍未知。
 
-同一主题按价格区间检索，避免候选limit只返回最低价资源。例如重点媒体可先查 `--min-price 1000 --max-price 5000`，专业/地方媒体再查 `--min-price 200 --max-price 1000`；这些是查询示例，实际区间按预算与目录调整，选用仍需检查业务、地域和可发限制。价格高低不代表权威性或AI引用能力。
+查询词仅为例，按客户业务、受众和稿件方向分开多次检索，两类结果分别筛选去重。`--limit 0`返回全部相关匹配，不能只读默认前30条就停止。推荐池不按预算、单价上限或计划刊发量削减，明确不适配和拒发资源除外；有条件的保留发布限制，不宣称已确认可发。价格区间仅供后续执行选配，不用于限制可推荐数量。
 
 用户另提供原始更新报价时，可用--input指定.xlsx并以--tier指定其原档位；没有这份文件也能完成选媒，不催用户重复上传。具体媒体、实际刊发形态、数量和参考价写入计划，不能用TBD或类型占位替代。
 
@@ -96,7 +97,9 @@ python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind
 
 - `stages`：每项name、objective、deliverables、effect_target。name与每篇已选contents.stage准确对应，写实际阶段目标、刚性交付和希望观察的变化。
 - `contents`补全keywords、source_layer、content_form、key_facts、observation_port、checkpoint；target_question可写真实目标问题，否则由question_ids对应project.questions.text。周次从start_date与计划日期计算，阶段的周量/篇数/次数与费用自动汇总。
-- `placements`保留media_type、source_sheet、source_row、media_id、category、region、entry_type、editorial_note及报价依据，既服务实际媒体明细，也用于原格式媒体Word。可选字段按media-word-output.md，未知不猜。
+- `placements`保留media_type、source_sheet、source_row、media_id、category、region、entry_type、editorial_note及报价依据，只用于实际执行媒体明细与预算；推荐Word另读media_recommendations。
+- `media_recommendations`是独立的宽推荐池，Word只读此数组。每项至少media_id、media_name、source_sheet，保留目录字段与六档原价；可加recommendation_reason，status为推荐/候选/需核实（省略默认推荐）。它不需要placement_id、刊发次数或执行金额，不回退使用placements。网络、自媒体归属按来源sheet。
+- `logic_links`按template-generation.md写诊断优先项/建议标签与事实依据、希望形成的选择理由、实际文章或客户动作、媒体角色、阶段、检查日期。执行PDF会检查覆盖、引用和时点；语义与费用承诺由WorkBuddy逐项核对。
 - 初期集中建设与后期维护应在同一年度计划中明确日期、内容、次数和计费范围；另期未计费维护不能写成全年已经包含。
 
 使用内置目录时，`unit_price`保留null；将所选资源的`market_reference_price`填入`client_unit_price`计算建议预算，同时保留`price_tier=市场价格`、`quotation_date`与`price_basis=市场参考价，用于建议预算，执行价格另行确认`。只有已有明确客户报价时才用该报价替换对客单价。不要把全部价格留空，也不要凭空加价或补内部成本。
@@ -105,9 +108,9 @@ python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --plan "工作目录/.work/plan.json" --out "工作目录/.work/analysis-final.json"
 ```
 
-WorkBuddy写客户业务内容形成report.json，与内置媒体选择形成plan，重算analysis供两个PDF与Word使用。内部底稿不默认导出两份Excel。市场参考价用于建议预算，不自动视为已确认客户售价或内部成本；Word则按原媒体表分别列六档真实价格。缺失服务费仅说明业务费用边界。
+WorkBuddy先按原模板推导业务与选择理由，完成广泛推荐池，再配置执行子集和阶段投入。analysis预算只核placements与fees，media_recommendations不计费用。Word仅借analysis.project识别客户，不要求analysis.budget存在、匹配或达到2万元。内部底稿不交客户；未报价服务不列为已含交付。
 
-重算后的budget含target、target_source、limit。正式导出会检查已知费用至少达到明确目标的90%且不超过上限；默认约2万元方案不得缩水成两千元。检查失败时调整真实内容/媒体配置，不篡改单价、预算目标或增加虚构补差项。
+重算后的budget含target、target_source、limit。执行PDF检查实际执行费用至少达到明确目标90%且不超上限；这不限制推荐Word数量或资源总标价。检查失败时调整真实执行配置，不篡改单价、目标或增加虚构差额。
 
 ## 6. 客户PDF
 

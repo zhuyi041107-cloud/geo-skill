@@ -17,11 +17,16 @@ from geo_data import calculate_budget
 class ExportMediaWordTests(unittest.TestCase):
     def fixture(self):
         project = {"client_name": "虚构客户", "brand_names": ["知桥演示（虚构）"], "currency": "CNY", "budget_target": "1440.00"}
-        plan = {"contents": [{"content_id": "C001", "title": "实施服务边界（虚构）", "status": "已选"}], "fees": [], "placements": []}
+        plan = {"contents": [{"content_id": "C001", "title": "实施服务边界（虚构）", "status": "已选"}], "fees": [], "placements": [], "media_recommendations": []}
         for i, sheet in enumerate(["网络媒体报价", "网络媒体报价", "自媒体报价"], 1):
             plan["placements"].append({"placement_id": f"P{i:03}", "content_id": "C001", "media_id": f"DEMO-{i}", "media_name": f"虚构媒体{i}", "source_sheet": sheet,
                 "media_group": "行业服务", "category": "企业服务", "region": "浙江", "market_price": "80.00", "client_unit_price": "480.00", "unit_price": "17.00", "quantity": 1,
                 "scheduled_date": "2026-11-20", "status": "已选", "contact_policy": "不带", "entry_type": "自媒体号" if i == 3 else "频道刊发"})
+            recommendation = copy.deepcopy(plan["placements"][-1])
+            recommendation["status"] = "推荐"
+            for field in ("content_id", "placement_id", "client_unit_price", "unit_price", "quantity", "scheduled_date"):
+                recommendation.pop(field)
+            plan["media_recommendations"].append(recommendation)
         return {"project": project, "budget": calculate_budget(project, plan)}, plan
 
     def document(self, analysis, plan):
@@ -62,21 +67,21 @@ class ExportMediaWordTests(unittest.TestCase):
         self.assertTrue(all(not network.cell(3, col).text for col in [4, 12, 15]))
         self.assertTrue(all(not doc.tables[1].cell(3, col).text for col in [13, 14, 16]))
         changed = copy.deepcopy(p)
-        changed["placements"][0].pop("market_price")
+        changed["media_recommendations"][0].pop("market_price")
         a["budget"] = calculate_budget(a["project"], changed)
         self.assertEqual(self.document(a, changed).tables[0].cell(3, 5).text, "")
-        changed["placements"][0]["tier_prices"] = {"超级代理": "63.00"}
+        changed["media_recommendations"][0]["tier_prices"] = {"超级代理": "63.00"}
         with self.assertRaisesRegex(ValueError, "tier_price_source"):
             self.document(a, changed)
-        changed["placements"][0]["tier_price_source"] = "虚构外部报价，第2行超级代理档"
+        changed["media_recommendations"][0]["tier_price_source"] = "虚构外部报价，第2行超级代理档"
         self.assertEqual(self.document(a, changed).tables[0].cell(3, 6).text, "63.00")
         self.assertEqual(self.document(a, changed).tables[0].cell(3, 7).text, "")
 
     def test_catalog_join_uses_id_and_sheet_not_media_label(self):
         a, p = self.fixture()
-        p["placements"][0]["media_id"] = "SAME"
-        p["placements"][2]["media_id"] = "SAME"
-        for item in p["placements"]:
+        p["media_recommendations"][0]["media_id"] = "SAME"
+        p["media_recommendations"][2]["media_id"] = "SAME"
+        for item in p["media_recommendations"]:
             item.pop("category"); item.pop("region"); item.pop("entry_type")
         catalog = {
             ("网络媒体报价", "SAME"): {"media_name": "虚构媒体1", "category": "网络分类", "region": "杭州", "editorial_note": "修改须确认", "entry_type": "新闻频道", "market_price": "80.00"},
@@ -86,13 +91,13 @@ class ExportMediaWordTests(unittest.TestCase):
         self.assertEqual(rows["网络媒体报价"][0]["媒体分类"], "网络分类")
         self.assertEqual(rows["自媒体报价"][0]["地区"], "宁波")
         self.assertEqual(rows["网络媒体报价"][0]["备注"], "修改须确认；刊发形态：新闻频道")
-        p["placements"][0]["market_price"] = "999.00"
+        p["media_recommendations"][0]["market_price"] = "999.00"
         with self.assertRaisesRegex(ValueError, "市场价格与目录不一致"):
             media_word.selected_rows(p, catalog)
 
     def test_catalog_fills_original_tiers_without_plan_prices_and_keeps_unknown_blank(self):
         a, p = self.fixture()
-        item = p["placements"][0]
+        item = p["media_recommendations"][0]
         catalog = {("网络媒体报价", item["media_id"]): {"media_name": item["media_name"], "market_price": "80.00",
             "super_agent_price": "0.00", "core_agent_price": "51.20", "senior_agent_price": "63.00", "regular_agent_price": "", "member_price": "75.00"}}
         rows = media_word.selected_rows(p, catalog)
@@ -108,21 +113,20 @@ class ExportMediaWordTests(unittest.TestCase):
 
     def test_real_catalog_auto_fills_all_six_word_price_columns(self):
         catalog = media_word.catalog_records(media_word.CATALOG)
-        plan = {"contents": [{"content_id": "C001", "title": "虚构行业说明", "status": "已选"}], "placements": [], "fees": []}
+        plan = {"media_recommendations": []}
         expected = []
         for index, sheet in enumerate(media_word.HEADERS, 1):
             (source_sheet, mid), source = next((key, row) for key, row in catalog.items() if key[0] == sheet and all(row.get(field) not in (None, "") for field in media_word.TIER_FIELDS.values()))
-            plan["placements"].append({"placement_id": f"P{index}", "content_id": "C001", "media_id": mid, "media_name": source["media_name"], "source_sheet": source_sheet,
-                "client_unit_price": source["market_price"], "unit_price": None, "quantity": 1, "status": "已选", "scheduled_date": "2026-11-20"})
+            plan["media_recommendations"].append({"media_id": mid, "media_name": source["media_name"], "source_sheet": source_sheet, "status": "推荐"})
             expected.append([source[field] for field in media_word.TIER_FIELDS.values()])
         project = {"client_name": "六档测试虚构客户", "brand_names": ["六档测试（虚构）"], "budget_limit": "1000000.00"}
-        document = self.document({"project": project, "budget": calculate_budget(project, plan)}, plan)
+        document = self.document({"project": project}, plan)
         for table, prices in zip(document.tables, expected):
             self.assertEqual([table.cell(3, col).text for col in range(5, 11)], prices)
 
     def test_explicit_external_row_does_not_fill_unknown_tiers_from_old_catalog(self):
         a, p = self.fixture()
-        item = p["placements"][0]
+        item = p["media_recommendations"][0]
         catalog = {("网络媒体报价", item["media_id"]): {"media_name": item["media_name"], "market_price": "80.00", "source_file": "虚构旧报价.xlsx",
             "super_agent_price": "50.00", "core_agent_price": "60.00", "senior_agent_price": "65.00", "regular_agent_price": "70.00", "member_price": "75.00"}}
         item.update(source_file="虚构更新报价.xlsx", quotation_date="2026-11-11", market_price="96.00",
@@ -131,37 +135,79 @@ class ExportMediaWordTests(unittest.TestCase):
         self.assertEqual(updated["市场价格"], "96.00")
         self.assertEqual([updated[tier] for tier in media_word.TIERS], ["61.00", "", "", "", ""])
 
-    def test_budget_mismatch_target_and_overwrite_leave_no_output(self):
+    def test_missing_pool_refuses_placement_fallback_and_preserves_existing_file(self):
         a, p = self.fixture()
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "推荐媒体.docx"
-            changed = copy.deepcopy(p); changed["placements"][0]["client_unit_price"] = "600.00"
-            with self.assertRaisesRegex(ValueError, "预算不一致"):
+            changed = copy.deepcopy(p)
+            changed.pop("media_recommendations")
+            with self.assertRaisesRegex(ValueError, "media_recommendations.*广泛推荐"):
                 media_word.export_docx(a, changed, output)
-            self.assertFalse(output.exists())
-            a["project"]["budget_target"] = "20000.00"
-            a["budget"] = calculate_budget(a["project"], p)
-            with self.assertRaisesRegex(ValueError, "目标的90%"):
-                media_word.export_docx(a, p, output)
             self.assertFalse(output.exists())
             output.write_bytes(b"existing-user-file")
             with self.assertRaises(FileExistsError):
                 media_word.export_docx(a, p, output)
             self.assertEqual(output.read_bytes(), b"existing-user-file")
 
+    def test_complete_pool_ignores_missing_stale_or_underfunded_budget(self):
+        a, p = self.fixture()
+        p["media_recommendations"] = [{"media_id": f"BROAD-{i}", "media_name": f"虚构广泛推荐{i}", "source_sheet": "网络媒体报价" if i % 2 == 0 else "自媒体报价",
+            "media_type": "有意与来源表不同的标签", "market_price": "10000.00", "status": ["推荐", "候选", "需核实"][i % 3], "editorial_note": "需确认具体题材与排期"} for i in range(18)]
+        for budget in (None, {"client": {"total": "100.00"}}, {"client": {"total": "99999999.00"}}):
+            with self.subTest(budget=budget):
+                changed_analysis = {"project": {**a["project"], "budget_target": "20000.00", "budget_limit": "20000.00"}}
+                if budget is not None:
+                    changed_analysis["budget"] = budget
+                document = self.document(changed_analysis, p)
+                self.assertEqual([len(t.rows) - 3 for t in document.tables], [9, 9])
+                self.assertTrue(all(t.cell(3, 5).text == "10000.00" for t in document.tables))
+                names = [r.cells[3].text for t in document.tables for r in t.rows[3:]]
+                self.assertNotIn("虚构媒体1", names)
+        self.assertEqual(len(p["placements"]), 3)
+
+    def test_exclusions_dedup_and_unverified_conditions_are_kept_separate(self):
+        a, p = self.fixture()
+        first = p["media_recommendations"][0]
+        p["media_recommendations"].append(copy.deepcopy(first))
+        for index, status in enumerate(("取消", "排除"), 4):
+            p["media_recommendations"].append({**first, "media_id": f"DEMO-{index}", "media_name": f"应排除媒体{index}", "status": status})
+        p["media_recommendations"].append({**first, "media_id": "NO-GEO", "media_name": "拒发GEO媒体", "editorial_note": "普通说明"})
+        p["media_recommendations"].append({**first, "media_id": "NEW-PRICE-NO-GEO", "media_name": "新报价拒发媒体", "source_file": "虚构更新价格.xlsx", "quotation_date": "2026-11-11", "market_price": "96.00"})
+        p["media_recommendations"][1].update(status="需核实", editorial_note="客户补充条件")
+        catalog = {("网络媒体报价", "NO-GEO"): {"media_name": "拒发GEO媒体", "market_price": "80.00", "editorial_note": "明确不发GEO"},
+                   ("网络媒体报价", "NEW-PRICE-NO-GEO"): {"media_name": "新报价拒发媒体", "market_price": "80.00", "source_file": "虚构旧价格.xlsx", "editorial_note": "不发GEO"},
+                   ("网络媒体报价", "DEMO-2"): {"media_name": "虚构媒体2", "market_price": "80.00", "editorial_note": "GEO需提供真实案例"}}
+        rows = media_word.selected_rows(p, catalog)
+        self.assertEqual([len(value) for value in rows.values()], [2, 1])
+        note = rows["网络媒体报价"][1]["备注"]
+        self.assertIn("GEO需提供真实案例", note)
+        self.assertIn("客户补充条件", note)
+        self.assertIn("尚未确认可发", note)
+        p["media_recommendations"].append({**first, "market_price": "90.00"})
+        with self.assertRaisesRegex(ValueError, "不同属性或报价"):
+            media_word.selected_rows(p, catalog)
+
+    def test_empty_second_category_keeps_original_header_and_blank_row(self):
+        a, p = self.fixture()
+        p["media_recommendations"] = p["media_recommendations"][:2]
+        document = self.document({"project": a["project"]}, p)
+        self.assertEqual(len(document.tables[1].rows), 4)
+        self.assertEqual([c.text for c in document.tables[1].rows[2].cells], list(media_word.HEADERS["自媒体报价"]))
+        self.assertTrue(all(not c.text for c in document.tables[1].rows[3].cells))
+
     def test_contact_column_refuses_personal_phone_and_missing_sheet(self):
         a, p = self.fixture()
-        p["placements"][0]["contact_policy"] = "张先生 13800000000"
+        p["media_recommendations"][0]["contact_policy"] = "张先生 13800000000"
         with self.assertRaisesRegex(ValueError, "不能填写联系人或电话"):
             self.document(a, p)
-        p["placements"][0]["contact_policy"] = "不带"
-        p["placements"][0]["source_sheet"] = ""
+        p["media_recommendations"][0]["contact_policy"] = "不带"
+        p["media_recommendations"][0]["source_sheet"] = ""
         with self.assertRaisesRegex(ValueError, "source_sheet"):
             self.document(a, p)
 
     def test_dated_external_quote_replaces_old_catalog_row(self):
         a, p = self.fixture()
-        item = p["placements"][0]
+        item = p["media_recommendations"][0]
         catalog = {("网络媒体报价", item["media_id"]): {"media_name": "旧版虚构媒体1", "market_price": "80.00", "source_file": "虚构旧报价.xlsx", "category": "旧分类", "region": "旧地区", "editorial_note": "旧备注"}}
         item.update(source_file="虚构更新报价.xlsx", quotation_date="2026-11-11", market_price="96.00", category="更新分类", region="更新地区")
         updated = media_word.selected_rows(p, catalog)["网络媒体报价"][0]
@@ -173,7 +219,7 @@ class ExportMediaWordTests(unittest.TestCase):
         self.assertTrue(all(not updated[tier] for tier in media_word.TIERS))
         for field, value in [("source_file", "虚构旧报价.xlsx"), ("source_file", "未知"), ("quotation_date", ""), ("market_price", None)]:
             changed = copy.deepcopy(p)
-            changed["placements"][0][field] = value
+            changed["media_recommendations"][0][field] = value
             with self.assertRaisesRegex(ValueError, "名称与目录"):
                 media_word.selected_rows(changed, catalog)
 

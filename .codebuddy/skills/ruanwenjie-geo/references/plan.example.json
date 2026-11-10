@@ -1246,5 +1246,493 @@
       "status": "已选"
     }
   ],
-  "fees": []
+  "fees": [],
+  "logic_links": [
+    {
+      "diagnosis_item": "统一平台与运营责任说明",
+      "basis": "平台介绍已有入库、检索和出处问答，但没有讲清管理员、员工及服务方的责任；自然选型中缺少可核对的适用说明。",
+      "choice_reason": "让采购方判断产品能力、客户维护义务与实施服务分别包含什么，降低初筛和询价的不确定性。",
+      "content_ids": [],
+      "client_action": "客户产品负责人于第1周确认主体和产品关系，官网负责人将角色责任与官方入口放入产品页和帮助中心。",
+      "media_role": "客户自有官网和帮助页承载稳定事实，不新增付费刊发。",
+      "stage": "基础事实与信任建设",
+      "check_date": "2026-11-20"
+    },
+    {
+      "diagnosis_item": "权限与出处机制成文",
+      "basis": "客户具备组织与文档权限、原文位置及版本描述，权限核验回答仍停留在通用清单，缺少可执行的品牌样例。",
+      "choice_reason": "使使用者能够核对谁能访问哪份资料、答案来自哪个版本，形成可信使用的具体理由。",
+      "content_ids": [
+        "C004",
+        "C005",
+        "C007"
+      ],
+      "media_role": "技术与行业媒体解释权限机制和验收条件，客户帮助页提供脱敏样例。",
+      "stage": "基础事实与信任建设",
+      "check_date": "2026-12-12"
+    },
+    {
+      "diagnosis_item": "适用团队和试用条件前置",
+      "basis": "点名回答可描述功能，但适用团队笼统；采购方尚不清楚资料负责人、版本及权限准备条件。",
+      "choice_reason": "让中小企业先根据资料治理和使用任务判断是否适合试用，而不是仅比较功能数量。",
+      "content_ids": [
+        "C002",
+        "C006",
+        "C008"
+      ],
+      "media_role": "专业选型稿与员工场景稿分别解释组织条件和实际使用任务。",
+      "stage": "基础事实与信任建设",
+      "check_date": "2026-12-12"
+    },
+    {
+      "diagnosis_item": "适用团队和试用条件前置",
+      "basis": "基础适用条件需进一步落到资料流及内容负责人，避免知识平台被理解为通用文件盘。",
+      "choice_reason": "让管理者以资料进入、审核发布和员工使用的实际流程决定平台是否匹配。",
+      "content_ids": [
+        "C009",
+        "C011"
+      ],
+      "media_role": "科技与企业软件媒体承载场景选型及负责人配置说明。",
+      "stage": "选择场景与决策说明",
+      "check_date": "2027-01-09"
+    },
+    {
+      "diagnosis_item": "选型任务与替代方式对照",
+      "basis": "澄页知识云与星栈协作台分别以知识沉淀和协作流转形成选择位置，知桥协同缺少受控获取知识的独立适配理由。",
+      "choice_reason": "依据存储、协作、权限和部署条件比较不同工具，让受控知识获取成为明确的候选路径。",
+      "content_ids": [
+        "C010",
+        "C014",
+        "C016",
+        "C017"
+      ],
+      "media_role": "专业技术与软件媒体分别说明任务分工、部署条件和旧资料迁移。",
+      "stage": "选择场景与决策说明",
+      "check_date": "2027-01-09"
+    },
+    {
+      "diagnosis_item": "更新责任与验收清单公开",
+      "basis": "平台功能已有描述，但上线维护、过期反馈和客户责任未串成完整使用闭环，影响持续使用的判断。",
+      "choice_reason": "让客户知道谁审核、谁发布、谁处理反馈，以及怎样验收找得到和用得对。",
+      "content_ids": [
+        "C019",
+        "C020",
+        "C021",
+        "C022",
+        "C024"
+      ],
+      "media_role": "行业治理内容及使用场景账号解释责任分工，客户页面保存验收清单。",
+      "stage": "使用闭环与交付收口",
+      "check_date": "2027-02-06"
+    },
+    {
+      "diagnosis_item": "费用与合作边界一致",
+      "basis": "收费构成和实施边界未形成完整说明，企业难以区分软件、整理、接口和维护费用。",
+      "choice_reason": "使采购方按实际范围询价，避免将媒体预算或平台功能描述误解为完整产品报价。",
+      "content_ids": [
+        "C015"
+      ],
+      "media_role": "面向采购的专业媒体解释费用项目，客户销售与官网使用同一合作边界。",
+      "stage": "选择场景与决策说明",
+      "check_date": "2027-01-09"
+    },
+    {
+      "diagnosis_item": "受控知识获取平台",
+      "basis": "客户已有组织与文档权限、原文段落和版本、审核发布的功能描述，能够区别于只存文件或流转任务的定位。",
+      "choice_reason": "让员工在有权访问且经审核的资料中检索，并能够回到原文及版本核对答案。",
+      "content_ids": [
+        "C003",
+        "C004",
+        "C005",
+        "C007"
+      ],
+      "media_role": "技术与行业内容建立存储、审核、权限和出处之间的机制解释。",
+      "stage": "基础事实与信任建设",
+      "check_date": "2026-12-12"
+    },
+    {
+      "diagnosis_item": "受控知识获取平台",
+      "basis": "基本机制需要通过权限变更、引用核验与跨部门测试转化为实际选型条件，避免标签停留在口号。",
+      "choice_reason": "让采购方以权限边界和出处核对判断适配程度，而不是把所有知识问答工具视作相同产品。",
+      "content_ids": [
+        "C009",
+        "C012",
+        "C013",
+        "C018"
+      ],
+      "media_role": "企业软件选型稿与专业测试清单承接受控获取的差异化理由。",
+      "stage": "选择场景与决策说明",
+      "check_date": "2027-01-09"
+    },
+    {
+      "diagnosis_item": "有责任人的持续知识服务",
+      "basis": "客户设置内容负责人、发布状态与反馈复核，但维护回答尚未体现这些责任如何共同形成持续更新。",
+      "choice_reason": "让使用者把业务审核、管理员发布和员工反馈理解为可执行的更新闭环。",
+      "content_ids": [
+        "C019",
+        "C020",
+        "C022",
+        "C024",
+        "C025"
+      ],
+      "media_role": "治理专题与使用场景内容解释责任闭环，客户自有页面同步责任清单。",
+      "stage": "使用闭环与交付收口",
+      "check_date": "2027-02-06"
+    }
+  ],
+  "_recommendation_note": "本例独立推荐池用于演示两类原格式与六档自动补价，未逐家实时询稿，不表示账号认证、收录或AI引用已验证。列举规模不是生产数量限制；实际客户须对相关检索全量逐项筛适配条件，不以预算或本例名单截断。推荐池不计执行费用。",
+  "media_recommendations": [
+    {
+      "media_id": "107",
+      "media_name": "51CTO",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "125",
+      "media_name": "IT168",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "1512",
+      "media_name": "硅谷动力",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "193",
+      "media_name": "比特网首发",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "19387",
+      "media_name": "中国软件网",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "623",
+      "media_name": "赛迪网",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "878",
+      "media_name": "天极网首发",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "128",
+      "media_name": "IT商业新闻网",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "28",
+      "media_name": "硅谷网",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "117",
+      "media_name": "CSDN",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "1500",
+      "media_name": "DOIT",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "10255",
+      "media_name": "IT专家网",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "117893",
+      "media_name": "计算机世界",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "5",
+      "media_name": "Citnews中文科技资讯",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "117889",
+      "media_name": "网界IT",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "120115",
+      "media_name": "中华网-IT",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "120112",
+      "media_name": "中华网-数字",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "876",
+      "media_name": "天极网",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "129",
+      "media_name": "IT时代网",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "25404",
+      "media_name": "电脑报",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "10192",
+      "media_name": "199IT",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "1325",
+      "media_name": "中金在线IT",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "130",
+      "media_name": "IT之家",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "9360",
+      "media_name": "硅谷网首页",
+      "source_sheet": "网络媒体报价",
+      "media_group": "企业软件与数字化选型",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "63771",
+      "media_name": "今日头条-IT168资讯",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "64615",
+      "media_name": "搜狐网-PChome电脑之家",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "64616",
+      "media_name": "网易-PChome电脑之家",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "117718",
+      "media_name": "百家号-199IT",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "72418",
+      "media_name": "百家号-IT168",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "8935",
+      "media_name": "知乎号-IT168科技第一线",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "52160",
+      "media_name": "网易-CSDN科技",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "57018",
+      "media_name": "百家号-DOIT网",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "33906",
+      "media_name": "微信公众号-IT科技君",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "117630",
+      "media_name": "百家号-凤凰IT",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "33908",
+      "media_name": "微信公众号-科技IT风云",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "48035",
+      "media_name": "搜狐网-IT科技频道",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "57231",
+      "media_name": "百家号-199IT报",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "57303",
+      "media_name": "搜狐网-数字科技探索",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "58911",
+      "media_name": "搜狐网-环球科技IT",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "53943",
+      "media_name": "百家号-互联网云观察",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "23179",
+      "media_name": "今日头条-IT互联热讯",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "115543",
+      "media_name": "一点资讯-互联网泛观察",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "111674",
+      "media_name": "腾讯网-IT科技解析",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    },
+    {
+      "media_id": "12607",
+      "media_name": "百家号-环球企业事",
+      "source_sheet": "自媒体报价",
+      "media_group": "科技与IT内容解读",
+      "status": "候选",
+      "recommendation_reason": "候选用于企业知识平台的权限、出处核验、选型与实施边界文章；按IT科技题材筛入，具体稿件与发布条件依原备注核实。"
+    }
+  ]
 }

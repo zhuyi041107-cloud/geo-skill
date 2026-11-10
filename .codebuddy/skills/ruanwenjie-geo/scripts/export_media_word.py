@@ -1,4 +1,4 @@
-"""Fill the retained two-list Word media template from the selected plan."""
+"""Fill the retained two-list Word template from an independent recommendation pool."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ import sys
 
 from docx import Document
 
-from geo_data import ACTIVE, calculate_budget, money, validate_delivery_budget
-from media import TIER_FIELDS, TIERS as PRICE_TIERS
+from geo_data import money
+from media import TIER_FIELDS, TIERS as PRICE_TIERS, restriction
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,20 +45,30 @@ def catalog_records(path):
 
 
 def selected_rows(plan, catalog):
-    """Join by sheet and ID; never treat a client price as a supplier tier."""
+    """Join the complete recommendation pool by source sheet and ID."""
+    recommendations = plan.get("media_recommendations")
+    if not isinstance(recommendations, list) or not recommendations:
+        raise ValueError("缺少独立媒体推荐池plan.media_recommendations；请先按客户业务完成广泛推荐，不能用预算内placements替代")
     result = {sheet: [] for sheet in HEADERS}
     seen = {}
-    for placement in plan.get("placements", []):
-        if placement.get("status") not in ACTIVE:
+    for placement in recommendations:
+        if not isinstance(placement, dict):
+            raise ValueError("media_recommendations每项须为媒体对象")
+        status = text(placement.get("status")) or "推荐"
+        if status in {"取消", "排除"}:
             continue
+        if status not in {"推荐", "候选", "需核实"}:
+            raise ValueError("独立推荐池status须为推荐、候选或需核实；取消、排除项不导出")
         sheet = SHEET_NAMES.get(text(placement.get("source_sheet")), text(placement.get("source_sheet")))
         if sheet not in HEADERS:
-            raise ValueError("已选媒体必须填写来源source_sheet：网络媒体报价或自媒体报价")
+            raise ValueError("推荐媒体必须填写来源source_sheet：网络媒体报价或自媒体报价")
         media_id, name = text(placement.get("media_id")), text(placement.get("media_name"))
         if not media_id or not name:
-            raise ValueError("已选媒体必须有media_id与具体媒体名称")
+            raise ValueError("推荐媒体必须有media_id与具体媒体名称")
         key = (sheet, media_id)
         source = catalog.get(key, {})
+        if any(restriction(note) == "排除" for note in (source.get("editorial_note"), placement.get("editorial_note"))):
+            continue
         tier_prices = placement.get("tier_prices") or {}
         if not isinstance(tier_prices, dict) or any(k not in PRICE_TIERS for k in tier_prices):
             raise ValueError("tier_prices须使用原表的六档中文名")
@@ -75,6 +85,7 @@ def selected_rows(plan, catalog):
         if source and external_source and dated_quote and placement.get("market_price") not in (None, ""):
             # A traceable external quote replaces the old row, including its optional attributes.
             source = {}
+        notes = list(dict.fromkeys(value for value in (text(source.get("editorial_note")), text(placement.get("editorial_note"))) if value))
         if source and name != text(source.get("media_name")):
             raise ValueError(f"媒体名称与目录的来源sheet及ID不一致：{media_id}")
         supplied_market = placement.get("market_price")
@@ -101,7 +112,9 @@ def selected_rows(plan, catalog):
         }
         if row["联系方式"] not in {"", "带", "不带", "可带", "不可带", "可以带", "不能带", "需确认", "不允许", "允许"}:
             raise ValueError("联系方式列仅填写可否在稿件带联系方式的政策，不能填写联系人或电话")
-        note = text(placement.get("editorial_note")) or text(source.get("editorial_note"))
+        note = "；".join(notes)
+        if status == "需核实" or restriction(note) == "需核实":
+            note = "；".join(value for value in (note, "发布条件需核实，尚未确认可发") if value)
         entry = text(placement.get("entry_type")) or text(source.get("entry_type"))
         row["备注"] = "；".join(v for v in (note, "刊发形态：" + entry if entry and entry not in note else "") if v)
         row.update({tier: price(tier_prices.get(tier) if tier_prices.get(tier) not in (None, "") else source.get(TIER_FIELDS[tier])) for tier in TIERS})
@@ -112,7 +125,7 @@ def selected_rows(plan, catalog):
         seen[key] = row
         result[sheet].append(row)
     if not seen:
-        raise ValueError("推荐媒体表需要先选定具体媒体")
+        raise ValueError("独立推荐池没有可列媒体；请完成广泛推荐，并排除取消、排除及明确拒发GEO的资源")
     return result
 
 
@@ -153,10 +166,6 @@ def fill_table(table, sheet, rows, brand):
 
 
 def build_docx(analysis, plan, template=TEMPLATE, catalog_path=CATALOG):
-    expected = calculate_budget(analysis.get("project", {}), plan)
-    if analysis.get("budget") != expected:
-        raise ValueError("计划与分析预算不一致，请重新生成analysis.json后导出")
-    validate_delivery_budget(expected)
     rows = selected_rows(plan, catalog_records(catalog_path))
     document = Document(template)
     if len(document.tables) != 2:
