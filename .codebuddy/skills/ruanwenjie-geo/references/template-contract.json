@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "description": "原参考PDF的业务栏目与层级契约。章节顺序由此决定；报告不能省略必需矩阵。source=plan由导出器同源生成，source=diagnosis复用相同诊断章节。表格数值不可覆盖plan/analysis。",
+  "schema_version": 2,
+  "description": "固定HTML模板的数据绑定契约。只填写数据，版式和页面组件由随包HTML锁定；图卡是原图形数据位，不作通用表格重排。",
   "profiles": {
     "platform": {
       "label": "平台型业务",
@@ -264,6 +264,14 @@
                 "本客户统一表述与边界"
               ],
               "source": "report"
+            },
+            {
+              "id": "execution_redlines",
+              "columns": [
+                "规范项",
+                "执行边界"
+              ],
+              "source": "report"
             }
           ]
         },
@@ -433,7 +441,7 @@
         },
         {
           "key": "brand_profile",
-          "title": "一、品牌现状与主体事实",
+          "title": "一、报告摘要",
           "level": 1,
           "source": "report",
           "tables": [
@@ -458,7 +466,7 @@
         },
         {
           "key": "source_coverage",
-          "title": "二、信源层级覆盖矩阵",
+          "title": "五、信源层级覆盖矩阵",
           "level": 1,
           "source": "report",
           "tables": [
@@ -476,7 +484,7 @@
         },
         {
           "key": "business_dimensions",
-          "title": "三、业务维度逐项诊断",
+          "title": "业务核心维度 AI 知识库完整度评测",
           "level": 1,
           "source": "report",
           "tables": [
@@ -495,7 +503,7 @@
         },
         {
           "key": "risk_issues",
-          "title": "四、关键风险与问题",
+          "title": "现存品牌风险清单",
           "level": 1,
           "source": "report",
           "tables": [
@@ -512,7 +520,7 @@
         },
         {
           "key": "exposure_analysis",
-          "title": "五、曝光场景与根因分析",
+          "title": "当前品牌 AI 曝光场景盘点",
           "level": 1,
           "source": "report",
           "tables": [
@@ -528,7 +536,7 @@
         },
         {
           "key": "keyword_opportunities",
-          "title": "六、核心关键词与长尾问句规划",
+          "title": "长尾问答词库 + 对应参考标题",
           "level": 1,
           "source": "report",
           "tables": [
@@ -545,7 +553,7 @@
         },
         {
           "key": "content_guidance",
-          "title": "七、内容写作规范",
+          "title": "长尾问答写文规范（GEO 专用）",
           "level": 1,
           "source": "report",
           "tables": [
@@ -562,7 +570,7 @@
         },
         {
           "key": "rollout_preview",
-          "title": "八、阶段目标与发文量推导",
+          "title": "分阶段可量化优化目标与落地执行方案",
           "level": 1,
           "source": "report",
           "tables": [
@@ -580,10 +588,9 @@
               "id": "content_volume",
               "columns": [
                 "信源层",
-                "独立内容篇数",
-                "刊发次数",
+                "篇数",
                 "推导依据",
-                "对应问题效果"
+                "对应词库效果"
               ],
               "source": "plan"
             }
@@ -591,7 +598,7 @@
         },
         {
           "key": "priority_actions",
-          "title": "九、优先优化方向",
+          "title": "建议可做动作与执行方向",
           "level": 1,
           "source": "report",
           "tables": [
@@ -662,6 +669,14 @@
                 "写作执行要求"
               ],
               "source": "report"
+            },
+            {
+              "id": "execution_principles",
+              "columns": [
+                "规范项",
+                "执行要求"
+              ],
+              "source": "report"
             }
           ]
         },
@@ -683,8 +698,7 @@
               "id": "content_types",
               "columns": [
                 "内容类型",
-                "内容安排",
-                "需客户提供的素材"
+                "内容安排与素材要求"
               ],
               "source": "report"
             },
@@ -695,12 +709,20 @@
                 "本客户统一表述与边界"
               ],
               "source": "report"
+            },
+            {
+              "id": "execution_boundaries",
+              "columns": [
+                "规范项",
+                "执行边界"
+              ],
+              "source": "report"
             }
           ]
         },
         {
           "key": "rollout",
-          "title": "三、三阶段执行计划",
+          "title": "三、阶段规划",
           "level": 1,
           "source": "report",
           "tables": [
@@ -716,12 +738,20 @@
                 "AI效果观察目标"
               ],
               "source": "plan"
+            },
+            {
+              "id": "rollout_reasoning",
+              "columns": [
+                "事项",
+                "推导逻辑"
+              ],
+              "source": "report"
             }
           ]
         },
         {
           "key": "maintenance",
-          "title": "3.1 长期维护安排",
+          "title": "长期维护稳定计划",
           "level": 2,
           "source": "report",
           "tables": [
@@ -739,7 +769,7 @@
         },
         {
           "key": "media_mix",
-          "title": "四、媒体投放矩阵",
+          "title": "四、媒体投放策略",
           "level": 1,
           "source": "report",
           "tables": [
@@ -747,28 +777,16 @@
               "id": "media_roles",
               "columns": [
                 "媒体类型",
-                "作用说明",
-                "内容选择理由"
+                "刊发次数",
+                "作用说明"
               ],
               "source": "report"
-            },
-            {
-              "id": "selected_media",
-              "columns": [
-                "媒体名称",
-                "媒体类型",
-                "承载选题",
-                "刊发次数",
-                "参考单价",
-                "媒体费用"
-              ],
-              "source": "plan"
             }
           ]
         },
         {
           "key": "article_schedule",
-          "title": "五、发文排期明细",
+          "title": "五、发文排期表",
           "level": 1,
           "source": "report",
           "tables": [
@@ -791,7 +809,7 @@
         },
         {
           "key": "budget",
-          "title": "六、费用预估与投入节奏",
+          "title": "六、费用预估",
           "level": 1,
           "source": "report",
           "tables": [
@@ -799,9 +817,11 @@
               "id": "media_costs",
               "columns": [
                 "媒体类型",
-                "刊发次数",
-                "单价范围",
-                "媒体费用"
+                "篇数",
+                "单价区间（元 / 篇）",
+                "小计区间（元）",
+                "媒体层级说明",
+                "备注"
               ],
               "source": "plan"
             },
@@ -809,30 +829,31 @@
               "id": "stage_budget",
               "columns": [
                 "阶段",
-                "计划周期",
-                "独立内容篇数",
-                "刊发次数",
-                "媒体费用",
-                "其他费用",
-                "阶段合计"
+                "周次",
+                "篇数",
+                "媒体构成",
+                "费用区间（元）",
+                "备注"
               ],
               "source": "plan"
             },
             {
-              "id": "quarterly_budget",
+              "id": "maintenance_budget",
               "columns": [
-                "自然季度",
-                "独立内容篇数",
-                "刊发次数",
-                "建议费用"
+                "项目",
+                "节奏",
+                "单次篇数",
+                "年度篇数估算",
+                "年度费用区间",
+                "备注"
               ],
-              "source": "plan"
+              "source": "report"
             }
           ]
         },
         {
           "key": "target_scenes",
-          "title": "七、效果预期与复测",
+          "title": "七、效果预估",
           "level": 1,
           "source": "report",
           "tables": [
@@ -840,9 +861,7 @@
               "id": "target_scenes",
               "columns": [
                 "场景类别",
-                "具体问句",
-                "希望形成的选择理由",
-                "观察节点"
+                "具体问句"
               ],
               "source": "report"
             },
@@ -850,8 +869,26 @@
               "id": "differentiation",
               "columns": [
                 "对比型问句",
-                "本品牌对应事实",
                 "期望呈现逻辑"
+              ],
+              "source": "report"
+            },
+            {
+              "id": "target_platforms",
+              "columns": [
+                "平台",
+                "内容适配说明",
+                "具体问句"
+              ],
+              "source": "report"
+            },
+            {
+              "id": "target_progress",
+              "columns": [
+                "阶段",
+                "周次",
+                "核心目标",
+                "预期呈现与节点"
               ],
               "source": "report"
             }

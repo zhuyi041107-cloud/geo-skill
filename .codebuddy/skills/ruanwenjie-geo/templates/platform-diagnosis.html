@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GEO诊断报告</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 14mm;
+      @bottom-center {
+        content: "GEO 优化诊断报告    第 " counter(page) " 页 / 共 " counter(pages) " 页";
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        font-size: 8pt;
+        font-weight: 400;
+        letter-spacing: 3.1pt;
+        white-space: pre;
+        text-indent: -17.12pt;
+        color: #94a7bd;
+        border-top: .5pt solid #dce7f1;
+        padding-top: 6px;
+        vertical-align: top;
+        width: 100%;
+      }
+    }
+    @page main-report { margin-top: 15.25mm; }
+    :root {
+      --ink: #172942;
+      --muted: #71829d;
+      --blue: #285f91;
+      --line: #ccd6e3;
+      --pale: #eef3fa;
+      --green: #4f8237;
+      --amber: #bd8424;
+      --red: #ba3b3c;
+      --link: #2c6bb1;
+    }
+    * { box-sizing: border-box; }
+    html { margin: 0; padding: 0; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 20px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      overflow-wrap: break-word;
+    }
+    h1, h2, h3, h4, p { padding: 0; }
+    p { margin: 0 0 8px; }
+    strong, b, th { font-weight: 700; }
+    [data-slot]:empty, h4:empty { display: none; }
+    .cover { padding: 17px 4px 4px; break-after: page; }
+    .cover h1 {
+      margin: 0 0 10px;
+      font-size: 29.333px;
+      font-weight: 700;
+      line-height: 1.32;
+      color: #16233e;
+    }
+    .cover-subtitle {
+      margin: 0 0 12px;
+      color: #8191ab;
+      font-size: 14.667px;
+      line-height: 22px;
+    }
+    .cover-rule {
+      height: 4px;
+      margin: 0 0 18px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #1e4c79 0%, #2e72b5 100%);
+    }
+    .cover-meta {
+      width: 100%;
+      margin: 0 0 12px;
+      border: 1px solid var(--line);
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 12.666px;
+      line-height: 18px;
+    }
+    .cover-meta th, .cover-meta td {
+      border: 1px solid var(--line);
+      padding: 7px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .cover-meta th { width: 24%; background: #edf3fa; color: #24577f; }
+    .cover-meta tr:has(td[data-slot]:empty) { display: none; }
+    .cover-conclusion {
+      margin: 0 0 16px;
+      border-left: 4px solid #2f74b3;
+      border-radius: 0 6px 6px 0;
+      background: #edf3fa;
+      padding: 12px 14px;
+      font-size: 13.333px;
+      line-height: 23px;
+    }
+    .cover-conclusion p { display: inline; margin: 0; }
+    .cover-note { color: #8c9ab0; font-size: 12px; line-height: 21px; }
+    .decision-page { padding: 7px 4px 4px; break-after: page; }
+    .diagram-heading {
+      margin: 0 0 4px;
+      color: #18253f;
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 28px;
+      text-align: center;
+    }
+    .diagram-subtitle { margin: 0 0 14px; color: #9aa6ba; font-size: 12px; line-height: 18px; text-align: center; }
+    .journey-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; margin: 0 0 9px; break-inside: avoid; }
+    .journey-step {
+      position: relative;
+      min-height: 119px;
+      padding: 12px 10px 10px;
+      border: 1px solid #dce5d6;
+      border-top: 4px solid var(--green);
+      border-radius: 6px;
+      background: #f4f7ef;
+      text-align: center;
+    }
+    .journey-step:nth-child(2) { border-top-color: #64833b; }
+    .journey-step:nth-child(3) { border-color: #eadcbe; border-top-color: var(--amber); background: #fcf8ee; }
+    .journey-step:nth-child(4) { border-color: #eed4d3; border-top-color: var(--red); background: #fcf1f1; }
+    .journey-step:not(:last-child)::after { content: "›"; position: absolute; right: -12px; top: 44px; color: #8a9ab0; font-size: 16px; font-weight: 700; }
+    .journey-step strong { display: block; margin-bottom: 6px; color: #294624; font-size: 14px; line-height: 20px; }
+    .journey-step p { margin: 0; color: #70819b; font-size: 11px; line-height: 17px; white-space: pre-line; }
+    .journey-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 8px; break-inside: avoid; }
+    .journey-status { border: 1px solid #d5e4c8; border-radius: 5px; background: #eaf3e0; padding: 9px 10px; color: #3f7130; text-align: center; font-size: 12.5px; font-weight: 700; line-height: 18px; }
+    .journey-status:last-child { border-color: #efc9c7; background: #fbe9e8; color: #af3439; }
+    .journey-note { margin: 0 0 26px; color: #71829d; font-size: 12.5px; line-height: 21px; text-align: center; white-space: pre-line; }
+    .layers-heading { margin-top: 16px; }
+    .layers { display: block; margin-top: 11px; }
+    .layer-card {
+      --accent: #588b3c;
+      display: grid;
+      grid-template-columns: 24% minmax(0, 1fr) 22%;
+      column-gap: 10.333px;
+      position: relative;
+      align-items: center;
+      min-height: 108px;
+      margin: 0 0 10px;
+      padding: 10px 14px 10px 31px;
+      border: 1px solid #e0e6ef;
+      border-radius: 8px;
+      background: #f8faff;
+      break-inside: avoid;
+    }
+    .layer-card::before { content: ""; position: absolute; top: 10px; bottom: 10px; left: 12px; width: 4px; border-radius: 3px; background: var(--accent); }
+    .layer-card:nth-child(2) { --accent: #c58b25; }
+    .layer-card:nth-child(3) { --accent: #2d74bb; }
+    .layer-card:nth-child(4) { --accent: #bd3e43; }
+    .layer-name { color: var(--accent); font-size: 14.5px; font-weight: 700; line-height: 21px; }
+    .layer-caption { margin-top: 5px; color: #8191ac; font-size: 11px; line-height: 17px; }
+    .layer-copy { color: #47546c; font-size: 12px; line-height: 20px; }
+    .layer-question { margin: 5px 0 0; color: #23334d; font-size: 12.5px; font-weight: 700; line-height: 20px; }
+    .layer-question b { display: inline-block; margin-right: 7px; padding: 1px 5px; border-radius: 2px; background: var(--accent); color: #fff; font-size: 10px; line-height: 14px; white-space: nowrap; }
+    .layer-state { justify-self: end; max-width: none; border: 1px solid var(--accent); border-radius: 16px; background: #fff; color: var(--accent); padding: 5px 10px; font-size: 12px; font-weight: 700; line-height: 18px; text-align: center; white-space: nowrap; }
+    .main-report { padding: 0; page: main-report; }
+    .section-heading {
+      margin: 24px 0 8px;
+      border-left: 4px solid #254f7a;
+      border-radius: 0 7px 7px 0;
+      background: linear-gradient(90deg, #edf3fa 0%, #f7faff 73%, #fff 100%);
+      padding: 12px 16px;
+      color: #182740;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 27px;
+      break-after: avoid;
+    }
+    .lead { margin: 0 0 8px; padding: 0 2px; color: #71829d; font-size: 12.666px; line-height: 22px; }
+    .lead h4 { margin: 0 0 3px; color: #324c6c; font-size: 12px; font-weight: 700; line-height: 20px; }
+    .lead p { margin: 0; white-space: pre-line; }
+    .recognition-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0 12px; break-inside: avoid; }
+    .recognition-card { border: 1px solid #dce6f1; border-radius: 5px; padding: 9px 10px; background: #f6f9fd; }
+    .recognition-card h3 { margin: 0 0 4px; color: #146c63; font-size: 12px; font-weight: 700; line-height: 18px; }
+    .recognition-card strong { display: block; margin-bottom: 4px; color: #172b47; font-size: 16.667px; line-height: 24px; }
+    .recognition-card p { margin: 0; color: #7f8fa8; font-size: 11px; line-height: 16px; }
+    .report-table { width: 100%; margin: 8px 0 12px; border-collapse: collapse; table-layout: fixed; border: 1px solid var(--line); font-size: 12px; line-height: 20px; }
+    .report-table thead { display: table-header-group; }
+    .report-table tr { break-inside: avoid; }
+    .report-table th, .report-table td { border: 1px solid var(--line); padding: 5px 6px; vertical-align: middle; overflow-wrap: break-word; white-space: pre-line; }
+    .report-table th { background: linear-gradient(#2e6496, #20537f); color: #fff; font-size: 12px; font-weight: 700; line-height: 21px; padding-top: 4px; padding-bottom: 4px; text-align: center; }
+    .report-table td { background: #fff; }
+    .report-table td.center { text-align: center; }
+    .status { display: inline-block; border: 1px solid #d6dde6; border-radius: 12px; background: #f1f4f8; padding: 0 6px; color: #748398; font-size: 11.333px; font-weight: 700; line-height: 16px; text-align: center; white-space: nowrap; }
+    .status.on { border-color: #b9dfcc; background: #eaf7f0; color: #249166; }
+    .status.off { border-color: #edbfb9; background: #fff1ef; color: #c74a40; }
+    .status.partial { border-color: #e8d2a6; background: #fff7e9; color: #b68226; }
+    .status.unknown { border-color: #d6dde6; background: #f1f4f8; color: #748398; }
+    .matrix-panel { margin: 10px 0 12px; border: 1px solid #dce5f0; border-radius: 9px; padding: 12px 12px 11.333px; break-inside: avoid; }
+    .matrix { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; line-height: 20px; }
+    .matrix th { padding: 5px 6px; border-bottom: 1px solid #dce5f0; color: #344b68; font-size: 11px; line-height: 18px; text-align: center; }
+    .matrix th:first-child { text-align: left; }
+    .matrix td { border-bottom: 1px dashed #e5ebf3; padding: 6px 6px; }
+    .matrix tr:last-child td { border-bottom: 0; }
+    .matrix .status { display: block; border: 0; border-radius: 3px; padding: 1px 4px; font-size: 10.5px; font-weight: 400; line-height: 18px; }
+    .matrix-legend { margin-top: 5px; color: #99a6ba; font-size: 10px; line-height: 16px; text-align: center; }
+    .priority-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0 10px; break-inside: avoid; }
+    .priority-cards:empty { display: none; }
+    .priority-card { min-height: 89px; border-radius: 5px; border: 1px solid #e0e7f1; background: #f6f9fd; padding: 9px 10px; }
+    .priority-card h3 { margin: 0 0 4px; color: #136b65; font-size: 12px; line-height: 18px; }
+    .priority-card strong { display: block; margin-bottom: 5px; color: #172b47; font-size: 16.667px; line-height: 24px; }
+    .priority-card p { margin: 0; color: #8190a7; font-size: 11.333px; line-height: 17px; }
+    .opportunities-table .status[data-value="高"] { border-color: #edbfb9; background: #fff1ef; color: #c74a40; }
+    .scene-details-table td:first-child, .opportunities-table td:first-child, .actions-table td:nth-child(2) { text-align: center; }
+    .tags-table td:first-child { text-align: center; }
+    .tags-table span[data-value="部分具备"] { display: inline-block; border: 1px solid #e8d2a6; border-radius: 12px; background: #fff7e9; padding: 0 6px; color: #b68226; font-size: 11.333px; font-weight: 700; line-height: 16px; white-space: nowrap; }
+    .tags-table .subhead td { background: #fff; font-weight: 400; text-align: left; }
+    .tags-table .subhead td:first-child { text-align: center; }
+    .tags-table tr.subhead, .tags-table tbody:has(> .subhead) { break-after: avoid; }
+    .closing-note { margin: 8px 0 0; color: #263750; font-size: 14px; line-height: 24px; }
+    @media screen { body { max-width: 182mm; margin: 14mm auto; } }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <h1><span data-slot="brand"></span> · AI 品牌 GEO 知识库诊断报告</h1>
+    <p class="cover-subtitle" data-slot="subtitle"></p>
+    <div class="cover-rule"></div>
+    <table class="cover-meta">
+      <tbody>
+        <tr><th>项目主体</th><td data-slot="client_name"></td></tr>
+        <tr><th>分析平台</th><td data-slot="platform_names"></td></tr>
+        <tr><th>业务范围</th><td data-slot="cover_method"></td></tr>
+        <tr><th>报告日期</th><td data-slot="report_date"></td></tr>
+        <tr><th>报告用途</th><td data-slot="cover_purpose"></td></tr>
+      </tbody>
+    </table>
+    <div class="cover-conclusion"><span>整体结论：</span><p data-slot="summary"></p></div>
+    <p class="cover-note" data-slot="cover_note"></p>
+  </section>
+
+  <section class="decision-page">
+    <h2 class="diagram-heading">用户从「看到你」到「买你」的路径</h2>
+    <p class="diagram-subtitle" data-slot="journey_subtitle"></p>
+    <div class="journey-grid" data-table="decision_path"></div>
+    <div class="journey-status-grid">
+      <div class="journey-status">认知段·<span data-slot="cognition_status"></span></div>
+      <div class="journey-status">决策段·<span data-slot="decision_status"></span></div>
+    </div>
+    <p class="journey-note" data-slot="journey_note"></p>
+    <h2 class="diagram-heading layers-heading">AI 应答的四层结构 · <span data-slot="brand"></span>当前位置</h2>
+    <p class="diagram-subtitle" data-slot="layers_subtitle"></p>
+    <div class="layers" data-table="response_layers"></div>
+  </section>
+
+  <main class="main-report">
+    <h2 class="section-heading">一、品牌现状</h2>
+    <div data-paragraphs="brand_recognition"></div>
+    <div class="recognition-cards" data-table="recognition_cards"></div>
+    <table class="report-table recognition-table">
+      <colgroup><col style="width:12.83%"><col style="width:17.90%"><col style="width:69.27%"></colgroup>
+      <thead><tr><th>判定项</th><th>直询结果</th><th>说明</th></tr></thead>
+      <tbody data-table="recognition"></tbody>
+    </table>
+
+    <h2 class="section-heading">二、品牌当前现状</h2>
+    <div data-paragraphs="scenario_competition"></div>
+    <div class="matrix-panel">
+      <table class="matrix">
+        <colgroup><col style="width:52%"><col style="width:24%"><col style="width:24%"></colgroup>
+        <thead><tr><th>客户关注场景</th><th>本品牌</th><th>指定竞品</th></tr></thead>
+        <tbody data-table="scene_matrix"></tbody>
+      </table>
+      <div class="matrix-legend">绿＝该场景下本主体已被 AI 提及，红＝未提及，琥珀＝部分提及；这格取值与下表一致。</div>
+    </div>
+    <table class="report-table scene-details-table">
+      <colgroup><col style="width:20.22%"><col style="width:16.74%"><col style="width:11.06%"><col style="width:11.35%"><col style="width:40.63%"></colgroup>
+      <thead><tr><th>客户关注场景</th><th>对应问句示例</th><th>本品牌提及</th><th>指定竞品提及</th><th>说明</th></tr></thead>
+      <tbody data-table="scene_details"></tbody>
+    </table>
+
+    <h2 class="section-heading">三、竞品现状</h2>
+    <div data-paragraphs="competitor_analysis"></div>
+    <table class="report-table competitor-table">
+      <colgroup><col style="width:9.2%"><col style="width:48.6%"><col style="width:42.2%"></colgroup>
+      <thead><tr><th>对标主体</th><th>AI 引用依据（可核验）</th><th>本主体对应情况</th></tr></thead>
+      <tbody data-table="competitor_basis"></tbody>
+    </table>
+
+    <h2 class="section-heading">四、信源层级覆盖矩阵</h2>
+    <div data-paragraphs="source_coverage"></div>
+    <table class="report-table source-table">
+      <colgroup><col style="width:50.22%"><col style="width:12.66%"><col style="width:12.66%"><col style="width:24.46%"></colgroup>
+      <thead><tr><th>信源层级</th><th>覆盖状态</th><th>覆盖质量</th><th>是否被 AI 实际引用</th></tr></thead>
+      <tbody data-table="source_layers"></tbody>
+    </table>
+
+    <h2 class="section-heading">五、建议可增加的推荐场景</h2>
+    <div data-paragraphs="opportunity_scenes"></div>
+    <table class="report-table opportunities-table">
+      <colgroup><col style="width:13.4%"><col style="width:20.5%"><col style="width:59.4%"><col style="width:6.7%"></colgroup>
+      <thead><tr><th>建议新增场景</th><th>对应问句示例</th><th>建议理由</th><th>优先级</th></tr></thead>
+      <tbody data-table="opportunities"></tbody>
+    </table>
+
+    <h2 class="section-heading">六、优化建议</h2>
+    <div data-paragraphs="priority_actions"></div>
+    <div class="priority-cards" data-table="priority_cards"></div>
+    <table class="report-table actions-table">
+      <colgroup><col style="width:5.39%"><col style="width:20.31%"><col style="width:74.30%"></colgroup>
+      <thead><tr><th>序号</th><th>得分项</th><th>说明</th></tr></thead>
+      <tbody data-table="actions"></tbody>
+    </table>
+
+    <div data-paragraphs="competitive_tags"></div>
+    <table class="report-table tags-table">
+      <colgroup><col style="width:11.515%"><col style="width:22.556%"><col style="width:36.5%"><col style="width:29.429%"></colgroup>
+      <thead><tr><th>同类主体当前被贴的标签</th><th>AI 回答里对应的说法</th><th>本主体是否具备</th><th>建议动作</th></tr></thead>
+      <tbody data-table="competitive_labels"></tbody>
+      <tbody><tr class="subhead"><td>建议抢占的标签</td><td>一句话定义</td><td>支撑事实（可核验）</td><td>落到方案里的哪类文章</td></tr></tbody>
+      <tbody data-table="proposed_tags"></tbody>
+    </table>
+    <p class="closing-note" data-slot="closing_note"></p>
+  </main>
+
+  <template data-paragraph><div class="lead"><h4 data-field="title"></h4><p data-field="detail"></p></div></template>
+  <template data-row="decision_path"><div class="journey-step"><strong>{{cell0}}</strong><p>{{cell1}}</p></div></template>
+  <template data-row="response_layers"><div class="layer-card"><div><div class="layer-name">{{cell0}}</div><div class="layer-caption">{{cell1}}</div></div><div class="layer-copy">{{cell2}}<p class="layer-question"><b>用户问</b>{{cell5}}</p></div><div class="layer-state">{{cell3}}</div></div></template>
+  <template data-row="recognition_cards"><article class="recognition-card"><h3>{{cell0}}</h3><strong>{{cell1}}</strong><p>{{cell2}}</p></article></template>
+  <template data-row="recognition"><tr><td>{{cell0}}</td><td class="center"><span class="status" data-value="{{cell1}}">{{cell1}}</span></td><td>{{cell2}}</td></tr></template>
+  <template data-row="scene_matrix"><tr><td>{{cell0}}</td><td><span class="status" data-value="{{cell1}}">{{cell1}}</span></td><td><span class="status" data-value="{{cell2}}">{{cell2}}</span></td></tr></template>
+  <template data-row="scene_details"><tr><td>{{cell0}}</td><td class="center">{{cell1}}</td><td class="center"><span class="status" data-value="{{cell2}}">{{cell2}}</span></td><td class="center"><span class="status" data-value="{{cell3}}">{{cell3}}</span></td><td>{{cell4}}</td></tr></template>
+  <template data-row="competitor_basis"><tr><td class="center">{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td></tr></template>
+  <template data-row="source_layers"><tr><td class="center">{{cell0}}</td><td class="center"><span class="status" data-value="{{cell1}}">{{cell1}}</span></td><td class="center"><span class="status" data-value="{{cell2}}">{{cell2}}</span></td><td class="center"><span class="status" data-value="{{cell3}}">{{cell3}}</span></td></tr></template>
+  <template data-row="opportunities"><tr><td>{{cell0}}</td><td class="center">{{cell1}}</td><td>{{cell2}}</td><td class="center"><span class="status" data-value="{{cell3}}">{{cell3}}</span></td></tr></template>
+  <template data-row="priority_cards"><article class="priority-card"><h3>{{cell0}}</h3><strong>{{cell1}}</strong><p>{{cell2}}</p></article></template>
+  <template data-row="actions"><tr><td class="center">{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td></tr></template>
+  <template data-row="competitive_labels"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td><span data-value="{{cell2}}">{{cell2}}</span></td><td>{{cell3}}</td></tr></template>
+  <template data-row="proposed_tags"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td><td>{{cell3}}</td></tr></template>
+</body>
+</html>

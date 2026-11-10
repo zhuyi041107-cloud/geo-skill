@@ -4,7 +4,7 @@
 
 业务同事只填写“问题、引用截图、答案”。每个AI平台一份文件，平台放在文件名里；其余字段内部处理。收到任意平台回传后直接完成本轮诊断报告和执行方案文件，不等齐平台、不先停在聊天判读摘要。下面的命令都是内部步骤，不向用户讲解操作流水账。
 
-以下命令由WorkBuddy内部执行。报告生成前完整读template-generation.md，并按客户类型读取template-contract.json对应profile；report-thinking.md约束证据判断。替换“技能目录”为安装路径，“工作目录”为客户独立文件夹；使用当前环境的Python，路径加引号。先检查 `python -c "import openpyxl, reportlab, pypdf, docx"`；按环境权限使用requirements.txt安装所需依赖。
+以下命令由WorkBuddy内部执行。报告生成前完整读template-generation.md，再读template-contract.json及templates/pdf-template-manifest.json对应profile/kind的数据位；report-thinking.md约束证据判断。替换“技能目录”为安装路径，“工作目录”为客户独立文件夹；使用当前环境Python，路径加引号。先检查 `python -c "import openpyxl, bs4, pypdf, docx"`；依requirements安装公共依赖。PDF使用本机Chrome/Edge与原微软雅黑常规/粗体，不能另造PDF脚本或替换字体。
 
 默认客户成品只有诊断PDF、执行方案PDF和一个推荐媒体.xlsx（sheet1网络媒体、sheet2自媒体）。内部JSON、判读和核算放.work，不作为正式输出或聊天附件。已有原件可以原位读取，不搬动。步骤5只重算内部analysis，默认流程不运行export-excel。
 

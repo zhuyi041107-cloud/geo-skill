@@ -22,12 +22,18 @@ def main():
         "templates/GEO诊断报告版式示例.pdf", "templates/品牌传播与GEO执行方案版式示例.pdf",
         "templates/推荐媒体模板.docx",
         "templates/推荐媒体模板.xlsx",
-        "assets/fonts/NotoSansSC-Regular.ttf", "assets/fonts/OFL.txt",
+        "templates/platform-diagnosis.html", "templates/platform-execution.html",
+        "templates/service-diagnosis.html", "templates/service-execution.html",
+        "templates/pdf-template-manifest.json",
     }
-    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".otf"})
+    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".html", ".xlsx", ".pdf", ".docx", ".gz"})
     relative = {p.relative_to(skill).as_posix() for p in files}
     if required - relative:
         raise ValueError("Missing release files: " + ", ".join(sorted(required - relative)))
+    manifest = json.loads((skill / "templates/pdf-template-manifest.json").read_text(encoding="utf-8"))
+    for name, info in manifest["templates"].items():
+        if hashlib.sha256((skill / "templates" / name).read_bytes()).hexdigest() != info["sha256"]:
+            raise ValueError("Fixed template changed after review: " + name)
     dist = repo / "dist"
     dist.mkdir(exist_ok=True)
     version = re.search(r'^  version:\s*"([0-9]+\.[0-9]+\.[0-9]+)"', (skill / "SKILL.md").read_text(encoding="utf-8"), re.MULTILINE)

@@ -1,67 +1,63 @@
-# 客户PDF交付
+# 固定模板PDF填写与打印
 
-两份客户PDF由 `scripts/export_pdf.py` 使用ReportLab直接生成，不经过PPT。WorkBuddy先执行 `template-generation.md` 的完整业务推导，再按 `template-contract.json` 写结构化正文。脚本只校验契约、汇总同源计划并排版，不替代业务分析。
+两份客户PDF由 `scripts/export_pdf.py` 填充随包固定HTML，再用本机Chrome/Edge无界面打印。BeautifulSoup只填文字和克隆数据行；字体、列宽、图形、表头、章节与分页骨架来自模板。生成阶段不重写HTML/CSS，不另造PDF脚本，没有ReportLab或通用排版回退。
 
-## 原模板契约
+## 先选模板，再写数据
 
-`report.template_profile` 必填 `platform` 或 `service`。前者对应平台型客户原模板：品牌/场景/竞品/信源/机会/优化/标签；执行保持四个主章及目标场景、发文明细附录。阶段与维护是内容创作机制的二级栏目，费用使用原报价卡，不增实际媒体组合章。后者保持项目或服务型原模板的主体事实、业务维度、风险、曝光、关键词、阶段推导及原执行章序。两类都保留客户选择路径与四层应答情况；它们描述客户业务，不是诊断教程。
+| profile | 诊断模板 | 执行模板 |
+| --- | --- | --- |
+| platform | `templates/platform-diagnosis.html` | `templates/platform-execution.html` |
+| service | `templates/service-diagnosis.html` | `templates/service-execution.html` |
 
-章节顺序、标题层级、必需矩阵及原表头以契约文件为准，不能再用七个通用长段落替代。所有必需章节与关键矩阵须有本客户内容；缺章、空表、错表头会拒绝导出。行数随真实业务而变，不套用原案例的问句数、发文数、评分或平台机制。
+写report前先读对应的两份HTML、`templates/pdf-template-manifest.json` 中的文字槽/段落/表绑定清单，以及 `references/template-contract.json` 的业务数据契约。HTML是固定输出骨架；contract说明要提供哪些业务数据。不能只看章节名称后自己重画页面。
 
-只替换客户业务内容，原格式不增写采集前言。客户summary直接写品牌情况与差距；采集方式、联网状态、回答数量、观察基础、样本边界和模板制作说明留内部。导出器会拒绝这些元话术，要求改写成业务分析；不会通过静默删句掩盖问题。具体资质、主体关系或服务承诺未确认时，在该事项旁简短说明。原表的单元格值和具体业务风险正常保留。
+模板SHA与manifest不匹配会拒绝生成。模板及manifest只在skill版本维护时一起更新；客户报告阶段修正report/plan数据，不改哈希绕过检查，也不复制模板或生成器到临时目录后改样式。
 
-最小数据形状（仅示意，不足以单独交付；完整虚构示例见 `report.example.json`）：
+## report仍写业务分析
 
-```json
-{
-  "template_profile": "platform",
-  "diagnosis": {
-    "summary": "品牌定位能够被识别，适用场景与交付责任仍需形成清楚的选择理由。",
-    "sections": [{
-      "key": "brand_recognition",
-      "title": "一、品牌现状",
-      "paragraphs": [{"title": "当前识别位置", "detail": "品牌服务定位清楚，客户选择前仍需要了解适用范围和双方责任。", "evidence_ref": ["内部证据索引"]}],
-      "tables": [{"id": "recognition", "columns": ["判定项", "直询结果", "说明"], "rows": [["业务识别", "服务定位可识别", "回答能说明主要服务，但适用条件仍需补齐"]]}]
-    }]
-  },
-  "execution": {"summary": "执行主线与投入重点。", "sections": []}
-}
-```
+保留 `template_profile`、diagnosis/execution的summary与sections。原模板的推导逻辑、证据和写作要求见 `template-generation.md`，完整虚构结构参考 `report.example.json`。
 
-`paragraphs`采用`title/detail/evidence_ref`，只补表内没有的判断，可为空。不逐表添加前言与总结，不重复摘要和单元格。状态格写短语，详细事实放说明列；来源覆盖矩阵保留“有/无/部分/待核实、质量、引用状态”的原短格形态，不能用长段把格子撑大。`evidence_ref`仅内部溯源，不打印。客户正文不放内部ID、本机路径、模板token、采集教程或处理流水账。
+| 数据位置 | 填写内容与边界 |
+| --- | --- |
+| `diagnosis.fields` / `execution.fields` | manifest列出的固定文字槽，值仅为字符串；如图注、原元信息栏、收口文字。客户、日期、费用等同源值由project/plan生成，不能用fields覆盖。 |
+| `diagnosis.blocks` / `execution.blocks` | manifest列出的原段落位置，采用title/detail条目；只补该位置需要的业务判断，不新增章节或布局。 |
+| `sections[].paragraphs` | 本节表内没有的独有判断，可为空；不逐表重复摘要或解释制作过程。 |
+| `sections[].tables` | 按contract原样columns与rows填写纯文本。`source=plan`的表由脚本取数，不能手填另一套数字。 |
+| `diagnosis.priority_cards` | 原四卡位置的四行 `[标题,优先级,说明]`，来自本客户真实优先任务，不照抄原案例标题与等级。 |
+| `diagnosis.layer_questions` | 四层对应的四条已有用户问法。它补充原图中的“用户问”，不改变原业务矩阵列数，不要求另行采集。未提供时生成器使用已有层关注问法。 |
 
-## 计划字段与机械表
+`data-slot`、`data-paragraphs`与`data-row`只是模板绑定方式，模型不提供HTML、CSS、样式参数或事件代码。填充器会安全转义文本，并保留固定DOM与行样式。原路径只印短阶段/问题，四层图按原左侧层级、中间现状与问法、右侧短状态填；不将旧业务影响长段再塞进图卡。
 
-`source=report` 的表由WorkBuddy按契约填 `columns/rows`。`source=diagnosis` 的用户路径与四层表由执行文档复用，避免两份报告互相矛盾。`source=plan` 的表由脚本生成，报告不得手填rows覆盖：
+manifest的required_blocks是原独立说明标题下的必填业务内容，必须在blocks填写；不能留下只有标题的空段。表内已讲清的普通引导段仍可为空，避免重复。缺省的可选附页按模板规则整块隐藏，不自行删改版式。
 
-- `stage_plan`：阶段目标与交付取 `plan.stages`，周范围、每周稿量、阶段独立内容和刊发数来自真实内容与投放。
-- `article_schedule`：原十/九列，第三列均为媒体类型。平台型端口表头按实际平台命名；保留浅蓝表头、阶段条及可容纳的同周合并。具体媒体去推荐Excel。
-- 平台型费用页只使用原报价卡，不渲染新增媒体/阶段/季度费用表和实际媒体组合章。budget节写`quote_card:{"name":"建议媒体投放方案","focus":"本客户配置重点","suitability":"适用考虑"}`；金额与配置由plan/analysis计算，字段不放内部检查话术。
-- 平台型附录恢复核心场景、平台方向、差异化三块两列表，无附加蓝色表头；选择理由及检查时点留内部映射。
-- 服务型仍按自身契约取数，不能将平台型新增的费用矩阵拼入。
-- `content_volume`：服务型诊断发文量推导，独立内容与刊发次数分列。
+原元信息槽按本案事实填写，不照搬原稿的检测模型、方法或日期。summary及正文直接说明品牌情况、差距、原因或策略及业务影响；不另加观察基础、回答数量、联网模式、样本边界或处理教程。具体主体、资质、收费及案例未确认时，在对应事实旁简短说明。`evidence_ref`与内部ID用于溯源，不打印。
 
-项目需 `start_date/end_date`；`plan.stages` 为 `[{"name":"阶段名称","objective":"阶段目标","deliverables":"可承诺交付","effect_target":"AI表现观察方向"}]`，name与contents.stage完全一致。每篇已选内容除原 `content_id/title/platform/stage/scheduled_date/question_ids/evidence/status` 外，填写 `source_layer/content_form/key_facts/observation_port/checkpoint`；`target_question`可直接写实际问句，否则从project.questions关联。周次自动从项目开始日期计算，不靠手填周号。其他费用可写 `stage`；未分配阶段的费用单列，不能静默漏掉。
+## 状态格按原短值填写
 
-示例字段：
+| 位置 | 常用原短值 |
+| --- | --- |
+| scene_matrix状态列、scene_details两项提及列 | 已出现、未出现、部分出现、待核实、不适用 |
+| source_layers覆盖状态 | 有、无、部分、待核实、不适用 |
+| source_layers覆盖质量 | 高、中、低、待核实、—、不适用 |
+| source_layers实际引用 | 是、否、部分、待核实、不适用 |
 
-```json
-{"content_id":"C001","title":"适用条件与交付边界","platform":"豆包","stage":"基础事实建设","scheduled_date":"2026-11-16","source_layer":"基础信源层","content_form":"专业说明稿","observation_port":"网页端","target_question":"哪些团队适合这项服务？","key_facts":"服务包含资料入库、权限检索与出处展示，实施范围按项目确认。","checkpoint":"第5周检查","status":"已选"}
-```
+这些格有硬校验。竞品名单和详细事实放scene_details的说明列或competitor_basis，来源资产说明放对应分析段；不能用长句撑大状态格。未确认不等于无，未被引用不等于页面不存在；保留待核实，不为凑原稿的红绿色块提高核验等级。长正文在原段落位置自然分页，不缩字号、截断或隐藏事实来凑原页数。
 
-实际媒体只用有效已选记录。文章日期、媒体日期、单价、次数、阶段及自然季度必须与同一plan一致；内容篇数与同稿多次刊发分别统计。修改plan后先重算analysis，PDF再次比对预算。不匹配拒绝输出。
+## 计划、内部映射与费用
 
-执行PDF还要求plan.logic_links覆盖原诊断的优先动作与建议标签，每条连接事实/竞争或信源依据、希望形成的选择理由、真实文章或客户自有动作、媒体角色、阶段和检查日。字段及语义审查见template-generation.md。导出器只验证覆盖、引用、阶段与日期，不替模型判断业务推导正确；映射不印入客户正文。
+项目保留start_date/end_date；stages写name、objective、deliverables、effect_target。每篇内容的stage与阶段名一致，并补齐source_layer、content_form、key_facts、observation_port、checkpoint及目标问题。周次、周频、独立内容与刊发量、费用均由同一plan计算；同稿多站发布分别计一次内容和多次刊发。修改计划或报价后先重算analysis，预算不一致拒绝导出。
 
-PDF费用只核实际执行的placements与fees。推荐媒体Excel读取更广的media_recommendations，不受该预算限制，不要求与执行子集同样条数；两者的相同资源应使用一致的原报价。
+执行PDF前，plan.logic_links须覆盖实际诊断优先项和建议标签，每条写事实/竞争或信源依据、希望形成的选择理由、实际文章或客户自有动作、媒体角色、阶段与检查日。客户自有动作允许不增加付费稿；有付费内容时，检查不得早于内容及有效刊发日期。机器只验覆盖、引用和时点，WorkBuddy仍需逐项检查文章是否解决该缺口、投入是否支持优先级、服务承诺是否有费用依据。映射不印入客户正文。
 
-## 预算与报价
+平台型沿用原费用报价卡、原阶段七列表和三块两列场景附录，不新增实际媒体组合章或阶段/季度费用表。budget节的quote_card填写name、focus、suitability；金额、稿量、刊发量与媒体配置由plan生成。service按自己的原表取数，不混用平台型结构。原表已有端口栏只填对应值，不展开采集说明。
 
-对客单价只读 `client_unit_price`。可采用已明确对客报价，或同值采用资源目录市场参考价形成建议包；后者须将原价格依据和报价日期放进 `price_basis/quotation_date`，不能称已确认售价。内部 `unit_price/price_tier` 不进客户PDF。价格说明集中一次，媒体单价列只显示金额，缺依据不造。
+当前默认建议执行目标及上限为20,000元；有明确目标时，正式方案已知费用须达到目标90%且不超上限。明确只给上限、允许少花时不强制花满。对客单价读client_unit_price；采用目录市场参考价时保留price_basis与quotation_date，不冒充确认售价。未报价的撰稿、官网建设、复测或维护不能写成已含刚性交付。
 
-当前默认建议预算目标和上限为20,000元；明确目标的正式已知方案须达到目标90%且不超上限。只给上限且明确允许少花时不强制花满。脚本调用统一 `validate_delivery_budget`，不能用虚构单价、服务费或补差项满足预算。未列价的撰稿、官网建设、后续维护等说明费用边界，不伪装已包含。约2万元示例是建议预算，不是确认结算承诺。
+预算只核实际placements与fees。推荐媒体.xlsx读取独立的media_recommendations，sheet1为网络媒体，sheet2为自媒体；推荐数量和资源标价总额不受该执行预算限制。两个输出中同一资源的原报价保持一致。
 
-## 导出及验证
+## 运行环境与命令
+
+安装本包requirements.txt中的Python依赖。本机需要Chrome或Edge，以及微软雅黑常规和粗体；Windows对应系统字体msyh.ttc、msyhbd.ttc。生成器还核对输出PDF实际使用的字体，两字重缺失或浏览器打印失败会拒绝交付。字体不随包重新分发，不再依赖旧Noto字体或伪粗体；无需Node、CDP或Codex私有运行时。
 
 在客户工作目录执行，替换安装路径：
 
@@ -69,10 +65,12 @@ PDF费用只核实际执行的placements与fees。推荐媒体Excel读取更广�
 python "技能目录/scripts/export_pdf.py" --analysis analysis.json --plan plan.json --report report.json --output-dir outputs/customer-pdf
 ```
 
-默认生成 `GEO诊断报告.pdf` 与 `品牌传播与GEO执行方案.pdf`；可用 `--kind diagnosis` 或 `--kind execution` 单独导出。同名文件已存在拒绝覆盖，保留旧文件并换新输出目录。首页只保留原有标题、客户与日期，不自动增加观察范围、回答条数或采集条件。
+默认同时生成GEO诊断报告.pdf、品牌传播与GEO执行方案.pdf；可用 `--kind diagnosis` 或 `--kind execution` 单独生成。同名输出已存在时保留旧文件，使用新版本目录。缺环境时说明具体缺项并保留数据，不交替代字体或临时自由排版的成品。
 
-通用版式示例位于 `templates/GEO诊断报告版式示例.pdf`、`templates/品牌传播与GEO执行方案版式示例.pdf`，来自同一代码和虚构资料。真实媒体及市场参考价来自内置目录，虚构客户与观察不能直接复用于真实业务。A4纵向，首页、客户路径页与分析正文分开，按原表列宽而非平均分配：说明列宽，状态/序号列窄；保留章节浅底蓝竖线、品牌三项判定卡与场景短状态色块。长表续页，不靠缩成小字或截断减少篇幅。
+## 验收看原稿与实际页面
 
-中文字体已随skill分发，覆盖常用中文、扩展A及标点，不按示例文字裁剪。许可证与来源在 `assets/fonts/`；运行只需requirements的公共依赖，不需要Codex、fontTools或系统中文字体。
+模板版本由维护者用已经提供的原文做私有重放，逐页对照原PDF：字体字重、标题位置、封面和路径页、图形与圆角、网格/胶囊、列宽、单元格写法、合并、续表、页脚与断页。相同页数、程序退出成功或虚构示例好看，都不能代替这项检查；未完成的对照不得写成已通过。
 
-导出后必须打开或逐页渲染检查：分析是否具体、原栏目是否齐全、所有选题及真实媒体是否能对上、量价是否一致、续表有内容行、中文/日期/页码无裁切。文本提取或程序成功不能替代视觉验证。
+客户生成只使用发布模板和本客户数据，逐页核对业务内容、量价、文字完整性及分页。新客户行数变化可自然增减页数，固定页面骨架与表形态保持。客户生成阶段不另索取原模板，也不重做真实客户报告来验证skill。
+
+公开仓库与迁移包只放空槽HTML及虚构版式示例；原客户PDF、截图、原文重放上下文和实采数据留私有工作区。开发验收与WorkBuddy安装实测分别记录，不用本地程序检查代替宿主环境验证。

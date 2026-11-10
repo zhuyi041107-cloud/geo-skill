@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GEO 落地执行方案</title>
+  <style>
+    @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"); font-style: normal; font-weight: 400; }
+    @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei Bold"); font-style: normal; font-weight: 700; }
+    :root {
+      --ink: #17233d; --text: #1f2a37; --muted: #8a94a6;
+      --blue: #1f4e79; --subhead: #24568c; --green: #0f6e56;
+      --rule: #c5d3e8; --pale: #f7faff;
+    }
+    @page {
+      size: 594.96pt 841.92pt;
+      margin: 42.75pt 39.75pt 42pt;
+      @bottom-center {
+        content: "GEO 落地执行方案    第 " counter(page) " 页 / 共 " counter(pages) " 页";
+        font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        font-size: 8pt; font-weight: 400; line-height: 10pt; letter-spacing: 3.1pt; white-space: pre;
+        color: #9bb0bf; border-top: .45pt solid #cbdde8;
+        margin-top: 6pt; padding-top: .75pt; height: 13pt; width: 100%; vertical-align: top;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { background: white; }
+    body {
+      margin: 0; color: var(--text); background: white;
+      font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+      font-size: 10.5pt; line-height: 18pt; font-weight: 400;
+      font-synthesis: none; overflow-wrap: anywhere;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    h1, h2, h3, h4, p { margin: 0; }
+    h1, h2, h3, h4, strong, b, th { font-weight: 700; }
+    template { display: none !important; }
+    [data-slot], [data-field], td, th { white-space: pre-line; }
+    .cover, .journey { break-after: page; page-break-after: always; }
+    .cover { padding: 8.25pt 3pt 0; }
+    .cover h1 { font-size: 22pt; line-height: 32pt; color: var(--ink); margin: 0 0 6.75pt; }
+    .cover-subtitle { font-size: 11pt; line-height: 18pt; color: var(--muted); }
+    .cover-rule { height: 3pt; border-radius: 2pt; background: linear-gradient(90deg, #1f4e79, #2f6fb5); margin: 9.75pt 0 10.5pt; }
+    .cover-meta { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9.5pt; line-height: 15pt; }
+    .cover-meta col:first-child { width: 24%; }
+    .cover-meta td { border: .6pt solid var(--rule); padding: 4.5pt 6pt; vertical-align: middle; }
+    .cover-meta td:first-child { color: var(--blue); font-weight: 700; background: #eef3f9; }
+    .cover-judgment { margin: 8.25pt 0 9pt; padding: 9pt 10.5pt; border-left: 3pt solid #2f6fb5; border-radius: 0 4.5pt 4.5pt 0; background: #e8f2fc; font-size: 10pt; line-height: 17.25pt; }
+    .contents { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt; margin: 9pt 0; }
+    .contents > div { border: .6pt solid #d4deed; border-radius: 4.5pt; padding: 6pt 8.25pt 5.25pt; font-size: 9.5pt; line-height: 17.25pt; }
+    .contents b { color: var(--blue); margin-right: 5.25pt; }
+    .cover-note { font-size: 9pt; line-height: 15pt; color: var(--muted); margin-top: 10.5pt; }
+    .journey { padding: 0 3pt; }
+    .journey h2 { font-size: 14.25pt; line-height: 22.5pt; color: var(--ink); text-align: center; margin: 0 0 3pt; }
+    .journey-subtitle { font-size: 9pt; line-height: 15pt; color: var(--muted); text-align: center; margin-bottom: 9pt; }
+    .decision-cards { display: grid; grid-template-columns: repeat(4, 117.75pt); gap: 12.75pt; }
+    .decision-card { position: relative; height: 90pt; border: .6pt solid #d2ddc5; border-top: 3.75pt solid #618f43; border-radius: 6pt; background: #f3f8ed; padding: 8.25pt 7.5pt; text-align: center; }
+    .decision-card:not(:last-child)::after { content: "›"; position: absolute; right: -9.5pt; top: 33.5pt; font-size: 12pt; font-weight: 700; color: #98a9bf; }
+    .decision-card:nth-child(3) { border-color: #ecd6aa; border-top-color: #c58a26; background: #fbf6e8; }
+    .decision-card:nth-child(4) { border-color: #ecc4c5; border-top-color: #bb3738; background: #fbefef; }
+    .decision-card h3 { color: #294425; font-size: 10.5pt; line-height: 16.5pt; margin-bottom: 3pt; }
+    .decision-card p { color: #718096; font-size: 8.5pt; line-height: 12.75pt; white-space: pre-line; }
+    .journey-bands { display: grid; grid-template-columns: 1fr 1fr; gap: 9pt; margin: 7.5pt 0; }
+    .journey-bands > div { border: .6pt solid #c9dfaa; border-radius: 4pt; padding: 5.25pt 6pt; font-size: 9.5pt; line-height: 16.5pt; font-weight: 700; text-align: center; color: #3e6d21; background: #eaf4de; }
+    .journey-bands > div:last-child { color: #b32e30; border-color: #efbfc0; background: #fbe9e9; }
+    .journey-caption { text-align: center; font-size: 9.37pt; line-height: 15pt; }
+    .response-heading { margin-top: 16.5pt !important; }
+    .response-cards { display: flex; flex-direction: column; gap: 6pt; margin-top: 9pt; }
+    .response-card { --tone: #568e34; display: grid; grid-template-columns: 116.25pt 1fr 124.5pt; gap: 4.5pt; align-items: center; position: relative; min-height: 80.25pt; border: .6pt solid #d9e2ee; border-radius: 7.5pt; background: #fafcff; padding: 8.25pt 10.5pt 8.25pt 23.25pt; break-inside: avoid; page-break-inside: avoid; }
+    .response-card::before { content: ""; position: absolute; top: 7.5pt; bottom: 7.5pt; left: 10.5pt; width: 3.75pt; border-radius: 2pt; background: var(--tone); }
+    .response-card:nth-child(2) { --tone: #c58a26; }
+    .response-card:nth-child(3) { --tone: #2f6fb5; }
+    .response-card:nth-child(4) { --tone: #bb3738; }
+    .response-left h3 { color: var(--tone); font-size: 10.87pt; line-height: 17.25pt; }
+    .response-left p { color: var(--muted); font-size: 8.62pt; line-height: 15pt; margin-top: 3pt; }
+    .response-detail { font-size: 9pt; line-height: 15pt; }
+    .response-query { margin-top: 4.5pt; font-size: 9pt; line-height: 15pt; font-weight: 700; color: var(--ink); }
+    .query-label { display: inline; font-size: 7.5pt; line-height: 12pt; padding: 1.5pt 3pt; margin-right: 5.25pt; color: white; background: var(--tone); border-radius: 1.5pt; white-space: nowrap; }
+    .response-state { text-align: right; }
+    .response-state .status { display: inline-block; border: .75pt solid var(--tone); border-radius: 20pt; padding: 4.5pt 9pt; font-size: 8.62pt; line-height: 15pt; font-weight: 700; color: var(--tone); background: white; text-align: center; }
+    .chapter { margin: 18pt 0 6pt; min-height: 38.6pt; padding: 8.25pt 10.5pt; border-left: 4.5pt solid var(--blue); border-bottom: .6pt solid #d6e1ed; border-radius: 0 0 7.5pt 0; background: linear-gradient(90deg, #edf3fa, #f8fafd 74%, #fff); color: var(--ink); font-size: 15pt; line-height: 21pt; break-after: avoid; page-break-after: avoid; }
+    .chapter.appendix { color: #5b6b82; }
+    main > section:first-child > .chapter { margin-top: 18pt; }
+    .lead { margin: 0 0 6pt; }
+    .lead h4 { font-size: 10.5pt; line-height: 18pt; font-weight: 400; color: var(--text); margin: 0 0 3pt; break-after: avoid; page-break-after: avoid; }
+    .lead h4:empty, .lead p:empty { display: none; }
+    .lead p { font-size: 10.5pt; line-height: 18pt; orphans: 2; widows: 2; }
+    .muted-copy .lead p, .intro-copy .lead p { color: #617897; font-size: 9.5pt; line-height: 16.5pt; }
+    .subheading { font-size: 12.5pt; line-height: 19.5pt; color: var(--subhead); margin: 9pt 0 6pt; break-after: avoid; page-break-after: avoid; }
+    .table-label { margin: 5.25pt 0; font-size: 10.5pt; line-height: 18pt; break-after: avoid; page-break-after: avoid; }
+    [data-paragraphs="content_label"] > .lead { margin-bottom: 5.25pt; }
+    .content-types-table { margin-bottom: 4.5pt !important; }
+    .data-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 9pt; line-height: 15.75pt; margin: 0 0 6pt; }
+    .data-table th { border: .6pt solid #47759f; background: linear-gradient(180deg, #2b5f91, #1f4e79); color: white; padding: 3pt 4.5pt; text-align: center; vertical-align: middle; }
+    .data-table td { border: .6pt solid var(--rule); padding: 3pt 4.5pt; vertical-align: middle; }
+    .data-table tr { break-inside: avoid; page-break-inside: avoid; }
+    .data-table thead { display: table-header-group; }
+    .data-table tfoot { display: table-footer-group; }
+    .data-table td:first-child { text-align: center; }
+    .platform-table td:first-child { white-space: nowrap; overflow-wrap: normal; }
+    .data-table.center-last td:last-child { text-align: center; }
+    .overview-cards, .stage-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6.75pt; margin: 7.5pt 0 9pt; }
+    .overview-card, .stage-card { background: var(--pale); border: .6pt solid #d4e1ef; border-radius: 4.5pt; padding: 7.5pt; break-inside: avoid; page-break-inside: avoid; }
+    .overview-card h4, .stage-kicker { color: var(--green); font-size: 9pt; line-height: 15pt; font-weight: 700; }
+    .overview-value { color: var(--ink); font-size: 12.5pt; line-height: 18pt; font-weight: 700; margin: 3pt 0; }
+    .overview-detail { color: #617897; font-size: 8.5pt; line-height: 12.75pt; }
+    .stage-card { min-height: 180pt; }
+    [data-paragraphs="article_delivery"] > .lead { margin-bottom: 1.5pt; }
+    .stage-cards { margin-top: 6pt; }
+    .stage-title { color: var(--ink); font-size: 12.5pt; line-height: 16.5pt; font-weight: 700; margin: 3pt 0 0; }
+    .stage-detail { color: #617897; font-size: 8.5pt; line-height: 12.75pt; }
+    .stage-table th { padding: 3pt 4.5pt; }
+    .stage-table td:first-child { text-align: left; color: #24568c; background: #e5f1fa; }
+    .stage-table tr:nth-child(2) td:first-child { color: #087e78; background: #e5f5f2; }
+    .stage-table tr:nth-child(3) td:first-child { color: #6b48aa; background: #f0ebfa; }
+    .stage-table td:nth-child(2), .stage-table td:nth-child(4), .stage-table td:nth-child(5) { text-align: center; }
+    .quote-deck { width: 100%; margin: 12pt 0 9pt; border-collapse: collapse; }
+    .quote-deck > tbody { display: grid; grid-template-columns: 250.5pt 250.5pt; gap: 15pt; counter-reset: quote; }
+    .quote-card { display: block; width: 250.5pt; min-height: 322.5pt; border: .6pt solid #d5e1ee; border-top: 2.25pt solid #0f795d; border-radius: 4.5pt; padding: 18.75pt 18pt 12pt; counter-increment: quote; break-inside: avoid; page-break-inside: avoid; }
+    .quote-card:nth-child(even) { border-top-color: var(--blue); }
+    .quote-card > td { display: block; padding: 0; border: 0; }
+    .quote-card > td:first-child { color: var(--ink); font-size: 15.5pt; line-height: 24pt; font-weight: 700; margin-bottom: 8.25pt; }
+    .quote-card > td:first-child::before { display: block; content: "方案" counter(quote, cjk-ideographic); color: #8a9db8; font-size: 10pt; line-height: 15.75pt; font-weight: 700; margin-bottom: 9pt; }
+    .quote-card > td:nth-child(2) { color: var(--blue); font-size: 34pt; line-height: 42pt; font-weight: 700; white-space: nowrap; }
+    .quote-card > td:nth-child(2)::before { content: "¥"; font-size: 15pt; margin-right: 3pt; }
+    .quote-card > td:nth-child(2)::after { content: "元"; font-size: 14pt; margin-left: 3pt; }
+    .quote-card > td:nth-child(3) { color: #8a9db8; font-size: 9.5pt; line-height: 16.5pt; margin-top: -7.5pt; margin-bottom: 7.5pt; }
+    .quote-card > td:nth-child(n+4) { display: grid; grid-template-columns: 57pt 1fr; gap: 0; padding: 9pt 0 6.75pt; border-top: .6pt solid #e4ebf5; font-size: 10pt; line-height: 16.5pt; }
+    .quote-card > td:nth-child(n+4)::before { color: #8a9db8; }
+    .quote-card > td:nth-child(4)::before { content: "测算口径"; }
+    .quote-card > td:nth-child(5)::before { content: "媒体配置"; }
+    .quote-card > td:nth-child(6)::before { content: "配置重点"; }
+    .quote-card > td:nth-child(7)::before { content: "适用考虑"; }
+    .actions-table td:last-child, .paths-table td:last-child { padding: 3pt; text-align: center; }
+    .actions-table .status, .paths-table .status { display: inline-block; color: #d64a41; background: #fff1ee; border: .6pt solid #f1b9ae; border-radius: 14pt; padding: 0 5.25pt; font-size: 8.25pt; line-height: 14.25pt; font-weight: 700; white-space: nowrap; }
+    .status[data-value="重要"], .status[data-value="partial"] { color: #b77818; background: #fff8e9; border-color: #efcf89; }
+    .status[data-value="建议"], .status[data-value="on"] { color: #138f87; background: #e9f7f5; border-color: #9ed9d4; }
+    .status[data-value="unknown"] { color: #708198; background: #f2f5f8; border-color: #c6d1dd; }
+    .schedule-title { color: var(--text); font-size: 15pt; line-height: 24pt; margin: 15pt 0 12pt; break-after: avoid; page-break-after: avoid; }
+    .schedule { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 1.5pt; margin: 0 0 6pt; font-size: 8pt; line-height: 13.5pt; }
+    .schedule th { background: #eef3f9; border: .6pt solid var(--rule); color: #24436a; font-size: 8pt; line-height: 13.5pt; text-align: center; vertical-align: middle; padding: 4.5pt 3pt; height: 36pt; }
+    .schedule td { border: .6pt solid var(--rule); text-align: center; vertical-align: middle; padding: 4.5pt 3pt; font-size: 8pt; line-height: 13.5pt; }
+    .schedule thead { display: table-header-group; }
+    .schedule tr { break-inside: avoid; page-break-inside: avoid; }
+    .schedule .stage-row { break-after: auto; page-break-after: auto; }
+    .schedule .stage-row td { padding: 3pt 6pt; background: #2f6fb5; color: white; font-size: 8.25pt; line-height: 13.5pt; font-weight: 700; border: 0; }
+    .schedule .total-row td { padding: 3pt; background: #fdf2df; font-weight: 700; }
+    .schedule-notes .lead { padding: 6pt 8.25pt; border: .6pt solid #d5e0ee; border-radius: 4.5pt; background: #f3f6fb; margin: 6pt 0; break-inside: avoid; page-break-inside: avoid; }
+    .schedule-notes .lead p { font-size: 9.5pt; line-height: 16.5pt; }
+    .scope-notes { margin-top: 0; padding-top: 1.5pt; }
+    .scope-notes > .subheading { margin-top: 0; font-size: 12pt; line-height: 18pt; }
+    .budget-section > .chapter { margin-top: 0; }
+    .chapter-start { break-before: page; page-break-before: always; }
+    @media screen { body { width: 515.46pt; margin: 42.75pt auto; } .cover, .journey { margin-bottom: 36pt; } }
+  </style>
+</head>
+<body>
+  <section class="cover" aria-label="封面">
+    <h1><span data-slot="client_name"></span> GEO 落地执行方案</h1>
+    <p class="cover-subtitle" data-slot="subtitle"></p>
+    <div class="cover-rule"></div>
+    <table class="cover-meta"><colgroup><col><col></colgroup><tbody>
+      <tr><td>媒体投放矩阵</td><td data-slot="media_mix"></td></tr>
+      <tr><td>平台范围</td><td data-slot="platform_names"></td></tr>
+      <tr><td>执行周期与总量</td><td data-slot="execution_period"></td></tr>
+      <tr><td>复测节点</td><td data-slot="checkpoints"></td></tr>
+      <tr><td>方案日期</td><td data-slot="report_date"></td></tr>
+    </tbody></table>
+    <div class="cover-judgment" data-slot="summary"></div>
+    <div class="contents">
+      <div><b>一、</b>执行总览</div><div><b>二、</b>内容创作机制与阶段规划</div>
+      <div><b>三、</b>费用预估</div><div><b>四、</b>客户侧配合动作</div>
+      <div><b>附：</b>场景清单</div><div><b>附：</b>发文排期明细</div>
+    </div>
+    <p class="cover-note">本报告 / 方案为结构性推断与经验估算，不构成效果承诺。</p>
+  </section>
+
+  <section class="journey" aria-label="决策路径与应答结构">
+    <h2>用户从「看到你」到「买你」的路径</h2>
+    <p class="journey-subtitle" data-slot="journey_subtitle"></p>
+    <div class="decision-cards" data-table="decision_path"></div>
+    <div class="journey-bands"><div data-slot="recognition_band"></div><div data-slot="decision_band"></div></div>
+    <p class="journey-caption" data-slot="recognition_caption"></p>
+    <p class="journey-caption" data-slot="decision_caption"></p>
+    <h2 class="response-heading" data-slot="response_title"></h2>
+    <p class="journey-subtitle">越在下层越接近成交，也越难被别人替代</p>
+    <div class="response-cards" data-table="response_layers"></div>
+  </section>
+
+  <main>
+    <section>
+      <h2 class="chapter">一、执行总览</h2>
+      <div class="intro-copy" data-paragraphs="overview"></div>
+      <div class="overview-cards" data-table="overview_cards"></div>
+      <h3 class="subheading">1.1 项目目标与首次检查</h3>
+      <table class="data-table center-last"><colgroup><col style="width:28.3945%"><col style="width:62.7067%"><col style="width:8.8988%"></colgroup><thead><tr><th>项目目标</th><th>主要工作</th><th>首次检查</th></tr></thead><tbody data-table="objectives"></tbody></table>
+      <div data-paragraphs="service_arrangement"></div>
+      <h3 class="subheading">1.2 平台采信规则</h3>
+      <table class="data-table platform-table"><colgroup><col style="width:10.252%"><col style="width:24.552%"><col style="width:65.196%"></colgroup><thead><tr><th>平台</th><th>内容定位</th><th>采信偏好</th></tr></thead><tbody data-table="platform_roles"></tbody></table>
+      <div data-paragraphs="platform_caveat"></div>
+      <p class="table-label">统一执行原则（未刊·内部备查）</p>
+      <table class="data-table"><colgroup><col style="width:10.252%"><col style="width:89.748%"></colgroup><tbody data-table="content_rules"></tbody></table>
+      <h3 class="subheading">1.3 全域 GEO 执行红线</h3>
+      <table class="data-table"><colgroup><col style="width:9.3%"><col style="width:90.7%"></colgroup><tbody data-table="execution_redlines"></tbody></table>
+    </section>
+
+    <section>
+      <h2 class="chapter">二、内容创作机制与阶段规划</h2>
+      <div class="intro-copy" data-paragraphs="content_standards"></div>
+      <h3 class="subheading">2.1 内容类型与需贵司提供的参考素材</h3>
+      <table class="data-table content-types-table"><colgroup><col style="width:13.65%"><col style="width:45.2%"><col style="width:41.15%"></colgroup><thead><tr><th>内容类型</th><th>内容安排</th><th>需贵司提供的参考素材</th></tr></thead><tbody data-table="content_types"></tbody></table>
+      <div data-paragraphs="content_label"></div>
+      <p class="table-label">本案专属内容口径规范（未刊·内部备查）</p>
+      <table class="data-table"><colgroup><col style="width:11.3%"><col style="width:88.7%"></colgroup><tbody data-table="fact_boundaries"></tbody></table>
+      <div data-paragraphs="article_delivery"></div>
+      <div class="muted-copy" data-paragraphs="rollout"></div>
+      <div class="stage-cards" data-table="stage_cards"></div>
+      <table class="data-table stage-table"><colgroup>
+        <col style="width:16.6137%"><col style="width:5.2296%"><col style="width:26.7485%"><col style="width:5.8592%"><col style="width:5.9684%"><col style="width:20.6346%"><col style="width:18.946%">
+      </colgroup><thead><tr><th>阶段</th><th>周次范围</th><th>阶段核心目标</th><th>周度固定发文量</th><th>本阶段产出稿件</th><th>服务商刚性交付指标</th><th>AI 效果目标</th></tr></thead><tbody data-table="stage_plan"></tbody></table>
+    </section>
+
+    <section>
+      <h3 class="subheading">2.2 长期维护稳定计划与调整方式<span data-slot="maintenance_scope"></span></h3>
+      <div data-paragraphs="maintenance"></div>
+      <table class="data-table center-last"><colgroup><col style="width:19.7936%"><col style="width:59.2373%"><col style="width:20.9691%"></colgroup><thead><tr><th>后续阶段</th><th>安排与调整方式</th><th>频次</th></tr></thead><tbody data-table="maintenance_plan"></tbody></table>
+      <h3 class="subheading">防衰减三条红线：</h3>
+      <div data-paragraphs="maintenance_redlines" data-required="true"></div>
+    </section>
+
+    <section class="chapter-start budget-section">
+      <h2 class="chapter">三、费用预估</h2>
+      <div data-paragraphs="budget"></div>
+      <table class="quote-deck"><tbody data-table="quote_cards"></tbody></table>
+      <div data-paragraphs="budget_notes"></div>
+    </section>
+
+    <section class="chapter-start">
+      <h2 class="chapter">四、客户侧配合动作</h2>
+      <div data-paragraphs="client_actions"></div>
+      <table class="data-table actions-table"><colgroup><col style="width:15.5%"><col style="width:76.7%"><col style="width:7.8%"></colgroup><thead><tr><th>配合动作</th><th>说明</th><th>优先级</th></tr></thead><tbody data-table="client_actions"></tbody></table>
+      <div data-paragraphs="identity_boundary"></div>
+      <table class="data-table paths-table"><colgroup><col style="width:22.053%"><col style="width:70.15%"><col style="width:7.797%"></colgroup><thead><tr><th>路径</th><th>核心操作</th><th>优先级</th></tr></thead><tbody data-table="specific_paths"></tbody></table>
+      <div data-paragraphs="specific_paths_note"></div>
+    </section>
+
+    <section>
+      <h2 class="chapter appendix">附：场景清单</h2>
+      <h3 class="subheading">3.2 全域核心必出场景</h3>
+      <div data-paragraphs="target_scenes"></div>
+      <table class="data-table"><colgroup><col style="width:15.8669%"><col style="width:84.1331%"></colgroup><tbody data-table="target_scenes"></tbody></table>
+      <h3 class="subheading">3.3 平台专属高命中场景</h3>
+      <div data-paragraphs="platform_scenes"></div>
+      <table class="data-table"><colgroup><col style="width:10.3363%"><col style="width:89.6637%"></colgroup><tbody data-table="platform_scenes"></tbody></table>
+      <h3 class="subheading">3.4 差异化心智专属推荐场景</h3>
+      <div data-paragraphs="differentiation"></div>
+      <table class="data-table"><colgroup><col style="width:20.8168%"><col style="width:79.1832%"></colgroup><tbody data-table="differentiation"></tbody></table>
+      <h3 class="subheading">3.5 不会推荐的场景（合规红线）</h3>
+      <div data-paragraphs="excluded_scenes" data-required="true"></div>
+    </section>
+
+    <section>
+      <h2 class="schedule-title">附：发文排期明细</h2>
+      <div data-paragraphs="article_schedule"></div>
+      <table class="schedule"><colgroup>
+        <col style="width:6.060606%"><col style="width:10.131439%"><col style="width:8.873524%"><col style="width:9.034485%"><col style="width:14.822935%"><col style="width:10.149688%"><col style="width:9.085695%"><col style="width:11.943865%"><col style="width:12.895219%"><col style="width:7.002544%">
+      </colgroup><thead><tr><th>周次</th><th>信源层</th><th>媒体类型</th><th>内容形态</th><th>拟发标题</th><th>平台</th><th data-slot="port_heading"></th><th>对应目标问句</th><th>核心卖点 / 可核验事实</th><th>节点</th></tr></thead><tbody data-table="article_schedule" data-merge-columns="0,1,2,3,5,6,7,8"></tbody><tbody><tr class="total-row"><td>合计</td><td colspan="9" data-slot="schedule_total"></td></tr></tbody></table>
+      <div class="schedule-notes" data-paragraphs="schedule_notes"></div>
+    </section>
+    <section class="scope-notes chapter-start" data-optional-section="scope_notes">
+      <h3 class="subheading">附：方案口径说明</h3>
+      <div data-paragraphs="scope_notes"></div>
+    </section>
+  </main>
+
+  <template data-paragraph><div class="lead"><h4 data-field="title"></h4><p data-field="detail"></p></div></template>
+  <template data-row="decision_path"><div class="decision-card"><h3>{{cell0}}</h3><p>{{cell1}}</p></div></template>
+  <template data-row="response_layers"><div class="response-card"><div class="response-left"><h3>{{cell0}}</h3><p>{{cell1}}</p></div><div><p class="response-detail">{{cell2}}</p><p class="response-query"><span class="query-label">用户问</span>{{cell5}}</p></div><div class="response-state"><span class="status" data-value="{{cell3}}">{{cell3}}</span></div></div></template>
+  <template data-row="overview_cards"><div class="overview-card"><h4>{{cell0}}</h4><p class="overview-value">{{cell1}}</p><p class="overview-detail">{{cell2}}</p></div></template>
+  <template data-row="objectives"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td></tr></template>
+  <template data-row="platform_roles"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td></tr></template>
+  <template data-row="content_rules"><tr><td>{{cell0}}</td><td>{{cell1}}</td></tr></template>
+  <template data-row="execution_redlines"><tr><td>{{cell0}}</td><td>{{cell1}}</td></tr></template>
+  <template data-row="content_types"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td></tr></template>
+  <template data-row="fact_boundaries"><tr><td>{{cell0}}</td><td>{{cell1}}</td></tr></template>
+  <template data-row="stage_cards"><div class="stage-card"><p class="stage-kicker">{{cell0}} · {{cell1}}</p><h4 class="stage-title">{{cell2}}</h4><p class="stage-detail">{{cell3}}，本阶段 {{cell4}}；{{cell5}}。目标：{{cell6}}</p></div></template>
+  <template data-row="stage_plan"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td><td>{{cell3}}</td><td>{{cell4}}</td><td>{{cell5}}</td><td>{{cell6}}</td></tr></template>
+  <template data-row="maintenance_plan"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td></tr></template>
+  <template data-row="quote_cards"><tr class="quote-card"><td>{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td><td>{{cell3}}</td><td>{{cell4}}</td><td>{{cell5}}</td><td>{{cell6}}</td></tr></template>
+  <template data-row="client_actions"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td><span class="status" data-value="{{cell2}}">{{cell2}}</span></td></tr></template>
+  <template data-row="specific_paths"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td><span class="status" data-value="{{cell2}}">{{cell2}}</span></td></tr></template>
+  <template data-row="target_scenes"><tr><td>{{cell0}}</td><td>{{cell1}}</td></tr></template>
+  <template data-row="platform_scenes"><tr><td>{{cell0}}</td><td>{{cell1}}</td></tr></template>
+  <template data-row="differentiation"><tr><td>{{cell0}}</td><td>{{cell1}}</td></tr></template>
+  <template data-stage-row="article_schedule"><tr class="stage-row"><td colspan="10">{{stage_label}}</td></tr></template>
+  <template data-row="article_schedule"><tr><td>{{cell0}}</td><td>{{cell1}}</td><td>{{cell2}}</td><td>{{cell3}}</td><td>{{cell4}}</td><td>{{cell5}}</td><td>{{cell6}}</td><td>{{cell7}}</td><td>{{cell8}}</td><td>{{cell9}}</td></tr></template>
+</body>
+</html>
