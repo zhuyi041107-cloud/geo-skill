@@ -1,6 +1,7 @@
 """Portable GEO workbook preparation, evidence statistics and budget exports."""
 import argparse
 import json
+import re
 import sys
 from collections import defaultdict
 from copy import copy
@@ -8,6 +9,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.parse import urlparse
+from zipfile import ZipFile
 
 import openpyxl
 
@@ -175,11 +177,11 @@ def inspect_client(path):
         wb.close()
 
 
-def prepare(project, out):
+def prepare_internal(project, out):
     validate_project(project)
     if Path(out).exists():
         raise ValueError(f"输出已存在，拒绝覆盖: {out}")
-    wb = openpyxl.load_workbook(ROOT / "templates/AI回答采集表.xlsx")
+    wb = openpyxl.load_workbook(ROOT / "references/内部判读底表.xlsx")
     metadata = {k: v for k, v in project.items() if k != "questions"}
     put_rows(wb["项目配置"], [[k, json.dumps(v, ensure_ascii=False), "由WorkBuddy配置"] for k, v in metadata.items()])
     put_rows(wb["问题清单"], [[q["question_id"], q["type"], q["intent"], q.get("theme"), q["text"], q.get("priority"), q.get("notes")] for q in project["questions"]])
@@ -193,6 +195,161 @@ def prepare(project, out):
     save_new(wb, out)
     wb.close()
     return {"output": str(out), "questions": len(project["questions"]), "samples": len(samples)}
+
+
+def prepare(project, out=None, out_dir=None):
+    """Produce only the three columns a colleague needs to collect."""
+    validate_project(project)
+    contexts = project["contexts"]
+    if out and (out_dir or len(contexts) != 1):
+        raise ValueError("--out仅用于单个context；多个平台/模式请使用--out-dir")
+    if not out and not out_dir:
+        raise ValueError("请提供--out或--out-dir")
+    targets = []
+    for i, context in enumerate(contexts, 1):
+        label = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", f"{context['platform']}-{context['mode']}")[:80]
+        target = Path(out) if out else Path(out_dir) / f"{i:02d}-{label}-回答采集.xlsx"
+        if target.exists():
+            raise ValueError(f"输出已存在，拒绝覆盖: {target}")
+        targets.append(target)
+    for target in targets:
+        wb = openpyxl.load_workbook(ROOT / "templates/AI回答采集表.xlsx")
+        put_rows(wb["回答采集"], [[q["text"], None, None] for q in project["questions"] for _ in range(project.get("repeats", 1))])
+        save_new(wb, target)
+        wb.close()
+    return {"outputs": [str(p) for p in targets], "questions": len(project["questions"]), "rows_per_file": len(project["questions"]) * project.get("repeats", 1)}
+
+
+def normalize_collection(input_path, project, context, out, base=None):
+    """Import a three-column collection without inventing sampling metadata."""
+    validate_project(project)
+    input_path, out = Path(input_path).resolve(), Path(out).resolve()
+    if out.exists():
+        raise ValueError(f"输出已存在，拒绝覆盖: {out}")
+    options = project["contexts"]
+    if str(context).isdigit():
+        selected = int(context) - 1
+        if selected < 0 or selected >= len(options):
+            raise ValueError("context序号超出范围（从1开始）")
+    else:
+        matches = [i for i, c in enumerate(options) if c["platform"] == context]
+        if len(matches) != 1:
+            raise ValueError("平台不唯一或不存在，请使用context序号")
+        selected = matches[0]
+    source = openpyxl.load_workbook(input_path, data_only=False)
+    visible = [s for s in source if s.sheet_state == "visible"]
+    if len(visible) != 1 or [c.value for c in next(visible[0].iter_rows(max_row=1))][:3] != ["问题", "引用截图", "答案"]:
+        source.close()
+        raise ValueError("采集表须有一个可见sheet，表头为：问题、引用截图、答案")
+    ws = visible[0]
+    if ws.max_column > 3 and any(c.value not in (None, "") for row in ws.iter_rows(min_col=4) for c in row):
+        raise ValueError("三列外存在内容，请由WorkBuddy确认后再导入，避免丢失数据")
+    images = defaultdict(list)
+    for image in ws._images:
+        marker = getattr(image.anchor, "_from", None)
+        if marker is None or marker.col != 1 or marker.row < 1:
+            raise ValueError("嵌入图片须锚定在引用截图列的对应问题行，不能静默丢图")
+        images[marker.row + 1].append(image)
+    with ZipFile(input_path) as package:
+        media = [n for n in package.namelist() if n.startswith("xl/media/") and not n.endswith("/")]
+        if any("cellimages" in n.lower() or n.startswith("xl/richData/") for n in package.namelist()) or len(media) > len(ws._images):
+            raise ValueError("检测到无法可靠关联的单元格图片；请将其转为锚定在引用截图列的浮动图片或同目录附件后导入")
+    metadata = dict(project.get("sampling_metadata") or {})
+    metadata.update(options[selected].get("sampling_metadata") or {})
+    by_question = defaultdict(list)
+    for q in project["questions"]:
+        by_question[text(q["text"])].append(q)
+    used = defaultdict(int)
+    records = []
+    for row_index, row in enumerate(ws.iter_rows(min_row=2, max_col=3), 2):
+        question, screenshot, answer = [c.value for c in row]
+        if not any(v not in (None, "") for v in (question, screenshot, answer)) and row_index not in images:
+            continue
+        candidates = by_question.get(text(question), [])
+        occurrence = used[text(question)]
+        if not candidates or occurrence >= len(candidates) * project.get("repeats", 1):
+            raise ValueError(f"第{row_index}行问题不在项目配置或超出重复次数，请让WorkBuddy核对实际问句")
+        q = candidates[occurrence // project.get("repeats", 1)]
+        repeat = occurrence % project.get("repeats", 1) + 1
+        used[text(question)] += 1
+        records.append((row_index, q, repeat, screenshot, answer))
+    represented = {r[0] for r in records}
+    if any(r not in represented for r in images):
+        raise ValueError("存在未关联问题的截图，拒绝静默丢图")
+    if base:
+        target = openpyxl.load_workbook(base)
+        config = {r["字段"]: json.loads(r["值(JSON)"]) for r in load_rows(target, "项目配置", ["字段", "值(JSON)", "说明"])}
+        old_questions = load_rows(target, "问题清单", QUESTION_HEADERS)
+        if any(config.get(k) != project.get(k) for k in ["project_id", "contexts"]) or [(q["question_id"], q["目标问题"]) for q in old_questions] != [(q["question_id"], q["text"]) for q in project["questions"]] or config.get("repeats", 1) != project.get("repeats", 1):
+            raise ValueError("--base与项目配置/问题/contexts不一致，不能合并")
+    else:
+        prepare_internal(project, out)
+        target = openpyxl.load_workbook(out)
+    target_rows = {r[0].value: r[0].row for r in target["回答记录"].iter_rows(min_row=2) if r[0].value}
+    refs = [[r.get(h) for h in CITATION_HEADERS] for r in load_rows(target, "引用明细", CITATION_HEADERS)]
+    extracted, warnings = [], []
+    attachment_dir = out.parent / "引用截图" / out.stem
+    try:
+        for original_row, q, repeat, attachment, answer in records:
+            sid = f"{q['question_id']}-C{selected+1:03d}-R{repeat:02d}"
+            row = target_rows[sid]
+            if target["回答记录"].cell(row, SAMPLE_HEADERS.index("回答全文") + 1).value not in (None, ""):
+                raise ValueError(f"任务{sid}已有答案，拒绝覆盖；新采样请建立新轮次")
+            paths = []
+            no_display = text(attachment) in {"未展示", "未展示可观察引用"}
+            for index, image in enumerate(images.get(original_row, []), 1):
+                data = image._data()
+                extension = re.sub(r"[^a-z0-9]", "", image.format.lower()) or "png"
+                path = attachment_dir / f"row-{original_row:04d}-image-{index:02d}.{extension}"
+                attachment_dir.mkdir(parents=True, exist_ok=True)
+                with path.open("xb") as stream:
+                    stream.write(data)
+                extracted.append(path)
+                paths.append(str(path))
+            for label in ([] if no_display else text(attachment).splitlines()):
+                if not label.strip():
+                    continue
+                candidate = (input_path.parent / label.strip()).resolve()
+                if not candidate.is_relative_to(input_path.parent):
+                    warnings.append(f"第{original_row}行附件未读取：路径超出采集表目录")
+                    paths.append(label)
+                elif candidate.is_file() and candidate.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tif", ".tiff", ".webp"}:
+                    path = attachment_dir / f"row-{original_row:04d}-attachment-{len(paths)+1:02d}{candidate.suffix.lower()}"
+                    attachment_dir.mkdir(parents=True, exist_ok=True)
+                    with path.open("xb") as stream:
+                        stream.write(candidate.read_bytes())
+                    extracted.append(path)
+                    paths.append(str(path))
+                else:
+                    warnings.append(f"第{original_row}行截图附件待定位，已保留原记录")
+                    paths.append(label)
+            status = "未采集" if not text(answer) else ("失败" if re.match(r"^(?:采集失败|失败)(?:$|[:：])", text(answer)) else "已完成")
+            values = {"采集状态": status, "回答全文": answer, "引用展示": "未展示" if no_display else "待核验",
+                      "采集时间": metadata.get("collected_at"), "新对话": metadata.get("new_conversation"),
+                      "回答证据路径": "\n".join(paths) or None, "备注": f"原采集表 {input_path.name}，第{original_row}行"}
+            for header, value in values.items():
+                cell = target["回答记录"].cell(row, SAMPLE_HEADERS.index(header) + 1, value)
+                if isinstance(value, str):
+                    cell.data_type = "s"
+            for i, path in enumerate([] if no_display else paths, 1):
+                refs.append([f"{sid}-CIT{i:02d}", sid, None, None, None, "待核验", "待判", None, path, "仅记录截图证据，来源名称及URL须由WorkBuddy查看后核验"])
+        put_rows(target["引用明细"], refs)
+        # This file was created above by this call; the user's input is never edited.
+        if base:
+            save_new(target, out)
+        else:
+            target.save(out)
+    except Exception:
+        target.close()
+        if not base:
+            out.unlink(missing_ok=True)
+        for path in extracted:
+            path.unlink(missing_ok=True)
+        raise
+    finally:
+        target.close()
+        source.close()
+    return {"output": str(out), "context": selected + 1, "imported_rows": len(records), "screenshots": len(extracted), "warnings": warnings}
 
 
 def fraction(yes, no):
@@ -221,8 +378,10 @@ def analyze(path, plan=None):
         if ref["sample_id"] not in sample_ids:
             raise ValueError(f"孤儿引用: {ref['citation_id']}")
         url = urlparse(text(ref["URL"]))
-        if url.scheme not in {"http", "https"} or not url.netloc:
+        if text(ref["URL"]) and (url.scheme not in {"http", "https"} or not url.netloc):
             raise ValueError(f"引用URL必须为http(s): {ref['citation_id']}")
+        if not text(ref["URL"]) and not (text(ref["证据路径"]) and ref["核验状态"] == "待核验"):
+            raise ValueError(f"无URL引用须保留截图证据并标为待核验: {ref['citation_id']}")
         if ref["核验状态"] not in {"已核验", "无效", "待核验"} or ref["支持品牌"] not in YES_NO:
             raise ValueError(f"引用核验状态/支持品牌缺失: {ref['citation_id']}")
         refs[ref["sample_id"]].append(ref)
@@ -249,7 +408,7 @@ def analyze(path, plan=None):
         key = context + (q["问题类型"], q["意图"])
         if key not in groups:
             groups[key] = dict(zip(("platform", "mode", "online", "round", "question_type", "intent"), key))
-            groups[key].update({k: 0 for k in ["planned", "completed", "failed", "pending_review", "uncollected", "valid", "invalid_conditions", "mention_yes", "mention_no", "mention_pending", "recommendation_yes", "recommendation_no", "recommendation_pending", "observable_citation_samples", "citation_known_samples", "citation_supported_samples", "unobserved_sources"]})
+            groups[key].update({k: 0 for k in ["planned", "completed", "failed", "pending_review", "uncollected", "valid", "invalid_conditions", "condition_unknown", "mention_yes", "mention_no", "mention_pending", "recommendation_yes", "recommendation_no", "recommendation_pending", "observable_citation_samples", "citation_known_samples", "citation_supported_samples", "unobserved_sources"]})
         group = groups[key]
         group["planned"] += 1
         group[{"已完成": "completed", "失败": "failed", "待核验": "pending_review", "未采集": "uncollected"}[sample["采集状态"]]] += 1
@@ -265,15 +424,17 @@ def analyze(path, plan=None):
             raise ValueError(f"引用展示状态无效: {sid}")
         if sample["引用展示"] == "未展示" and refs[sid]:
             raise ValueError(f"未展示引用却有引用明细: {sid}")
-        condition_issues = []
-        if sample["新对话"] != "是":
-            condition_issues.append("未确认使用独立新对话")
+        condition_issues, unknown_conditions = [], []
+        if sample["新对话"] == "否":
+            condition_issues.append("已知不是独立新对话")
+        elif sample["新对话"] != "是":
+            unknown_conditions.append("新对话状态未记录")
         collected_at = sample["采集时间"]
         try:
             if not isinstance(collected_at, datetime):
                 datetime.fromisoformat(text(collected_at))
         except ValueError:
-            condition_issues.append("采集时间缺失或格式无效")
+            unknown_conditions.append("采集时间未记录或格式未确认")
         if collected_at and ((isinstance(collected_at, date) and not isinstance(collected_at, datetime)) or len(text(collected_at)) == 10):
             issues.append({"sample_id": sid, "issue": "采集时间仅记录日期，时分和时区精度未确认"})
         elif isinstance(collected_at, datetime) and collected_at.tzinfo is None:
@@ -282,12 +443,15 @@ def analyze(path, plan=None):
                          "question_type": q["问题类型"], "intent": q["意图"], "platform": sample["平台"],
                          "mode": sample["模型或模式"], "online": sample["联网状态"], "round": int(sample["轮次"]),
                          "answer": sample["回答全文"], "mention": sample["品牌提及"], "recommendation": sample["品牌推荐"],
-                         "source": sample["回答证据路径"], "comparable": not condition_issues, "condition_issues": condition_issues,
+                         "source": sample["回答证据路径"], "comparable": not condition_issues and not unknown_conditions, "condition_issues": condition_issues + unknown_conditions,
                          "verified_citation_ids": [r["citation_id"] for r in refs[sid] if r["核验状态"] == "已核验" and r["支持品牌"] == "是"]})
         if condition_issues:
             group["invalid_conditions"] += 1
             issues.append({"sample_id": sid, "issue": "；".join(condition_issues) + "；已排除标准可比指标"})
             continue
+        if unknown_conditions:
+            group["condition_unknown"] += 1
+            issues.append({"sample_id": sid, "issue": "采样条件未记录；" + "；".join(unknown_conditions) + "；仅作本次描述性分析"})
         group["valid"] += 1
         verified += sum(r["核验状态"] == "已核验" and r["支持品牌"] == "是" for r in refs[sid])
         if sample["品牌提及"] == "待判" or sample["品牌推荐"] == "待判":
@@ -317,7 +481,7 @@ def analyze(path, plan=None):
         group["mention_rate"] = fraction(group["mention_yes"], group["mention_no"])
         group["recommendation_rate"] = fraction(group["recommendation_yes"], group["recommendation_no"]) if group["intent"] == "推荐" else None
         group["citation_rate"] = group["citation_supported_samples"] / group["citation_known_samples"] if group["citation_known_samples"] else None
-    counts = {k: sum(g[k] for g in result_groups) for k in ["planned", "completed", "failed", "pending_review", "uncollected", "valid", "invalid_conditions"]}
+    counts = {k: sum(g[k] for g in result_groups) for k in ["planned", "completed", "failed", "pending_review", "uncollected", "valid", "invalid_conditions", "condition_unknown"]}
     counts.update(questions=len(questions), citations=len(citations), verified_supporting_citations=verified)
     return {"schema_version": 1, "project": project, "groups": result_groups, "counts": counts, "samples": samples,
             "citations": citations, "evidence": evidence, "issues": issues,
@@ -473,7 +637,14 @@ def main(argv=None):
             p.add_argument("--plan")
     p = sub.add_parser("prepare")
     p.add_argument("--project", required=True)
+    p.add_argument("--out")
+    p.add_argument("--out-dir")
+    p = sub.add_parser("normalize", aliases=["import-collection"])
+    p.add_argument("--input", required=True)
+    p.add_argument("--project", required=True)
+    p.add_argument("--context", required=True)
     p.add_argument("--out", required=True)
+    p.add_argument("--base")
     p = sub.add_parser("export-excel")
     p.add_argument("--project", required=True)
     p.add_argument("--analysis", required=True)
@@ -484,7 +655,9 @@ def main(argv=None):
         if args.command == "inspect-client":
             write_json(inspect_client(args.input), args.out)
         elif args.command == "prepare":
-            write_json(prepare(read_json(args.project), args.out))
+            write_json(prepare(read_json(args.project), args.out, args.out_dir))
+        elif args.command in {"normalize", "import-collection"}:
+            write_json(normalize_collection(args.input, read_json(args.project), args.context, args.out, args.base))
         elif args.command == "analyze":
             write_json(analyze(args.input, read_json(args.plan) if args.plan else None), args.out)
         else:

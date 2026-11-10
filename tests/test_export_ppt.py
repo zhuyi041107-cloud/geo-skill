@@ -53,6 +53,12 @@ class ExportPptTests(unittest.TestCase):
         analysis["project"].update(start_date="2027-01-01", end_date="2027-12-31")
         analysis["samples"] = [{"采集状态": "已完成", "采集时间": "2026-11-10T14:00:00+09:00"}]
         self.assertEqual(export_ppt.sampling_dates(analysis), "2026-11-10 至 2026-11-10")
+        unknown = copy.deepcopy(analysis)
+        unknown["samples"][0]["采集时间"] = ""
+        unknown["counts"].update(valid=1, invalid_conditions=0, condition_unknown=1)
+        self.assertEqual(export_ppt.sampling_dates(unknown), "采集时间未记录")
+        self.assertIn("有效 1", export_ppt.diagnosis_sections(unknown, {})["summary"])
+        self.assertIn("采样条件未记录 1", export_ppt.diagnosis_sections(unknown, {})["summary"])
         findings = [{"title": f"问题{i:02d}", "detail": f"问题{i:02d}的完整依据" + "可核验事实" * 25, "evidence_ref": [f"E{i:02d}"]} for i in range(13)]
         summary = "长段叙述需要完整保留" * 100
         with tempfile.TemporaryDirectory() as folder:

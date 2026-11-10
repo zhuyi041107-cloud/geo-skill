@@ -34,7 +34,7 @@ python "技能目录/scripts/export_ppt.py" --analysis outputs/analysis.json --p
 ## 数据与交付规则
 
 - 平台指标逐组读取 `analysis.groups`，保留平台、模式、联网状态、轮次、问题类型与意图区分，不对分组比例求平均。比例未知时显示“待核验”。主动推荐只用于自然需求中的推荐意图题。
-- 诊断中的实采日期来自 `analysis.samples` 的“采集时间”，执行封面中的周期来自 `project.start_date/end_date`，不能把执行周期当作已经发生的采样日期。不符合采样条件的数量从 `analysis.counts.invalid_conditions` 披露，实际疑点保留在证据清单。
+- 诊断中的实采日期来自 `analysis.samples` 的“采集时间”，执行封面中的周期来自 `project.start_date/end_date`，不能把执行周期当作已经发生的采样日期。时间未采集时显示“采集时间未记录”。明确不符合采样条件的数量从 `analysis.counts.invalid_conditions` 披露；未记录的条件从 `condition_unknown` 单独披露，仍可作单次描述性诊断，不能当成同条件跨轮比较。实际疑点保留在证据清单。
 - 客户预算仅读取 `analysis.budget.client` 及客户预算上限，不读取 `internal`、原始单价、报价档位、采集人或内部备注。客户价缺失时保留“待报价”，不使用成本代替客户价。
 - 存在缺价时，可显示客户已知金额小计与缺项数；计划合计仍保持未知，不能将已知小计宣称为完整预算。
 - 选题来自 `plan.contents`，取消和排除项不输出。媒体执行清单仅采用“已选、待执行、已发布”记录；候选资源不当成承诺交付。

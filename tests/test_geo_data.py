@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 
 import openpyxl
+from openpyxl.drawing.image import Image
+from PIL import Image as PILImage
 
 SCRIPT = Path(__file__).resolve().parents[1] / ".codebuddy/skills/ruanwenjie-geo/scripts/geo_data.py"
 spec = importlib.util.spec_from_file_location("geo_data", SCRIPT)
@@ -24,7 +26,7 @@ class GeoDataTests(unittest.TestCase):
                         "contexts": [{"platform": "测试平台", "mode": "标准", "online": "是", "round": 1}]}
 
     def prepare(self):
-        geo.prepare(self.project, self.path)
+        geo.prepare_internal(self.project, self.path)
 
     def edit_sample(self, changes, citation=None):
         wb = openpyxl.load_workbook(self.path)
@@ -49,9 +51,105 @@ class GeoDataTests(unittest.TestCase):
 
     def test_blank_templates_have_no_fictitious_client(self):
         wb = openpyxl.load_workbook(geo.ROOT / "templates/AI回答采集表.xlsx", read_only=True, data_only=True)
-        self.assertIsNone(wb["问题清单"]["A2"].value)
-        self.assertIsNone(wb["回答记录"]["A2"].value)
+        self.assertEqual(wb.sheetnames, ["回答采集"])
+        self.assertEqual([c.value for c in wb["回答采集"][1]], ["问题", "引用截图", "答案"])
+        self.assertIsNone(wb["回答采集"]["A2"].value)
         wb.close()
+
+    def test_prepare_one_context_is_only_three_columns(self):
+        geo.prepare(self.project, self.path)
+        wb = openpyxl.load_workbook(self.path)
+        self.assertEqual(wb.sheetnames, ["回答采集"])
+        self.assertEqual(wb.active.max_column, 3)
+        self.assertEqual(wb.active["A2"].value, self.project["questions"][0]["text"])
+        self.assertIsNone(wb.active["B2"].value)
+        self.assertIsNone(wb.active["C2"].value)
+        wb.close()
+
+    def test_prepare_multiple_contexts_and_merge_imports(self):
+        self.project["contexts"].append(dict(self.project["contexts"][0], platform="第二平台"))
+        result = geo.prepare(self.project, out_dir=Path(self.tmp.name) / "collections")
+        self.assertEqual(len(result["outputs"]), 2)
+        for i, source in enumerate(result["outputs"]):
+            wb = openpyxl.load_workbook(source)
+            wb.active["C2"] = f"平台{i+1}原始答案"
+            wb.save(source)
+            wb.close()
+        first = Path(self.tmp.name) / "internal-one.xlsx"
+        combined = Path(self.tmp.name) / "internal-all.xlsx"
+        geo.normalize_collection(result["outputs"][0], self.project, "1", first)
+        geo.normalize_collection(result["outputs"][1], self.project, "第二平台", combined, base=first)
+        analysis = geo.analyze(combined)
+        self.assertEqual(analysis["counts"]["completed"], 2)
+        self.assertEqual(analysis["counts"]["valid"], 2)
+        self.assertEqual(analysis["counts"]["condition_unknown"], 2)
+        self.assertEqual({s["回答全文"] for s in analysis["samples"]}, {"平台1原始答案", "平台2原始答案"})
+        self.assertTrue(all(s["采集时间"] is None and s["新对话"] is None for s in analysis["samples"]))
+
+    def test_import_preserves_embedded_and_relative_screenshots(self):
+        geo.prepare(self.project, self.path)
+        image_path = Path(self.tmp.name) / "evidence.png"
+        PILImage.new("RGB", (30, 20), "white").save(image_path)
+        wb = openpyxl.load_workbook(self.path)
+        wb.active["B2"] = image_path.name
+        wb.active["C2"] = "无完整来源URL的原始答案"
+        wb.active.add_image(Image(str(image_path)), "B2")
+        wb.save(self.path)
+        wb.close()
+        original = self.path.read_bytes()
+        target = Path(self.tmp.name) / "internal.xlsx"
+        result = geo.normalize_collection(self.path, self.project, "1", target)
+        self.assertEqual(result["screenshots"], 2)
+        self.assertEqual(self.path.read_bytes(), original)
+        analysis = geo.analyze(target)
+        self.assertEqual(analysis["counts"]["citations"], 2)
+        self.assertIsNone(analysis["groups"][0]["citation_rate"])
+        for citation in analysis["citations"]:
+            self.assertIsNone(citation["URL"])
+            self.assertIsNone(citation["网站或媒体"])
+            self.assertEqual(citation["核验状态"], "待核验")
+            self.assertEqual(Path(citation["证据路径"]).read_bytes(), image_path.read_bytes())
+
+    def test_import_does_not_read_outside_collection_directory(self):
+        source_dir = Path(self.tmp.name) / "source"
+        source_dir.mkdir()
+        source = source_dir / "input.xlsx"
+        geo.prepare(self.project, source)
+        external = Path(self.tmp.name) / "outside.png"
+        PILImage.new("RGB", (2, 2), "red").save(external)
+        wb = openpyxl.load_workbook(source)
+        wb.active["B2"], wb.active["C2"] = "../outside.png", "保留答案"
+        wb.save(source)
+        wb.close()
+        output = Path(self.tmp.name) / "internal.xlsx"
+        result = geo.normalize_collection(source, self.project, "1", output)
+        self.assertEqual(result["screenshots"], 0)
+        self.assertIn("超出", result["warnings"][0])
+        self.assertEqual(geo.analyze(output)["samples"][0]["回答全文"], "保留答案")
+
+    def test_unrecorded_sampling_conditions_allow_descriptive_analysis(self):
+        self.prepare()
+        self.completed(新对话="", 采集时间="")
+        result = geo.analyze(self.path)
+        self.assertEqual(result["counts"]["valid"], 1)
+        self.assertEqual(result["counts"]["condition_unknown"], 1)
+        self.assertEqual(result["counts"]["invalid_conditions"], 0)
+        self.assertEqual(result["groups"][0]["mention_rate"], 1)
+        self.assertFalse(result["evidence"][0]["comparable"])
+
+    def test_explicit_collection_failure_and_no_sources_markers(self):
+        geo.prepare(self.project, self.path)
+        wb = openpyxl.load_workbook(self.path)
+        wb.active["B2"], wb.active["C2"] = "未展示", "失败：平台连接失败"
+        wb.save(self.path)
+        wb.close()
+        target = Path(self.tmp.name) / "internal.xlsx"
+        result = geo.normalize_collection(self.path, self.project, "1", target)
+        analysis = geo.analyze(target)
+        self.assertEqual(analysis["counts"]["failed"], 1)
+        self.assertEqual(analysis["counts"]["completed"], 0)
+        self.assertEqual(analysis["counts"]["citations"], 0)
+        self.assertEqual(result["warnings"], [])
 
     def test_prepare_more_than_200_questions(self):
         self.project["questions"] = [dict(self.project["questions"][0], question_id=f"Q{i}") for i in range(205)]

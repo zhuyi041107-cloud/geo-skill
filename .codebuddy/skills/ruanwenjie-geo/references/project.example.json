@@ -15,9 +15,7 @@
   "end_date": "2027-11-09",
   "questions": [
     {"question_id":"Q001","type":"自然需求","intent":"推荐","theme":"本地推荐","text":"杭州有哪些面向中小企业的知识库实施服务商？","priority":"高"},
-    {"question_id":"Q002","type":"自然需求","intent":"决策","theme":"能力核验","text":"中小企业选择知识库实施服务时，应核验哪些交付能力和案例？","priority":"高"},
-    {"question_id":"Q003","type":"自然需求","intent":"认知","theme":"服务认知","text":"企业知识库建设通常包括哪些实施步骤？","priority":"中"},
-    {"question_id":"Q004","type":"品牌认知","intent":"认知","theme":"品牌事实","text":"知桥演示提供哪些服务，有哪些可核验的公开资料？","priority":"高"}
+    {"question_id":"Q002","type":"品牌认知","intent":"决策","theme":"服务与案例","text":"知桥演示能为中小企业提供哪些知识库实施服务，有哪些可核验案例？","priority":"高"}
   ],
   "contexts": [
     {"platform":"演示平台A","mode":"联网搜索（演示）","online":"是","round":1},

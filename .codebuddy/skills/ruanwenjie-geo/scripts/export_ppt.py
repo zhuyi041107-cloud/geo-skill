@@ -18,6 +18,7 @@ import copy
 from datetime import date
 import json
 import re
+import sys
 import unicodedata
 from pathlib import Path
 
@@ -82,7 +83,7 @@ def scope_rows(analysis):
         ["问题与计划样本", f"问题 {value(counts.get('questions'))}，计划样本 {value(counts.get('planned'))}，每轮重复 {value(project.get('repeats'))}"],
         ["有效与缺失状态", f"有效 {value(counts.get('valid'))}，失败 {value(counts.get('failed'))}，待复核 {value(counts.get('pending_review'))}，未采 {value(counts.get('uncollected'))}"],
         ["实采日期", sampling_dates(analysis)],
-        ["条件异常记录", f"不符合采样条件 {value(counts.get('invalid_conditions'), '待检查')}。条件异常与统计疑点见本次证据清单。"],
+        ["采样条件", f"明确不符合采样条件 {value(counts.get('invalid_conditions'), '待检查')} 条，采样条件未记录 {value(counts.get('condition_unknown'), '待检查')} 条。条件未记录项用于本次描述性观察，跨轮比较须补齐条件。"],
         ["统计边界", "按平台、模式、联网状态、轮次、问题类型与意图分别统计。待复核不计入已判分母。未展示来源不推断为没有检索或训练来源。"],
     ]
 
@@ -101,7 +102,7 @@ def sampling_dates(analysis):
         elif sample.get("采集状态") == "已完成":
             unknown += 1
     if not dates:
-        return "待采集或实采时间未知"
+        return "采集时间未记录" if unknown else "尚未采集"
     result = f"{min(dates)} 至 {max(dates)}"
     return result + (f"，另有 {unknown} 条已完成记录时间未知" if unknown else "")
 
@@ -145,6 +146,8 @@ def diagnosis_sections(analysis, report):
     summary += f"\n\n计划样本 {value(counts.get('planned'))}，已完成 {value(counts.get('completed'))}，有效 {value(counts.get('valid'))}。"
     if counts.get("invalid_conditions"):
         summary += f"\n不符合采样条件 {counts['invalid_conditions']} 条，未纳入有效样本。"
+    if counts.get("condition_unknown"):
+        summary += f"\n采样条件未记录 {counts['condition_unknown']} 条，结果仅作本次描述性观察。"
     platforms = []
     for g in analysis.get("groups", []):
         platforms.append([
@@ -420,4 +423,6 @@ def main():
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     main()

@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -12,6 +13,7 @@ def main():
     required = {
         "SKILL.md", "requirements.txt", "scripts/geo_data.py", "scripts/media.py",
         "scripts/export_ppt.py", "references/commands.md", "references/ppt-output.md",
+        "references/内部判读底表.xlsx",
         "templates/AI回答采集表.xlsx", "templates/软文街_GEO客户素材收集表.xlsx",
         "templates/诊断与执行明细模板.xlsx", "templates/GEO诊断报告模板.pptx",
         "templates/品牌传播与GEO执行方案模板.pptx",
@@ -22,7 +24,10 @@ def main():
         raise ValueError("Missing release files: " + ", ".join(sorted(required - relative)))
     dist = repo / "dist"
     dist.mkdir(exist_ok=True)
-    target = dist / "ruanwenjie-geo-0.1.0.zip"
+    version = re.search(r'^  version:\s*"([0-9]+\.[0-9]+\.[0-9]+)"', (skill / "SKILL.md").read_text(encoding="utf-8"), re.MULTILINE)
+    if not version:
+        raise ValueError("Missing release version in SKILL.md metadata")
+    target = dist / f"ruanwenjie-geo-{version.group(1)}.zip"
     with ZipFile(target, "w", ZIP_DEFLATED) as archive:
         for path in files:
             archive.write(path, "ruanwenjie-geo/" + path.relative_to(skill).as_posix())
