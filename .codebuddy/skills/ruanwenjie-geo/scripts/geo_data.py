@@ -221,7 +221,14 @@ def prepare(project, out=None, out_dir=None):
 
 
 def normalize_collection(input_path, project, context, out, base=None):
-    """Import a three-column collection without inventing sampling metadata."""
+    """Import three columns using the user's current-round convention for gaps."""
+    project = dict(project, contexts=[dict(c) for c in project.get("contexts", [])])
+    original_contexts = [dict(c) for c in project["contexts"]]
+    for c in project["contexts"]:
+        if c.get("mode") in (None, "", "未知", "未记录"):
+            c["mode"] = "网页端"
+        if c.get("online") in (None, "", "未知", "未记录"):
+            c["online"] = "是"
     validate_project(project)
     input_path, out = Path(input_path).resolve(), Path(out).resolve()
     if out.exists():
@@ -245,17 +252,21 @@ def normalize_collection(input_path, project, context, out, base=None):
     if ws.max_column > 3 and any(c.value not in (None, "") for row in ws.iter_rows(min_col=4) for c in row):
         raise ValueError("三列外存在内容，请由WorkBuddy确认后再导入，避免丢失数据")
     images = defaultdict(list)
+    unlocated = []
     for image in ws._images:
         marker = getattr(image.anchor, "_from", None)
-        if marker is None or marker.col != 1 or marker.row < 1:
-            raise ValueError("嵌入图片须锚定在引用截图列的对应问题行，不能静默丢图")
+        if marker is None or marker.row < 1:
+            unlocated.append((image, "未确定对应问题行", image.format))
+            continue
         images[marker.row + 1].append(image)
     with ZipFile(input_path) as package:
         media = [n for n in package.namelist() if n.startswith("xl/media/") and not n.endswith("/")]
         if any("cellimages" in n.lower() or n.startswith("xl/richData/") for n in package.namelist()) or len(media) > len(ws._images):
-            raise ValueError("检测到无法可靠关联的单元格图片；请将其转为锚定在引用截图列的浮动图片或同目录附件后导入")
+            unlocated.extend((package.read(n), n, Path(n).suffix.lstrip(".")) for n in media)
     metadata = dict(project.get("sampling_metadata") or {})
     metadata.update(options[selected].get("sampling_metadata") or {})
+    if metadata.get("collected_at") in (None, "", "未知", "未记录"):
+        metadata["collected_at"] = date.today().isoformat()
     by_question = defaultdict(list)
     for q in project["questions"]:
         by_question[text(q["text"])].append(q)
@@ -263,6 +274,10 @@ def normalize_collection(input_path, project, context, out, base=None):
     records = []
     for row_index, row in enumerate(ws.iter_rows(min_row=2, max_col=3), 2):
         question, screenshot, answer = [c.value for c in row]
+        if not text(question) and row_index in images:
+            unlocated.extend((image, f"原表第{row_index}行无问题", image.format) for image in images.pop(row_index))
+            if not text(answer) and not text(screenshot):
+                continue
         if not any(v not in (None, "") for v in (question, screenshot, answer)) and row_index not in images:
             continue
         candidates = by_question.get(text(question), [])
@@ -274,22 +289,58 @@ def normalize_collection(input_path, project, context, out, base=None):
         used[text(question)] += 1
         records.append((row_index, q, repeat, screenshot, answer))
     represented = {r[0] for r in records}
-    if any(r not in represented for r in images):
-        raise ValueError("存在未关联问题的截图，拒绝静默丢图")
+    for row_index in set(images) - represented:
+        unlocated.extend((image, f"原表第{row_index}行未对应问题", image.format) for image in images[row_index])
     if base:
         target = openpyxl.load_workbook(base)
         config = {r["字段"]: json.loads(r["值(JSON)"]) for r in load_rows(target, "项目配置", ["字段", "值(JSON)", "说明"])}
         old_questions = load_rows(target, "问题清单", QUESTION_HEADERS)
-        if any(config.get(k) != project.get(k) for k in ["project_id", "contexts"]) or [(q["question_id"], q["目标问题"]) for q in old_questions] != [(q["question_id"], q["text"]) for q in project["questions"]] or config.get("repeats", 1) != project.get("repeats", 1):
+        old_contexts = config.get("contexts", [])
+        mismatch = len(old_contexts) != len(original_contexts)
+        for old, supplied in zip(old_contexts, original_contexts):
+            mismatch |= any(old.get(k) != supplied.get(k) for k in ("platform", "round"))
+            mismatch |= any(old.get(k) not in (None, "", "未知", "未记录") and supplied.get(k) not in (None, "", "未知", "未记录") and old.get(k) != supplied.get(k) for k in ("mode", "online"))
+        if mismatch or config.get("project_id") != project.get("project_id") or [(q["question_id"], q["目标问题"]) for q in old_questions] != [(q["question_id"], q["text"]) for q in project["questions"]] or config.get("repeats", 1) != project.get("repeats", 1):
             raise ValueError("--base与项目配置/问题/contexts不一致，不能合并")
+        project["contexts"] = [dict(c) for c in old_contexts]
+        for key in ("mode", "online"):
+            if project["contexts"][selected].get(key) in (None, "", "未知", "未记录"):
+                project["contexts"][selected][key] = options[selected][key]
+        for row in target["项目配置"].iter_rows(min_row=2):
+            if row[0].value == "contexts":
+                row[1].value = json.dumps(project["contexts"], ensure_ascii=False)
     else:
         prepare_internal(project, out)
         target = openpyxl.load_workbook(out)
     target_rows = {r[0].value: r[0].row for r in target["回答记录"].iter_rows(min_row=2) if r[0].value}
+    for sid, row in target_rows.items():
+        if f"-C{selected+1:03d}-R" in sid:
+            for header, key in [("模型或模式", "mode"), ("联网状态", "online")]:
+                target["回答记录"].cell(row, SAMPLE_HEADERS.index(header) + 1, project["contexts"][selected][key])
+    if not any(row[0].value == "collection_convention" for row in target["项目配置"].iter_rows(min_row=2)):
+        last = max(row[0].row for row in target["项目配置"].iter_rows() if row[0].value) + 1
+        target["项目配置"].cell(last, 1, "collection_convention")
+        target["项目配置"].cell(last, 2, json.dumps("缺失日期按本轮本地日期，缺失模式/联网按网页端直接联网；这是用户本轮约定，网页端不是实测模型名", ensure_ascii=False))
     refs = [[r.get(h) for h in CITATION_HEADERS] for r in load_rows(target, "引用明细", CITATION_HEADERS)]
     extracted, warnings = [], []
     attachment_dir = out.parent / "引用截图" / out.stem
     try:
+        loose_paths = []
+        for i, (item, location, extension) in enumerate(unlocated, 1):
+            extension = re.sub(r"[^a-z0-9]", "", extension.lower()) or "bin"
+            path = attachment_dir / f"unlocated-{i:03d}.{extension}"
+            attachment_dir.mkdir(parents=True, exist_ok=True)
+            with path.open("xb") as stream:
+                stream.write(item if isinstance(item, bytes) else item._data())
+            extracted.append(path)
+            loose_paths.append({"path": str(path), "original_location": location})
+        if loose_paths:
+            warnings.append(f"{len(loose_paths)}张未定位截图已保留供内部判读，未强绑问题，不影响已有答案分析")
+            rows = [r for r in target["项目配置"].iter_rows(min_row=2) if r[0].value == "unlocated_screenshots"]
+            row = rows[0][0].row if rows else max(r[0].row for r in target["项目配置"].iter_rows() if r[0].value) + 1
+            prior = json.loads(rows[0][1].value) if rows else []
+            target["项目配置"].cell(row, 1, "unlocated_screenshots")
+            target["项目配置"].cell(row, 2, json.dumps(prior + loose_paths, ensure_ascii=False))
         for original_row, q, repeat, attachment, answer in records:
             sid = f"{q['question_id']}-C{selected+1:03d}-R{repeat:02d}"
             row = target_rows[sid]
@@ -349,7 +400,7 @@ def normalize_collection(input_path, project, context, out, base=None):
     finally:
         target.close()
         source.close()
-    return {"output": str(out), "context": selected + 1, "imported_rows": len(records), "screenshots": len(extracted), "warnings": warnings}
+    return {"output": str(out), "context": selected + 1, "imported_rows": len(records), "screenshots": len(extracted), "unlocated_screenshots": loose_paths, "warnings": warnings}
 
 
 def fraction(yes, no):
@@ -367,6 +418,25 @@ def analyze(path, plan=None):
     finally:
         wb.close()
     project["questions"] = [{"question_id": q["question_id"], "type": q["问题类型"], "intent": q["意图"], "theme": q["问题主题"], "text": q["目标问题"], "priority": q["优先级"]} for q in questions]
+    used_convention = False
+    for index, ctx in enumerate(project.get("contexts", []), 1):
+        linked = [s for s in samples if f"-C{index:03d}-R" in text(s["sample_id"])]
+        for key, header, default in [("mode", "模型或模式", "网页端"), ("online", "联网状态", "是")]:
+            if ctx.get(key) in (None, "", "未知", "未记录"):
+                recorded = {s[header] for s in linked if s[header] not in (None, "", "未知", "未记录")}
+                ctx[key] = next(iter(recorded)) if len(recorded) == 1 else default
+                used_convention = True
+            for s in linked:
+                if s[header] in (None, "", "未知", "未记录"):
+                    s[header] = ctx[key]
+                    used_convention = True
+    ref_sample_ids = {r["sample_id"] for r in citations}
+    for sample in samples:
+        if (sample["采集状态"] != "未采集" or text(sample["回答全文"]) or text(sample["回答证据路径"]) or sample["sample_id"] in ref_sample_ids) and sample["采集时间"] in (None, "", "未知", "未记录"):
+            sample["采集时间"] = date.today().isoformat()
+            used_convention = True
+    if used_convention:
+        project.setdefault("collection_convention", "缺失日期按本轮本地日期，缺失模式/联网按网页端直接联网；这是用户本轮约定，网页端不是实测模型名")
     validate_project(project)
     question_ids = unique(questions, "question_id", "问题")
     sample_ids = unique(samples, "sample_id", "回答")
@@ -390,6 +460,9 @@ def analyze(path, plan=None):
     issues = []
     identities = set()
     contexts = {tuple(text(c[k]) for k in ("platform", "mode", "online", "round")) for c in project["contexts"]}
+    sampled = {tuple(text(s[k]) for k in ("平台", "模型或模式", "联网状态", "轮次")) for s in samples
+               if s["采集状态"] != "未采集" or text(s["回答全文"]) or text(s["回答证据路径"]) or s["sample_id"] in refs}
+    scoped_sample_ids = {s["sample_id"] for s in samples if tuple(text(s[k]) for k in ("平台", "模型或模式", "联网状态", "轮次")) in sampled}
     for sample in samples:
         sid = sample["sample_id"]
         if sample["question_id"] not in question_ids:
@@ -404,6 +477,8 @@ def analyze(path, plan=None):
         identities.add(identity)
         if sample["采集状态"] not in STATUSES:
             raise ValueError(f"样本采集状态无效: {sid}")
+        if context not in sampled:
+            continue
         q = question_by_id[sample["question_id"]]
         key = context + (q["问题类型"], q["意图"])
         if key not in groups:
@@ -427,17 +502,15 @@ def analyze(path, plan=None):
         condition_issues, unknown_conditions = [], []
         if sample["新对话"] == "否":
             condition_issues.append("已知不是独立新对话")
-        elif sample["新对话"] != "是":
-            unknown_conditions.append("新对话状态未记录")
         collected_at = sample["采集时间"]
         try:
             if not isinstance(collected_at, datetime):
                 datetime.fromisoformat(text(collected_at))
         except ValueError:
             unknown_conditions.append("采集时间未记录或格式未确认")
-        if collected_at and ((isinstance(collected_at, date) and not isinstance(collected_at, datetime)) or len(text(collected_at)) == 10):
+        if not project.get("collection_convention") and collected_at and ((isinstance(collected_at, date) and not isinstance(collected_at, datetime)) or len(text(collected_at)) == 10):
             issues.append({"sample_id": sid, "issue": "采集时间仅记录日期，时分和时区精度未确认"})
-        elif isinstance(collected_at, datetime) and collected_at.tzinfo is None:
+        elif not project.get("collection_convention") and isinstance(collected_at, datetime) and collected_at.tzinfo is None:
             issues.append({"sample_id": sid, "issue": "Excel采集时间未记录时区，需核验"})
         evidence.append({"evidence_id": f"EV-{sid}", "sample_id": sid, "question_id": sample["question_id"],
                          "question_type": q["问题类型"], "intent": q["意图"], "platform": sample["平台"],
@@ -447,7 +520,7 @@ def analyze(path, plan=None):
                          "verified_citation_ids": [r["citation_id"] for r in refs[sid] if r["核验状态"] == "已核验" and r["支持品牌"] == "是"]})
         if condition_issues:
             group["invalid_conditions"] += 1
-            issues.append({"sample_id": sid, "issue": "；".join(condition_issues) + "；已排除标准可比指标"})
+            issues.append({"sample_id": sid, "issue": "；".join(condition_issues) + "；保留本次事实，排除标准可比指标"})
             continue
         if unknown_conditions:
             group["condition_unknown"] += 1
@@ -472,8 +545,9 @@ def analyze(path, plan=None):
             group["citation_supported_samples"] += supported
     expected = {(q["question_id"], tuple(text(c[k]) for k in ("platform", "mode", "online", "round")), r)
                 for q in project["questions"] for c in project["contexts"]
-                for r in range(1, project.get("repeats", 1) + 1)}
-    if identities != expected:
+                for r in range(1, project.get("repeats", 1) + 1)
+                if tuple(text(c[k]) for k in ("platform", "mode", "online", "round")) in sampled}
+    if {i for i in identities if i[1] in sampled} != expected:
         raise ValueError("采样任务缺失或重复序号超出项目配置；请用prepare重新生成并保留全部任务")
     result_groups = list(groups.values())
     for group in result_groups:
@@ -482,9 +556,17 @@ def analyze(path, plan=None):
         group["recommendation_rate"] = fraction(group["recommendation_yes"], group["recommendation_no"]) if group["intent"] == "推荐" else None
         group["citation_rate"] = group["citation_supported_samples"] / group["citation_known_samples"] if group["citation_known_samples"] else None
     counts = {k: sum(g[k] for g in result_groups) for k in ["planned", "completed", "failed", "pending_review", "uncollected", "valid", "invalid_conditions", "condition_unknown"]}
-    counts.update(questions=len(questions), citations=len(citations), verified_supporting_citations=verified)
+    scoped_citations = [c for c in citations if c["sample_id"] in scoped_sample_ids]
+    counts.update(questions=len({s["question_id"] for s in samples if s["sample_id"] in scoped_sample_ids}), citations=len(scoped_citations),
+                  visible_sources=sum(bool(text(c["标题"]) or text(c["网站或媒体"])) for c in scoped_citations),
+                  pending_source_verification=sum(c["核验状态"] == "待核验" for c in scoped_citations), verified_supporting_citations=verified)
+    sampled_contexts = [dict(platform=c[0], mode=c[1], online=c[2], round=int(c[3])) for c in sorted(sampled)]
+    collected_dates = sorted({text(s["采集时间"])[:10] for s in samples if s["sample_id"] in scoped_sample_ids and s["采集时间"]})
+    report_scope = {"platforms": sorted({c["platform"] for c in sampled_contexts}), "contexts": sampled_contexts,
+                    "report_date": date.today().isoformat(), "round_date": collected_dates[0] if len(collected_dates) == 1 else None,
+                    "collected_dates": collected_dates, "metadata_note": project.get("collection_convention")}
     return {"schema_version": 1, "project": project, "groups": result_groups, "counts": counts, "samples": samples,
-            "citations": citations, "evidence": evidence, "issues": issues,
+            "sampled_contexts": sampled_contexts, "report_scope": report_scope, "citations": citations, "evidence": evidence, "issues": issues,
             "budget": calculate_budget(project, plan) if plan is not None else None}
 
 
@@ -564,9 +646,10 @@ def calculate_budget(project, plan):
 
 
 def export_excel(project, analysis, plan, out_dir):
-    validate_project(project)
     if analysis.get("project", {}).get("project_id") != project["project_id"]:
         raise ValueError("分析文件与项目ID不一致")
+    project = dict(project, contexts=analysis.get("project", {}).get("contexts", project.get("contexts", [])))
+    validate_project(project)
     budget = calculate_budget(project, plan)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -618,6 +701,17 @@ def export_excel(project, analysis, plan, out_dir):
             wb["其他费用"].data_validations.dataValidation.clear()
             wb["说明"].delete_rows(2, wb["说明"].max_row - 1)
             put_rows(wb["说明"], [["项目", project.get("client_name")], ["统计口径", "自然需求与品牌认知分开；平台、模式、联网状态与轮次分别统计。"], ["未知值", "空白表示尚不能确定，不等于零。未展示可观察引用不等于没有使用信源。"], ["执行预算", "仅计已选、待执行、已发布项目；未排期费用不分配到已知季度。"]])
+        scope = analysis.get("report_scope", {})
+        if scope:
+            notes = [["本轮采样范围", "、".join(scope.get("platforms", []))], ["采样日期", scope.get("round_date") or "、".join(scope.get("collected_dates", []))], ["本轮约定", scope.get("metadata_note")]]
+            for label, value in notes:
+                if value:
+                    row = wb["说明"].max_row + 1
+                    for col, item in enumerate([label, value], 1):
+                        cell = wb["说明"].cell(row, col, item)
+                        cell.data_type = "s"
+                        cell._style = copy(wb["说明"].cell(2, col)._style)
+                    wb["说明"].row_dimensions[row].height = 40
         target = out_dir / name
         save_new(wb, target)
         wb.close()

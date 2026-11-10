@@ -2,7 +2,7 @@
 
 ## 对外只交三列表
 
-业务同事只填写“问题、引用截图、答案”。每个AI平台一份文件，平台放在文件名里；其余编号、模式、轮次、证据关联和判读均由WorkBuddy内部处理。不要把内部判读底表交给用户填写。
+业务同事只填写“问题、引用截图、答案”。每个AI平台一份文件，平台放在文件名里；其余字段内部处理。收到任意平台回传后直接完成本轮诊断报告和执行方案文件，不等齐平台、不先停在聊天判读摘要。下面的命令都是内部步骤，不向用户讲解操作流水账。
 
 以下命令由WorkBuddy执行。替换“技能目录”为实际安装路径，“工作目录”为客户独立文件夹；使用当前环境的Python命令，路径加引号。先检查 `python -c "import openpyxl, pptx"`；需要安装依赖时按环境权限使用本包requirements.txt。
 
@@ -18,9 +18,9 @@ project主要字段：
 
 - project_id、client_name、brand_names；可选industry、services、regions、audience、advantages、competitors、public_sources。
 - questions：每项question_id、type（自然需求/品牌认知）、intent（认知/推荐/决策/对比/其他）、theme、text、priority。
-- contexts：每项platform、mode、online（是/否/未知）、round。用户只选平台即可，其余未知使用“未记录/未知”，不要替用户假设联网或模型。
+- contexts：每项platform、mode、online、round。默认沿用用户约定：mode为网页端，online为是，日期为当前本轮日期；原材料有明确记录时优先保留。具体模型名不臆造，也不要求用户逐行填模式或联网。
 - repeats：初轮通常1。budget_limit与执行start_date/end_date未知时为null；金额以十进制字符串保存。
-- 有确切采集时间或新对话确认时，可在normalize阶段填写；不知道则保留未知，不作为交付采集表的前置条件。
+- 缺少采集日期时由内部按本轮约定记录当前日期，不捏造精确时分秒。没有新对话记录不作为缺项、不催补；已明确的历史采样条件仍保留。
 
 这些JSON和ID不是人工采集任务。
 
@@ -50,29 +50,29 @@ python "技能目录/scripts/geo_data.py" prepare --project "工作目录/projec
 python "技能目录/scripts/geo_data.py" normalize --input "工作目录/豆包-AI回答采集表.xlsx" --project "工作目录/project.json" --context 1 --out "工作目录/内部判读-豆包.xlsx"
 ```
 
-`import-collection`是同一命令的别名。context采用project.contexts中的1起始序号；脚本也支持唯一平台名时，以实际CLI帮助为准。文件名已经能确定平台就直接匹配；无法确定只补问一次。
+`import-collection`是同一命令的别名。context采用project.contexts中的1起始序号，也支持唯一平台名。平台从文件名和会话直接识别，无法确认具体名称时用“本次回传平台”继续，不为标签停下追问。
 
-汇入其他平台时，使用上一份内部底表作为base，生成新的合并底表，不覆盖已采答案：
+收到一个平台就立即分析和导出全部成品。用户之后另行回传其他平台时，才使用上一份内部底表作为base增量更新，不覆盖已采答案：
 
 ```text
 python "技能目录/scripts/geo_data.py" normalize --base "工作目录/内部判读-豆包.xlsx" --input "工作目录/DeepSeek-AI回答采集表.xlsx" --project "工作目录/project.json" --context 2 --out "工作目录/内部判读-全部平台.xlsx"
 ```
 
-最后对合并底表运行analyze，平台分别统计并进入同一套交付文件。
+每次都对当前底表运行analyze并继续导出；只展示实际回传平台。未回传平台不列0、不算缺项，也不催用户补采。
 
-normalize按题目对应内部ID，保留原文，提取嵌入截图并记录行关联；截图附件内容不会凭文件名推断。原始三列表不覆盖，生成内部判读底表仅供WorkBuddy使用。旧版包含项目配置/问题清单/回答记录/引用明细的采集结果仍可直接analyze，无需让同事重填。
+normalize按题目对应内部ID，保留原文，按问题行关联截图；同一行图片偏到相邻列也接受。图片关联和必要兼容内部完成，原件不改，不要求同事修表。个别来源无法对应时留待核验并继续其他答案与完整报告。旧版内部底表也可直接analyze，无需重填。
 
 内部底表位于references/内部判读底表.xlsx。WorkBuddy只在此维护：
 
 - 回答记录：品牌提及/推荐（是、否、待判）、引用展示（已展示、未展示、待核验、不适用），并保留原回答与截图证据位置。
 - 引用明细：截图可见网站、标题、支持内容、核验状态与证据位置。有完整URL时才填写URL；没有URL但有截图时可保留待核验，不能伪称已查证正文。
-- 时间或新对话状态未知，记录未知；已知未使用新对话才列为可比条件异常。用户不需要补填这些字段。
+- 缺少日期或网页条件按本轮约定内部处理；新对话未记录不构成交付缺项。不要额外向用户索取模式、联网、时间、截图修正或其他平台数据。
 
 ```text
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/内部判读-豆包.xlsx" --out "工作目录/analysis.json"
 ```
 
-重复ID、问题无法对应、无证据的孤立引用等按错误处理，不静默丢数据。analysis保留project、groups、counts与证据。未知条件的样本可做本轮描述性观察；明确不符条件单列。自然题和点名题分别统计，小样本优先显示“出现次数/有效数”。来源未核验时引用指标保持未知，不把截图来源名拼成想象的URL。
+analysis保留内部原文与证据，本轮指标只统计已有回传的平台，自然题和点名题分开，小样本显示“出现次数/有效数”。截图可用于来源结构诊断；正文未核验的指标保留未知，但继续完成报告和执行文件。不把来源名拼成想象的URL，不自动开展额外采样。
 
 ## 4. 按报价选媒体
 
@@ -91,10 +91,10 @@ python "技能目录/scripts/geo_data.py" analyze --input "工作目录/内部�
 python "技能目录/scripts/geo_data.py" export-excel --project "工作目录/project.json" --analysis "工作目录/analysis-final.json" --plan "工作目录/plan.json" --out-dir "工作目录/正式输出"
 ```
 
-输出内外两份Excel。内部结果保留原价及档位；客户结果只用明确的对客价。缺价时总额未知，known_subtotal显示已知小计，missing_count显示缺项数；季度按实际执行日期归属。修改计划后重算再导出。
+输出内外两份Excel并继续导出PPT，不以聊天摘要结束。优先使用会话已有报价与预算；缺价项写在文件中，仍给出内容、媒体组合和排期。客户结果只用明确的对客价；缺价时总额未知，known_subtotal显示已知小计，missing_count显示缺项数。修改计划后重算再导出。
 
 ## 6. 客户PPT
 
 由WorkBuddy按证据维护report.json叙述，使用 [PPT导出说明](ppt-output.md) 生成两份PPT。统计与预算读取analysis，不在叙述中另填数字。截图支持的观察与网页正文已核验的事实分开标明；没有证据不写全网结论或效果保证。
 
-客户输出是生成时快照，输入变化后导出新版本。文件保留明确的待采集/待报价/待核验状态；交付前检查所有页、金额和证据关联。
+两份PPT与内外两份Excel实际生成并检查后才交付。聊天只给成品文件链接及简短说明，具体不确定事实留在文件中；不展示导入/锚点/内部JSON过程，不再列补平台、模式或时间的待办。

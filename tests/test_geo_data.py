@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime
+from datetime import date, datetime
 import importlib.util
 import tempfile
 import unittest
@@ -82,9 +82,9 @@ class GeoDataTests(unittest.TestCase):
         analysis = geo.analyze(combined)
         self.assertEqual(analysis["counts"]["completed"], 2)
         self.assertEqual(analysis["counts"]["valid"], 2)
-        self.assertEqual(analysis["counts"]["condition_unknown"], 2)
+        self.assertEqual(analysis["counts"]["condition_unknown"], 0)
         self.assertEqual({s["回答全文"] for s in analysis["samples"]}, {"平台1原始答案", "平台2原始答案"})
-        self.assertTrue(all(s["采集时间"] is None and s["新对话"] is None for s in analysis["samples"]))
+        self.assertTrue(all(s["采集时间"] == date.today().isoformat() and s["新对话"] is None for s in analysis["samples"]))
 
     def test_import_preserves_embedded_and_relative_screenshots(self):
         geo.prepare(self.project, self.path)
@@ -132,10 +132,10 @@ class GeoDataTests(unittest.TestCase):
         self.completed(新对话="", 采集时间="")
         result = geo.analyze(self.path)
         self.assertEqual(result["counts"]["valid"], 1)
-        self.assertEqual(result["counts"]["condition_unknown"], 1)
+        self.assertEqual(result["counts"]["condition_unknown"], 0)
         self.assertEqual(result["counts"]["invalid_conditions"], 0)
         self.assertEqual(result["groups"][0]["mention_rate"], 1)
-        self.assertFalse(result["evidence"][0]["comparable"])
+        self.assertTrue(result["evidence"][0]["comparable"])
 
     def test_explicit_collection_failure_and_no_sources_markers(self):
         geo.prepare(self.project, self.path)
@@ -155,9 +155,10 @@ class GeoDataTests(unittest.TestCase):
         self.project["questions"] = [dict(self.project["questions"][0], question_id=f"Q{i}") for i in range(205)]
         self.prepare()
         result = geo.analyze(self.path)
-        self.assertEqual(result["counts"]["questions"], 205)
-        self.assertEqual(result["counts"]["uncollected"], 205)
-        self.assertIsNone(result["groups"][0]["mention_rate"])
+        self.assertEqual(len(result["samples"]), 205)
+        self.assertEqual(result["counts"]["questions"], 0)
+        self.assertEqual(result["counts"]["uncollected"], 0)
+        self.assertEqual(result["groups"], [])
         wb = openpyxl.load_workbook(self.path)
         self.assertTrue(any("B2:B206" == str(rule.sqref) for rule in wb["问题清单"].data_validations.dataValidation))
         wb.close()
@@ -206,18 +207,89 @@ class GeoDataTests(unittest.TestCase):
         self.project["questions"].append(dict(self.project["questions"][0], question_id="Q2", type="品牌认知"))
         self.project["contexts"].append(dict(self.project["contexts"][0], mode="深度", round=2, online="否"))
         self.prepare()
+        wb = openpyxl.load_workbook(self.path)
+        for r in (2, 3):
+            for h, v in {"采集状态": "已完成", "回答全文": "原始回答"}.items():
+                wb["回答记录"].cell(r, geo.SAMPLE_HEADERS.index(h) + 1, v)
+        wb.save(self.path)
+        wb.close()
         result = geo.analyze(self.path)
         self.assertEqual(len(result["groups"]), 4)
         self.assertEqual({g["round"] for g in result["groups"]}, {1, 2})
 
     def test_deleted_task_is_detected(self):
+        self.project["questions"].append(dict(self.project["questions"][0], question_id="Q2", text="第二题"))
         self.prepare()
+        self.completed()
         wb = openpyxl.load_workbook(self.path)
-        wb["回答记录"].delete_rows(2)
+        wb["回答记录"].delete_rows(3)
         wb.save(self.path)
         wb.close()
         with self.assertRaisesRegex(ValueError, "任务缺失"):
             geo.analyze(self.path)
+
+    def test_one_returned_platform_reports_immediately_and_accepts_offset_image(self):
+        self.project["contexts"][0].update(mode="未知", online="未知")
+        self.project["contexts"] += [dict(self.project["contexts"][0], platform=p) for p in ["未回传二", "未回传三"]]
+        collection = Path(self.tmp.name) / "returned.xlsx"
+        wb = openpyxl.load_workbook(geo.ROOT / "templates/AI回答采集表.xlsx")
+        wb.active["A2"], wb.active["C2"] = self.project["questions"][0]["text"], "实际回传回答"
+        picture = Path(self.tmp.name) / "source.png"
+        PILImage.new("RGB", (20, 10), "white").save(picture)
+        wb.active.add_image(Image(str(picture)), "A2")
+        wb.save(collection)
+        wb.close()
+        before = collection.read_bytes()
+        output = Path(self.tmp.name) / "internal.xlsx"
+        geo.normalize_collection(collection, self.project, "1", output)
+        result = geo.analyze(output)
+        self.assertEqual(collection.read_bytes(), before)
+        self.assertEqual(len(result["samples"]), 3)
+        self.assertEqual((result["counts"]["planned"], result["counts"]["valid"]), (1, 1))
+        self.assertEqual(result["sampled_contexts"], [{"platform": "测试平台", "mode": "网页端", "online": "是", "round": 1}])
+        self.assertEqual(result["report_scope"]["round_date"], date.today().isoformat())
+        self.assertEqual(result["report_scope"]["platforms"], ["测试平台"])
+        self.assertIsNone(result["groups"][0]["citation_rate"])
+        self.assertEqual(result["counts"]["pending_source_verification"], 1)
+        self.assertFalse(any("采样条件未记录" in i["issue"] or "新对话" in i["issue"] for i in result["issues"]))
+
+    def test_unlocated_screenshot_is_saved_without_blocking_or_false_binding(self):
+        geo.prepare(self.project, self.path)
+        picture = Path(self.tmp.name) / "unlocated.png"
+        PILImage.new("RGB", (10, 10), "white").save(picture)
+        wb = openpyxl.load_workbook(self.path)
+        wb.active["C2"] = "已有答案继续分析"
+        wb.active.add_image(Image(str(picture)), "C1")
+        wb.save(self.path)
+        wb.close()
+        output = Path(self.tmp.name) / "internal.xlsx"
+        imported = geo.normalize_collection(self.path, self.project, "1", output)
+        analysis = geo.analyze(output)
+        self.assertEqual(analysis["counts"]["valid"], 1)
+        self.assertEqual(analysis["counts"]["citations"], 0)
+        self.assertIsNone(analysis["samples"][0]["回答证据路径"])
+        self.assertEqual(len(imported["unlocated_screenshots"]), 1)
+        self.assertTrue(Path(imported["unlocated_screenshots"][0]["path"]).is_file())
+
+    def test_direct_old_workbook_gets_same_convention_without_editing_history(self):
+        self.project["contexts"][0].update(mode="未知", online="未知")
+        self.prepare()
+        self.completed(采集时间="", 新对话="")
+        before = self.path.read_bytes()
+        result = geo.analyze(self.path)
+        self.assertEqual(result["sampled_contexts"][0]["mode"], "网页端")
+        self.assertEqual(result["sampled_contexts"][0]["online"], "是")
+        self.assertEqual(result["report_scope"]["round_date"], date.today().isoformat())
+        self.assertEqual(before, self.path.read_bytes())
+
+    def test_explicit_historical_metadata_is_kept(self):
+        self.project["contexts"][0].update(mode="历史模式", online="否")
+        self.prepare()
+        self.completed(采集时间="2024-03-02T10:00:00+09:00", 新对话="")
+        result = geo.analyze(self.path)
+        self.assertEqual(result["report_scope"]["round_date"], "2024-03-02")
+        self.assertEqual(result["sampled_contexts"][0]["mode"], "历史模式")
+        self.assertEqual(result["sampled_contexts"][0]["online"], "否")
 
     def test_recommendation_only_for_recommendation_intent(self):
         self.project["questions"][0]["intent"] = "认知"

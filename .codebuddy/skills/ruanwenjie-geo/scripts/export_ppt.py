@@ -59,7 +59,7 @@ def read_json(path, required=False):
 def rate(group, key, yes_key, no_key=None, denominator_key=None):
     measured = group.get(key)
     if measured is None:
-        return "待核验"
+        return "未核验"
     if not isinstance(measured, (int, float)) or not 0 <= measured <= 1:
         raise ValueError(f"无效比率：{key}")
     numerator = group.get(yes_key)
@@ -70,27 +70,57 @@ def rate(group, key, yes_key, no_key=None, denominator_key=None):
     return f"{measured:.1%}{suffix}"
 
 
+def context_key(context):
+    return tuple(str(context.get(key, "")) for key in ("platform", "mode", "online", "round"))
+
+
+def reported_groups(analysis):
+    groups = analysis.get("groups", [])
+    if "sampled_contexts" in analysis:
+        actual = {context_key(c) for c in analysis["sampled_contexts"]}
+        return [g for g in groups if context_key(g) in actual]
+    return [g for g in groups if any(g.get(k) for k in ("completed", "valid", "failed", "pending_review"))]
+
+
+def report_contexts(analysis):
+    if "sampled_contexts" in analysis:
+        return analysis["sampled_contexts"]
+    contexts = {context_key(g): {k: g.get(k) for k in ("platform", "mode", "online", "round")} for g in reported_groups(analysis)}
+    return list(contexts.values())
+
+
+def web_mode(item):
+    return "网页端" if item in (None, "", "未知", "未记录") else str(item)
+
+
+def online_mode(item):
+    return "是" if item in (None, "", "未知", "未记录") else str(item)
+
+
 def scope_rows(analysis):
     project, counts = analysis.get("project", {}), analysis.get("counts", {})
-    contexts = project.get("contexts", [])
+    contexts = report_contexts(analysis)
     context_text = "\n".join(
-        f"{value(c.get('platform'))} / {value(c.get('mode'))} / 联网{value(c.get('online'))} / 第{value(c.get('round'))}轮"
+        f"{value(c.get('platform'))} / {web_mode(c.get('mode'))} / 联网{online_mode(c.get('online'))} / 第{value(c.get('round'), '1')}轮"
         for c in contexts
     ) or MISSING
     return [
         ["采样对象", value(project.get("brand_names"), value(project.get("client_name")))],
-        ["平台、模式与轮次", context_text],
-        ["问题与计划样本", f"问题 {value(counts.get('questions'))}，计划样本 {value(counts.get('planned'))}，每轮重复 {value(project.get('repeats'))}"],
-        ["有效与缺失状态", f"有效 {value(counts.get('valid'))}，失败 {value(counts.get('failed'))}，待复核 {value(counts.get('pending_review'))}，未采 {value(counts.get('uncollected'))}"],
-        ["实采日期", sampling_dates(analysis)],
-        ["采样条件", f"明确不符合采样条件 {value(counts.get('invalid_conditions'), '待检查')} 条，采样条件未记录 {value(counts.get('condition_unknown'), '待检查')} 条。条件未记录项用于本次描述性观察，跨轮比较须补齐条件。"],
-        ["统计边界", "按平台、模式、联网状态、轮次、问题类型与意图分别统计。待复核不计入已判分母。未展示来源不推断为没有检索或训练来源。"],
+        ["本轮平台与方式", context_text],
+        ["本轮问题与完成", f"问题 {value(counts.get('questions'))}，已完成 {value(counts.get('completed'))}，有效 {value(counts.get('valid'))}"],
+        ["本轮日期", sampling_dates(analysis)],
+        ["统计口径", "按本轮回传平台与问题意图分别统计。未经核实的来源事实标为未核验。"],
     ]
 
 
 def sampling_dates(analysis):
+    scope = analysis.get("report_scope") or {}
+    if scope.get("round_date"):
+        return scope["round_date"]
+    if scope.get("collected_dates"):
+        dates = scope["collected_dates"]
+        return min(dates) if min(dates) == max(dates) else f"{min(dates)} 至 {max(dates)}"
     dates = []
-    unknown = 0
     for sample in analysis.get("samples", []):
         timestamp = str(sample.get("采集时间") or "").strip()
         match = re.match(r"(\d{4})[-/](\d{2})[-/](\d{2})", timestamp)
@@ -98,13 +128,10 @@ def sampling_dates(analysis):
             try:
                 dates.append(date.fromisoformat("-".join(match.groups())).isoformat())
             except ValueError:
-                unknown += 1
-        elif sample.get("采集状态") == "已完成":
-            unknown += 1
+                pass
     if not dates:
-        return "采集时间未记录" if unknown else "尚未采集"
-    result = f"{min(dates)} 至 {max(dates)}"
-    return result + (f"，另有 {unknown} 条已完成记录时间未知" if unknown else "")
+        return scope.get("report_date") or date.today().isoformat()
+    return min(dates) if min(dates) == max(dates) else f"{min(dates)} 至 {max(dates)}"
 
 
 def prose_rows(items, empty="暂无可核验记录", last_key="evidence_ref"):
@@ -142,24 +169,22 @@ def paragraphs(item, fallback):
 
 def diagnosis_sections(analysis, report):
     counts = analysis.get("counts", {})
-    summary = paragraphs(report.get("summary"), "本次诊断结论待采集，尚无足够证据形成品牌表现判断。")
-    summary += f"\n\n计划样本 {value(counts.get('planned'))}，已完成 {value(counts.get('completed'))}，有效 {value(counts.get('valid'))}。"
+    summary = paragraphs(report.get("summary"), "本轮诊断依据已回传的平台回答与所附资料形成。")
+    summary += f"\n\n本轮已完成 {value(counts.get('completed'))}，有效 {value(counts.get('valid'))}。"
     if counts.get("invalid_conditions"):
         summary += f"\n不符合采样条件 {counts['invalid_conditions']} 条，未纳入有效样本。"
-    if counts.get("condition_unknown"):
-        summary += f"\n采样条件未记录 {counts['condition_unknown']} 条，结果仅作本次描述性观察。"
     platforms = []
-    for g in analysis.get("groups", []):
+    for g in reported_groups(analysis):
         platforms.append([
-            f"{value(g.get('platform'))}\n{value(g.get('mode'))}\n联网{value(g.get('online'))}",
+            f"{value(g.get('platform'))}\n{web_mode(g.get('mode'))}\n联网{online_mode(g.get('online'))}",
             f"{value(g.get('question_type'))}\n{value(g.get('intent'), '未分组')}\n第{value(g.get('round'))}轮",
             value(g.get("valid")),
             rate(g, "mention_rate", "mention_yes", "mention_no"),
             rate(g, "recommendation_rate", "recommendation_yes", "recommendation_no") if g.get("question_type") == "自然需求" and g.get("intent") == "推荐" else "不适用\n非自然推荐题",
             rate(g, "citation_rate", "citation_supported_samples", denominator_key="citation_known_samples"),
         ])
-    sources = prose_rows(report.get("sources"), "AI引用来源待采集")
-    sources += [["公开网络声量与舆情", paragraphs(report.get("sentiment_summary"), "未提供独立网络检索证据，暂不判断全网声量与正负面占比。"), value(report.get("sentiment_evidence_ref"), "待补网络证据")]]
+    sources = prose_rows(report["sources"]) if report.get("sources") else [["引用来源事实", "未核验", "以本轮所附资料为准"]]
+    sources += [["公开网络声量与舆情", paragraphs(report.get("sentiment_summary"), "网络声量与正负面事实未核验。"), value(report.get("sentiment_evidence_ref"), "未核验")]]
     return {
         "summary": summary,
         "method": scope_rows(analysis) + ([["补充方法说明", paragraphs(report["method_notes"], "")]] if report.get("method_notes") else []),
@@ -169,7 +194,7 @@ def diagnosis_sections(analysis, report):
         "facts": prose_rows(report.get("facts")),
         "sources": sources,
         "findings": prose_rows(report.get("findings")),
-        "next": paragraphs(report.get("priorities"), "优先动作待确认。请先补齐缺失采样、来源证据与品牌事实核验，再确定执行优先级。"),
+        "next": paragraphs(report.get("priorities"), "根据本轮诊断完善品牌事实页，落实内容选题、媒体组合及季度执行安排。"),
     }
 
 
@@ -213,7 +238,7 @@ def execution_sections(analysis, plan, report):
         deliverables.insert(0, ["内容与刊发计划", f"计划内容 {value(budget.get('planned_content_count'))} 项，其中已纳入投放内容 {value(budget.get('content_count'))} 项，投放记录 {value(budget.get('placement_count'))} 项，计划刊发 {value(budget.get('publication_count'))} 次", "以明细和发布凭证验收"])
     targets = prose_rows(report.get("targets"), "目标值待客户确认", "method")
     return {
-        "objectives": paragraphs(report.get("objectives"), "品牌传播目标待确认。\n\nGEO目标待确认，待建立可复测基线后确定目标值。"),
+        "objectives": paragraphs(report.get("objectives"), "围绕本轮品牌认知与用户决策问题，完善品牌事实、内容和媒体承载。\n\nGEO表现以本轮结果为基线，按季度复测。"),
         "keywords": prose_rows(report.get("keywords")),
         "contents": content_rows, "media": media_rows, "quarterly": quarters,
         "deliverables": deliverables, "budget": budget_rows, "targets": targets,
@@ -355,7 +380,7 @@ def export(kind, analysis, plan, report, output, template_dir=None):
     project = analysis.get("project", {})
     client = value(project.get("client_name"), "客户名称待确认")
     brand = value(project.get("brand_names"), client)
-    cover = f"{brand}\n{client}\n报告日期：{value(report.get('report_date'), '待确认')}"
+    cover = f"{brand}\n{client}\n报告日期：{value(report.get('report_date'), (analysis.get('report_scope') or {}).get('report_date') or sampling_dates(analysis))}"
     if kind == "execution":
         cover += f"\n执行周期：{value(project.get('start_date'), '待确认')} 至 {value(project.get('end_date'), '待确认')}"
     for original in list(prs.slides):
@@ -386,6 +411,9 @@ def export(kind, analysis, plan, report, output, template_dir=None):
                 content = next(x for x in slide.shapes if x.name == "geo_content")
                 set_text(content, page, 22)
     for index, slide in enumerate(prs.slides):
+        note = next((x for x in slide.shapes if x.name == "geo_note"), None)
+        if note and not any(x.name == "geo_section_cover" for x in slide.shapes):
+            set_text(note, "本报告依据本轮已回传的平台回答与所附资料形成。" if kind == "diagnosis" else "媒体、客户报价与排期以执行明细为准。AI提及与引用效果按实际结果评估。", 13.5, "526777")
         footer = next((x for x in slide.shapes if x.name == "geo_footer"), None)
         if footer:
             set_text(footer, f"软文街  {index + 1:02d} / {len(prs.slides):02d}", 10.5, "526777")
