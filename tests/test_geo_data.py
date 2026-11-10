@@ -400,6 +400,25 @@ class GeoDataTests(unittest.TestCase):
         b = geo.calculate_budget(self.project, plan)
         self.assertEqual((b["content_count"], b["placement_count"], b["publication_count"]), (1, 2, 5))
 
+    def test_default_twenty_thousand_budget_rejects_token_proposals(self):
+        project = dict(self.project, budget_limit=None)
+        plan = self.plan()
+        plan["fees"] = []
+        plan["placements"][0].update(client_unit_price="2015.00", quantity=1)
+        budget = geo.calculate_budget(project, plan)
+        self.assertEqual((budget["target"], budget["limit"]), ("20000.00", "20000.00"))
+        with self.assertRaisesRegex(ValueError, "未达到"):
+            geo.validate_delivery_budget(budget)
+        plan["placements"][0]["client_unit_price"] = "19800.00"
+        geo.validate_delivery_budget(geo.calculate_budget(project, plan))
+        plan["placements"][0]["client_unit_price"] = "20100.00"
+        with self.assertRaisesRegex(ValueError, "超出"):
+            geo.validate_delivery_budget(geo.calculate_budget(project, plan))
+        # An explicit smaller budget is a client override, not the skill default.
+        project.update(budget_limit="2200.00", budget_target="2200.00")
+        plan["placements"][0]["client_unit_price"] = "2015.00"
+        geo.validate_delivery_budget(geo.calculate_budget(project, plan))
+
     def test_export_does_not_leak_cost_or_execute_text(self):
         self.prepare()
         self.completed()
@@ -461,6 +480,17 @@ class GeoDataTests(unittest.TestCase):
         for item in ["完整核心发现", "完整优先行动", "完整关键词"]:
             self.assertEqual(values.count(item), 1)
         self.assertNotIn("优先行动2", values)
+        wb.close()
+
+    def test_business_excel_preserves_structured_diagnostic_matrix(self):
+        report = {"diagnosis": {"sections": [{"key": "scenario_competition", "title": "客户场景", "paragraphs": [{"title": "本轮情况", "detail": "虚构需求对照"}], "tables": [{"columns": ["客户关注场景", "本品牌", "指定竞品"], "rows": [["本地选型", "本轮未出现", "演示竞品"]]}]}]}}
+        plan = self.plan()
+        plan["contents"][0]["keywords"] = ["本地虚构服务"]
+        wb = geo.customer_workbook(self.project, {"groups": []}, plan, report)
+        values = [c.value for s in wb for row in s for c in row if c.value is not None]
+        self.assertIn("客户场景：本地选型", values)
+        self.assertIn("本品牌：本轮未出现；指定竞品：演示竞品", values)
+        self.assertIn("本地虚构服务", values)
         wb.close()
 
     def test_business_excel_uses_supplied_report_and_separates_unpriced_services(self):

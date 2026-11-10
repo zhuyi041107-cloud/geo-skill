@@ -1,25 +1,90 @@
 {
-  "project_id": "DEMO-20261110",
-  "client_name": "演示客户（虚构，不是真实诊断）",
-  "brand_names": ["知桥演示"],
-  "industry": "企业软件服务",
-  "services": ["企业知识库实施"],
-  "regions": ["杭州"],
-  "audience": ["中小企业"],
-  "advantages": ["演示资料：本地实施服务，需真实案例核验"],
-  "competitors": [],
+  "project_id": "DEMO-ZHIQIAO-20261110",
+  "client_name": "知桥协同（虚构演示）",
+  "brand_names": [
+    "知桥协同"
+  ],
+  "industry": "企业知识服务平台",
+  "services": [
+    "团队知识库",
+    "带出处的知识问答",
+    "按组织与文档权限检索",
+    "知识发布审核与持续更新"
+  ],
+  "regions": [
+    "全国线上服务；现场实施按范围评估"
+  ],
+  "audience": [
+    "设有多个部门的中小企业",
+    "企业知识管理员",
+    "需要检索内部资料的员工"
+  ],
+  "advantages": [
+    "演示设定：知识管理员审核后发布，员工按权限检索",
+    "演示设定：答案可回到原文段落与文档版本",
+    "演示设定：入库整理、权限核对与更新责任分别确认"
+  ],
+  "competitors": [
+    "澄页知识云（虚构演示）",
+    "星栈协作台（虚构演示）"
+  ],
   "public_sources": [],
-  "budget_limit": "3000.00",
+  "budget_target": "20000.00",
+  "budget_limit": "20000.00",
   "currency": "CNY",
-  "start_date": "2026-11-10",
-  "end_date": "2027-11-09",
+  "start_date": "2026-11-16",
+  "end_date": "2027-02-07",
+  "template_profile": "platform",
   "questions": [
-    {"question_id":"Q001","type":"自然需求","intent":"推荐","theme":"本地推荐","text":"杭州有哪些面向中小企业的知识库实施服务商？","priority":"高"},
-    {"question_id":"Q002","type":"品牌认知","intent":"决策","theme":"服务与案例","text":"知桥演示能为中小企业提供哪些知识库实施服务，有哪些可核验案例？","priority":"高"}
+    {
+      "question_id": "Q001",
+      "type": "自然需求",
+      "intent": "推荐",
+      "theme": "平台初筛",
+      "text": "适合中小企业的企业知识服务平台有哪些？",
+      "priority": "高"
+    },
+    {
+      "question_id": "Q002",
+      "type": "自然需求",
+      "intent": "决策",
+      "theme": "权限与可信回答",
+      "text": "企业知识平台的文档权限和答案出处怎么核验？",
+      "priority": "高"
+    },
+    {
+      "question_id": "Q003",
+      "type": "品牌认知",
+      "intent": "认知",
+      "theme": "品牌定位",
+      "text": "知桥协同是做什么的，适合哪些团队？",
+      "priority": "高"
+    },
+    {
+      "question_id": "Q004",
+      "type": "品牌认知",
+      "intent": "对比",
+      "theme": "平台适配比较",
+      "text": "知桥协同与澄页知识云、星栈协作台怎样按场景选择？",
+      "priority": "高"
+    },
+    {
+      "question_id": "Q005",
+      "type": "自然需求",
+      "intent": "决策",
+      "theme": "上线维护与验收",
+      "text": "企业知识平台上线后谁负责更新，怎样验收可用性？",
+      "priority": "高"
+    }
   ],
   "contexts": [
-    {"platform":"演示平台A","mode":"联网搜索（演示）","online":"是","round":1},
-    {"platform":"演示平台B","mode":"联网搜索（演示）","online":"是","round":1}
+    {
+      "platform": "演示平台",
+      "mode": "网页端联网回答（虚构演示）",
+      "online": "是",
+      "round": 1
+    }
   ],
-  "repeats": 1
+  "repeats": 1,
+  "_example_note": "品牌、对比候选、业务资料及回答情境为虚构示例；本轮问题只展示不同决策入口，不规定真实项目题数。真实媒体及市场参考价格仅用于预算结构演示。"
 }

@@ -93,11 +93,17 @@ def restriction(note):
     return "需核实"
 
 
-def search_media(path=None, tier="市场价格", query="", region="", kind="all", limit=30):
+def search_media(path=None, tier="市场价格", query="", region="", kind="all", limit=30, min_price=None, max_price=None):
     if tier not in TIERS:
         raise ValueError("报价档位无效：" + tier)
     if kind not in (*SHEETS, "all") or limit < 1 or limit > 500:
         raise ValueError("kind必须是network/self/all，limit须在1至500之间")
+    bounds = [price(v) if v is not None else None for v in (min_price, max_price)]
+    if any(raw is not None and parsed is None for raw, parsed in zip((min_price, max_price), bounds)):
+        raise ValueError("价格区间必须为非负确定金额")
+    lower, upper = [Decimal(v) if v is not None else None for v in bounds]
+    if lower is not None and upper is not None and lower > upper:
+        raise ValueError("最低价格不能高于最高价格")
     path = Path(path) if path else CATALOG
     builtin = path.name.endswith(".csv.gz")
     if builtin and tier != "市场价格":
@@ -139,12 +145,14 @@ def search_media(path=None, tier="市场价格", query="", region="", kind="all"
                 actual_region = str(row.get("地区") or "").strip()
                 if regions and actual_region and "全国" not in actual_region and not any(r in actual_region for r in regions):
                     continue
+                amount = price(row.get(tier))
+                if (lower is not None and (amount is None or Decimal(amount) < lower)) or (upper is not None and (amount is None or Decimal(amount) > upper)):
+                    continue
                 stats["matched"] += 1
                 state = restriction(row.get("备注"))
                 if state == "排除":
                     stats["excluded_geo"] += 1
                     continue
-                amount = price(row.get(tier))
                 checks = []
                 if state == "需核实":
                     checks.append("备注包含GEO限制或要求，需结合稿件核实")
@@ -187,6 +195,7 @@ def search_media(path=None, tier="市场价格", query="", region="", kind="all"
         "price_tier": tier,
         "query": query,
         "region": region,
+        "price_range": {"min": bounds[0], "max": bounds[1]},
         "stats": stats,
         "returned": min(len(candidates), limit),
         "truncated": len(candidates) > limit,
@@ -203,12 +212,14 @@ def main():
     parser.add_argument("--region", default="", help="多个区域用逗号分隔；地区未知的记录保留并提示")
     parser.add_argument("--kind", choices=("all", "network", "self"), default="all")
     parser.add_argument("--limit", type=int, default=30)
+    parser.add_argument("--min-price", help="按选用报价档位筛选最低单价，用于分层配置媒体")
+    parser.add_argument("--max-price", help="按选用报价档位筛选最高单价")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.out.exists():
             raise ValueError("输出文件已存在，请使用新路径：" + str(args.out))
-        result = search_media(args.input, args.tier, args.query, args.region, args.kind, args.limit)
+        result = search_media(args.input, args.tier, args.query, args.region, args.kind, args.limit, args.min_price, args.max_price)
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     except (ValueError, OSError) as exc:

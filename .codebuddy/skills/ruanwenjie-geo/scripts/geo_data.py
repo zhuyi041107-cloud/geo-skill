@@ -156,6 +156,7 @@ def validate_project(project):
     if project.get("start_date") and project.get("end_date") and project["start_date"] > project["end_date"]:
         raise ValueError("项目结束日早于开始日")
     money(project.get("budget_limit"), "budget_limit")
+    money(project.get("budget_target"), "budget_target")
 
 
 def inspect_client(path):
@@ -597,6 +598,14 @@ def calculate_budget(project, plan):
         if p.get("quantity") not in (None, ""):
             positive_int(p["quantity"], "quantity")
     limit = money(project.get("budget_limit"), "budget_limit")
+    target = money(project.get("budget_target"), "budget_target")
+    target_source = "项目目标" if target is not None else "仅预算上限"
+    if target is None and limit is None:
+        target, target_source = Decimal("20000.00"), "技能默认建议"
+    if limit is None and target is not None:
+        limit = target
+    if target is not None and limit is not None and target > limit:
+        raise ValueError("budget_target不能高于budget_limit")
     for f in fees:
         if f.get("status") not in PLACEMENT_STATUSES:
             raise ValueError(f"费用状态无效: {f.get('fee_id')}")
@@ -613,6 +622,7 @@ def calculate_budget(project, plan):
         raise ValueError("有效投放关联已取消或排除的内容")
     publication_count = sum(positive_int(p["quantity"], "quantity") for p in active) if all(p.get("quantity") not in (None, "") for p in active) else None
     result = {"currency": project.get("currency", "CNY"), "limit": amount(limit),
+              "target": amount(target), "target_source": target_source,
               "planned_content_count": len([c for c in contents if c.get("status") not in {"取消", "排除"}]),
               "content_count": len({p["content_id"] for p in active}), "candidate_placement_count": sum(p.get("status") == "候选" for p in placements),
               "placement_count": len(active), "publication_count": publication_count}
@@ -646,6 +656,16 @@ def calculate_budget(project, plan):
     return result
 
 
+def validate_delivery_budget(budget):
+    """Catch a token-sized proposal before it becomes a formal client plan."""
+    subtotal = Decimal(budget["client"]["known_subtotal"])
+    target, limit = money(budget.get("target"), "target"), money(budget.get("limit"), "limit")
+    if target is not None and subtotal < target * Decimal("0.90"):
+        raise ValueError(f"正式方案已知费用{amount(subtotal)}元，未达到{amount(target)}元目标的90%；请按业务需要重新配置实际媒体、内容和次数，不能修改单价或添加补差额凑预算")
+    if limit is not None and subtotal > limit:
+        raise ValueError(f"正式方案已知费用{amount(subtotal)}元超出预算上限{amount(limit)}元，请调整实际投放计划")
+
+
 def business_text(value):
     if isinstance(value, dict):
         value = value.get("detail") or value.get("description") or value.get("title") or ""
@@ -675,6 +695,20 @@ def customer_workbook(project, analysis, plan, report):
     observations = []
     if diagnosis.get("summary"):
         observations.append(["整体判断", business_text(diagnosis["summary"])])
+    for section in diagnosis.get("sections", []):
+        label = business_text(section.get("title") or section.get("key"))
+        paragraphs = section.get("paragraphs") or []
+        if not isinstance(paragraphs, list):
+            paragraphs = [paragraphs]
+        for item in paragraphs:
+            title = business_text(item.get("title")) if isinstance(item, dict) else ""
+            observations.append([label + ("：" + title if title else ""), business_text(item)])
+        for table in section.get("tables", []):
+            columns = table.get("columns", [])
+            for row in table.get("rows", []):
+                if not columns or len(row) != len(columns):
+                    raise ValueError("诊断矩阵的列数与表头不一致")
+                observations.append([label + "：" + business_text(row[0]), "；".join(f"{business_text(c)}：{business_text(v)}" for c, v in zip(columns[1:], row[1:]))])
     for key, label in [("brand_status", "品牌现状"), ("demand_entries", "需求入口"), ("competitors", "竞争比较"), ("fact_consistency", "事实一致性"), ("source_structure", "来源结构")]:
         items = diagnosis.get(key, [])
         if not isinstance(items, list):
@@ -704,6 +738,8 @@ def customer_workbook(project, analysis, plan, report):
         keyword_items = [keyword_items]
     keyword_rows = [[business_text(k.get("title")), business_text(k.get("detail") or k.get("description"))] if isinstance(k, dict) else [business_text(k), ""] for k in keyword_items]
     contents = [c for c in plan.get("contents", []) if c.get("status") in ACTIVE or c["content_id"] in {p["content_id"] for p in placements}]
+    if not keyword_rows:
+        keyword_rows = [[business_text(k), business_text(c.get("title"))] for c in contents for k in (c.get("keywords") or [])]
     content_rows = []
     for c in contents:
         keywords = c.get("keywords") or [k.get("title", "") for k in keyword_items if isinstance(k, dict) and set(k.get("evidence_ref", [])) & set(c.get("question_ids", []))]
@@ -722,11 +758,14 @@ def customer_workbook(project, analysis, plan, report):
     for f in fees:
         value = money(f.get("client_amount"), "服务费用")
         fee_rows.append([business_text(f.get("category") or "服务费用"), float(value) if value is not None else "单独核价", business_text(f.get("description")) + ("；未计入媒体投放预算" if value is None else "")])
-    b = calculate_budget(project, plan)["client"]
+    budget = calculate_budget(project, plan)
+    b = budget["client"]
     fee_rows.append(["已知费用合计", float(b["known_subtotal"]), "仅包含已列出明确价格的项目；单独核价项目未计入。"])
     for q, values in b["quarterly"].items():
         media_amount = values.get("media")
         fee_rows.append([q + "媒体投放预算", float(media_amount) if media_amount is not None else None, "按媒体计划刊发日期归属季度。"])
+    if budget.get("target") is not None:
+        fee_rows.append(["建议预算目标", float(budget["target"]), "预算配置目标；未列服务项目不计入已知合计。"])
     sections = {"现状分析": observations, "关键词与内容排期": content_rows, "媒体投放": media_rows, "费用汇总": fee_rows}
     content_start = 5
     for name, rows in sections.items():
@@ -787,6 +826,7 @@ def export_excel(project, analysis, plan, out_dir, report=None):
     names = ["内部诊断与执行明细.xlsx", "客户诊断与执行明细.xlsx"]
     if any((out_dir / name).exists() for name in names):
         raise ValueError("导出文件已存在，拒绝覆盖；请使用新输出目录")
+    validate_delivery_budget(budget)
     customer = customer_workbook(project, analysis, plan, report or {})
     results = {}
     for audience, name in [("internal", "内部诊断与执行明细.xlsx"), ("client", "客户诊断与执行明细.xlsx")]:

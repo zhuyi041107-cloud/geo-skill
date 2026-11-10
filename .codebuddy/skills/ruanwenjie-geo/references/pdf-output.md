@@ -1,60 +1,71 @@
 # 客户PDF交付
 
-客户交付为两份业务PDF：`GEO诊断报告.pdf`、`品牌传播与GEO执行方案.pdf`。由 `scripts/export_pdf.py` 直接排版生成，不经过PPT，不沿用方法页或采样教程。
+两份客户PDF由 `scripts/export_pdf.py` 使用ReportLab直接生成，不经过PPT。WorkBuddy先执行 `template-generation.md` 的完整业务推导，再按 `template-contract.json` 写结构化正文。脚本只校验契约、汇总同源计划并排版，不替代业务分析。
 
-WorkBuddy负责依据本轮客户材料、回答与截图形成判断和方案。导出脚本负责排版、同源数字与预算检查，不代替业务分析。不要把示例中的虚构品牌、业务判断、媒体或金额直接用于真实客户。
+## 原模板契约
 
-## 叙述字段
+`report.template_profile` 必填 `platform` 或 `service`。前者对应平台型客户原模板：品牌/场景/竞品/信源/机会/优化/标签；执行保持四个主章及目标场景、发文明细附录。阶段与维护是内容创作机制的二级栏目，实际媒体是费用章的二级栏目。后者保持项目或服务型原模板的主体事实、业务维度、风险、曝光、关键词、阶段推导及原执行章序。两类都保留客户选择路径与四层应答情况；它们描述客户业务，不是诊断教程。
 
-推荐使用嵌套结构，参考 `references/report.example.json`。各章节采用 `[{"title":"业务判断标题","detail":"连续的情况说明与分析","evidence_ref":["内部证据索引"]}]`，摘要也可直接使用字符串。`detail`应说明本轮现状、原因或判断、业务影响与执行意义，而不是一句短标签。
+章节顺序、标题层级、必需矩阵及原表头以契约文件为准，不能再用七个通用长段落替代。所有必需章节与关键矩阵须有本客户内容；缺章、空表、错表头会拒绝导出。行数随真实业务而变，不套用原案例的问句数、发文数、评分或平台机制。
 
-| 诊断章节 | 应写的业务内容 |
-| --- | --- |
-| `diagnosis.summary` | 首屏核心判断、主要业务缺口与优先方向 |
-| `diagnosis.brand_status` | 品牌已知情况、需求推荐表现及其业务意义 |
-| `diagnosis.demand_entries` | 用户需求入口、品牌出现位置与未被承接的决策问题 |
-| `diagnosis.competitors` | 本轮候选主体与用户选择逻辑，按实际证据分析 |
-| `diagnosis.fact_consistency` | 品牌、主体、服务、资质、案例等事实的一致性 |
-| `diagnosis.source_structure` | 本轮信息来源的结构、作用与未核实事实 |
-| `diagnosis.key_findings` | 主要问题、成因、业务影响与优先级 |
-| `diagnosis.priorities` | 适合该客户的优先结论与落地重点 |
+最小数据形状（仅示意，不足以单独交付；完整虚构示例见 `report.example.json`）：
 
-| 执行章节 | 应写的业务内容 |
-| --- | --- |
-| `execution.summary` | 整体执行逻辑与投入重点 |
-| `execution.objectives` | 品牌传播目标与GEO目标 |
-| `execution.keywords` | 关键词或问题簇及业务用途 |
-| `execution.content_strategy` | 内容方向、文章分工、需要承载的真实事实 |
-| `execution.media_rationale` | 具体媒体组合的内容适配、受众与配置理由 |
-| `execution.quarterly` | 各自然季度的目标、工作与调整安排 |
-| `execution.expected_deliverables` | 预期交付、业务观察与合理效果方向 |
-| `execution.client_actions` | 客户与执行方的业务协作重点 |
+```json
+{
+  "template_profile": "platform",
+  "diagnosis": {
+    "summary": "本轮核心判断及业务影响。",
+    "sections": [{
+      "key": "brand_recognition",
+      "title": "一、品牌现状",
+      "paragraphs": [{"title": "当前识别位置", "detail": "具体情况、判断及业务影响的连贯分析。", "evidence_ref": ["内部证据索引"]}],
+      "tables": [{"id": "recognition", "columns": ["判定项", "直询结果", "说明"], "rows": [["业务识别", "本轮可见情况", "具体分析"]]}]
+    }]
+  },
+  "execution": {"summary": "执行主线与投入重点。", "sections": []}
+}
+```
 
-兼容旧顶层字段：`summary/scenarios/competitors/facts/sources/findings/priorities` 对应诊断；`objectives/keywords/content_strategy/media_rationale/quarterly/deliverables/targets/prerequisites` 对应执行。旧字段中的方法说明和操作教程不进入客户正文。新写作优先使用嵌套章节。
+`paragraphs` 采用 `title/detail/evidence_ref`。每一条应连贯说明现状、原因或策略判断、对选择的影响及执行含义，矩阵每行写具体情况。`evidence_ref`仅内部溯源，不打印。客户正文不放内部ID、本机路径、模板token、采集教程或处理流水账。旧 `keywords` 可继续供表格使用，但旧摘要和findings不能代替完整模板。
 
-## 数字与实际资源
+## 计划字段与机械表
 
-- 提及和推荐表现读取 `analysis.groups` 的已判计数，范围仅为本轮回传平台。客户报告只保留一行本轮范围，不列未回传平台，也不要求补其他平台。
-- 实际选题、具体媒体、刊发次数、日期与季度费用来自 `plan.json` 和同源 `analysis.budget`。修改计划或报价后先重算分析文件，导出时会再次比对预算。
-- 执行稿须有业务目标、已选内容和具体媒体名称。不能把“行业类媒体（待报价）”等占位写成已选资源。用资源目录中的实际媒体筛选结果生成组合。
-- 对客费用读取 `client_unit_price`，不读取内部采购单价或报价档位。该字段既可采用明确的对客报价，也可采用资源目录市场参考价形成建议预算；后者必须在 `price_basis` 中标明依据，并将资源报价日期写入 `quotation_date`，不能称为已确认售价。PDF逐项原样列示价格依据与报价日期，缺字段不编造。
-- 未提供年度预算时，可以形成按已选资源测算的建议媒体投放包；执行价格以当次确认条件为准。不编造稿件、官网建设等未列服务费用。
-- 未明确的事实短标为未核验。缺价事实如实保留，但不要用一页空预算或许多“待采”代替方案。已经可以从本轮材料判断的情况，应直接说明并分析。
+`source=report` 的表由WorkBuddy按契约填 `columns/rows`。`source=diagnosis` 的用户路径与四层表由执行文档复用，避免两份报告互相矛盾。`source=plan` 的表由脚本生成，报告不得手填rows覆盖：
 
-`evidence_ref`用于内部溯源，不打印进PDF。不要在 `title/detail` 中放问题编号、内容编号、媒体编号、源码路径或处理步骤。客户正文出现内部编号、路径、模板token或诊断教程时，脚本会拒绝导出，需由WorkBuddy改成业务语言。
+- `stage_plan`：阶段目标与交付取 `plan.stages`，周范围、每周稿量、阶段独立内容和刊发数来自真实内容与投放。
+- `article_schedule`：逐篇排期。平台型保留原十列含媒体类型、观察端口；服务型保留原九列并在原具体媒体列列出实际媒体。完整资源与费用另在媒体明细呈现。
+- `selected_media/media_costs`：具体媒体、内容、刊发量、参考单价、金额及类型合计。
+- `stage_budget/quarterly_budget`：阶段和自然季度费用，季度由日期推得。
+- `content_volume`：服务型诊断发文量推导，独立内容与刊发次数分列。
 
-## 导出与版式
+项目需 `start_date/end_date`；`plan.stages` 为 `[{"name":"阶段名称","objective":"阶段目标","deliverables":"可承诺交付","effect_target":"AI表现观察方向"}]`，name与contents.stage完全一致。每篇已选内容除原 `content_id/title/platform/stage/scheduled_date/question_ids/evidence/status` 外，填写 `source_layer/content_form/key_facts/observation_port/checkpoint`；`target_question`可直接写实际问句，否则从project.questions关联。周次自动从项目开始日期计算，不靠手填周号。其他费用可写 `stage`；未分配阶段的费用单列，不能静默漏掉。
 
-在客户工作目录执行，将“技能目录”替换为安装路径：
+示例字段：
+
+```json
+{"content_id":"C001","title":"适用条件与交付边界","platform":"本轮平台","stage":"基础事实建设","scheduled_date":"2026-11-16","source_layer":"基础信源层","content_form":"专业说明稿","observation_port":"网页端","target_question":"哪些团队适合这项服务？","key_facts":"使用真实服务范围、适用条件及公开事实，不编造案例。","checkpoint":"第5周观察","status":"已选"}
+```
+
+实际媒体只用有效已选记录。文章日期、媒体日期、单价、次数、阶段及自然季度必须与同一plan一致；内容篇数与同稿多次刊发分别统计。修改plan后先重算analysis，PDF再次比对预算。不匹配拒绝输出。
+
+## 预算与报价
+
+对客单价只读 `client_unit_price`。可采用已明确对客报价，或同值采用资源目录市场参考价形成建议包；后者须将原价格依据和报价日期放进 `price_basis/quotation_date`，不能称已确认售价。内部 `unit_price/price_tier` 不进客户PDF。价格说明集中一次，媒体单价列只显示金额，缺依据不造。
+
+当前默认建议预算目标和上限为20,000元；明确目标的正式已知方案须达到目标90%且不超上限。只给上限且明确允许少花时不强制花满。脚本调用统一 `validate_delivery_budget`，不能用虚构单价、服务费或补差项满足预算。未列价的撰稿、官网建设、后续维护等说明费用边界，不伪装已包含。约2万元示例是建议预算，不是确认结算承诺。
+
+## 导出及验证
+
+在客户工作目录执行，替换安装路径：
 
 ```bash
 python "技能目录/scripts/export_pdf.py" --analysis analysis.json --plan plan.json --report report.json --output-dir outputs/customer-pdf
 ```
 
-默认同时生成两份PDF，可用 `--kind diagnosis` 或 `--kind execution` 单独生成。输入应来自同一项目；同名输出已存在时拒绝覆盖，使用新目录保留版本。
+默认生成 `GEO诊断报告.pdf` 与 `品牌传播与GEO执行方案.pdf`；可用 `--kind diagnosis` 或 `--kind execution` 单独导出。同名文件已存在拒绝覆盖。只观察本轮回传平台，不列未提供平台或要求补采；范围仅在首页简短一行。
 
-两份通用版式示例位于 `templates/GEO诊断报告版式示例.pdf`、`templates/品牌传播与GEO执行方案版式示例.pdf`，全部为虚构资料，由同一导出代码生成。版式采用A4纵向蓝色报告体，首屏直接给业务判断，正文与表格自然分页，不单独留大空白封面，也不硬凑固定页数。
+通用版式示例位于 `templates/GEO诊断报告版式示例.pdf`、`templates/品牌传播与GEO执行方案版式示例.pdf`，来自同一代码和虚构资料。真实媒体及市场参考价来自内置目录，虚构客户与观察不能直接复用于真实业务。A4纵向蓝色报告体，首屏给判断，正文与完整矩阵自然分页，不硬凑原页数。长文自动分页，长表重复表头，超高单行允许跨页，内容不截断。
 
-中文字体随skill分发，覆盖源字体支持的CJK基本区、扩展A、兼容字及常用拉丁、标点、全角等字符；不是按示例客户文字裁剪的字体。许可证与来源说明在 `assets/fonts/`。消费端仅需 `reportlab` 及原有预算脚本依赖，不需要安装系统字体、fontTools、PPT软件或Codex运行时。
+中文字体已随skill分发，覆盖常用中文、扩展A及标点，不按示例文字裁剪。许可证与来源在 `assets/fonts/`；运行只需requirements的公共依赖，不需要Codex、fontTools或系统中文字体。
 
-导出后检查所有页：叙述是否连贯且有依据，媒体与金额是否一致，表格是否跨页续表，文字是否完整，页码是否连续，是否遗留内部编号或空模板。文本提取、包结构或程序退出成功都不能替代逐页渲染检查。
+导出后必须打开或逐页渲染检查：分析是否具体、原栏目是否齐全、所有选题及真实媒体是否能对上、量价是否一致、续表有内容行、中文/日期/页码无裁切。文本提取或程序成功不能替代视觉验证。

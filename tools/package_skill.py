@@ -13,14 +13,17 @@ def main():
     required = {
         "SKILL.md", "requirements.txt", "scripts/geo_data.py", "scripts/media.py",
         "scripts/export_pdf.py", "references/commands.md", "references/pdf-output.md",
+        "scripts/export_media_word.py", "references/media-word-output.md",
+        "references/template-generation.md", "references/template-contract.json",
         "references/report-thinking.md", "references/media-catalog.csv.gz",
         "references/内部判读底表.xlsx",
         "templates/AI回答采集表.xlsx", "templates/软文街_GEO客户素材收集表.xlsx",
         "templates/诊断与执行明细模板.xlsx", "templates/客户业务方案模板.xlsx",
         "templates/GEO诊断报告版式示例.pdf", "templates/品牌传播与GEO执行方案版式示例.pdf",
+        "templates/推荐媒体模板.docx",
         "assets/fonts/NotoSansSC-Regular.ttf", "assets/fonts/OFL.txt",
     }
-    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".xlsx", ".pdf", ".gz", ".ttf", ".otf"})
+    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".otf"})
     relative = {p.relative_to(skill).as_posix() for p in files}
     if required - relative:
         raise ValueError("Missing release files: " + ", ".join(sorted(required - relative)))

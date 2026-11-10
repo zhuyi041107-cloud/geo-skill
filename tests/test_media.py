@@ -70,6 +70,10 @@ class MediaTests(unittest.TestCase):
             self.assertTrue(all(c["status"] == "需核实" for c in result["candidates"]))
             self.assertEqual(result["candidates"][0]["source_row"], 5)
             self.assertEqual(result["candidates"][0]["source_file"], "报价.xlsx")
+            band = media.search_media(path, "普通会员", "科技", "山西", "network", 10, min_price="100", max_price="150")
+            self.assertEqual([c["media_id"] for c in band["candidates"]], ["N2"])
+            with self.assertRaisesRegex(ValueError, "最低价格"):
+                media.search_media(path, "普通会员", min_price="150", max_price="100")
 
     def test_missing_header_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
