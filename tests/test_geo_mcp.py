@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SKILL = Path(__file__).resolve().parents[1] / ".codebuddy/skills/ruanwenjie-geo"
 try:
@@ -49,7 +50,7 @@ class MCPProtocolTests(unittest.TestCase):
                     tools = await session.list_tools()
                     self.assertEqual({t.name for t in tools.tools}, {
                         "geo_status", "geo_analyze_customer", "geo_search_media", "geo_create_plan",
-                        "geo_write_reports", "geo_review_deliverables", "geo_publish"})
+                        "geo_write_reports", "geo_review_deliverables", "geo_resume_task", "geo_publish"})
                     result = await session.call_tool("geo_status", {})
                     self.assertFalse(result.isError)
                     value = json.loads(result.content[0].text)
@@ -72,6 +73,49 @@ class MCPProtocolTests(unittest.TestCase):
     @unittest.skipUnless(os.name == "nt" and shutil.which("powershell.exe"), "Windows launcher required")
     def test_workbuddy_windows_launcher_preserves_live_mcp_protocol(self):
         self.check_protocol(True)
+
+    def test_generation_and_resume_pending_become_normal_tool_results(self):
+        sys.path.insert(0, str(SKILL / "scripts"))
+        self.addCleanup(sys.path.remove, str(SKILL / "scripts"))
+        import geo_mcp
+        import gpt_client
+
+        with tempfile.TemporaryDirectory(prefix="geo-mcp-pending-") as folder:
+            run = Path(folder).resolve() / "run"
+            checkpoint = run / "requests" / "analysis.json"
+            calls = [
+                ("geo_analyze_customer", "analyze_customer", (str(run), "project.json", "answers.xlsx")),
+                ("geo_create_plan", "create_plan", (str(run), ["candidates.json"])),
+                ("geo_write_reports", "write_reports", (str(run),)),
+                ("geo_review_deliverables", "review_deliverables", (str(run),)),
+                ("geo_resume_task", "resume_task", (str(run),)),
+            ]
+            for tool_name, business_name, args in calls:
+                with self.subTest(tool=tool_name), patch.object(
+                    geo_mcp.geo_gpt, business_name,
+                    side_effect=gpt_client.GPTPending(checkpoint, "resp_offline_pending", "in_progress"),
+                ):
+                    value = getattr(geo_mcp, tool_name)(*args)
+                    self.assertEqual(value["status"], "pending")
+                    self.assertEqual(Path(value["run_dir"]), run)
+                    self.assertEqual(value["response_id"], "resp_offline_pending")
+                    self.assertEqual(value["provider_status"], "in_progress")
+                    self.assertEqual(value["resume_tool"], "geo_resume_task")
+                    self.assertEqual(value["retry_after_seconds"], 20)
+
+    def test_resume_returns_completed_result_and_other_errors_are_not_pending(self):
+        sys.path.insert(0, str(SKILL / "scripts"))
+        self.addCleanup(sys.path.remove, str(SKILL / "scripts"))
+        import geo_mcp
+        import gpt_client
+
+        complete = {"status": "completed", "plan_file": "offline-plan.json"}
+        with patch.object(geo_mcp.geo_gpt, "resume_task", return_value=complete) as resume:
+            self.assertIs(geo_mcp.geo_resume_task("offline-run"), complete)
+            resume.assert_called_once_with("offline-run")
+        with patch.object(geo_mcp.geo_gpt, "resume_task", side_effect=gpt_client.GPTError("任务已过期")):
+            with self.assertRaisesRegex(gpt_client.GPTError, "已过期"):
+                geo_mcp.geo_resume_task("offline-run")
 
 
 if __name__ == "__main__":

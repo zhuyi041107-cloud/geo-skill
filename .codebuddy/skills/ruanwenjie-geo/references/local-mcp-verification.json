@@ -1,9 +1,11 @@
 {
-  "skill_version": "0.10.1",
+  "skill_version": "0.10.2",
   "verified_on": "2026-11-11",
-  "scope": "Local Windows stdio MCP, offline API contracts and fictional report fixtures",
+  "scope": "Recoverable background Windows stdio MCP; mocked provider, fictional artifacts, read-only legacy run compatibility",
   "model_configuration": {
     "model": "gpt-6.1-sol",
+    "request_mode": "background",
+    "store": false,
     "reasoning_effort": "max",
     "model_context_window_tokens": 1050000,
     "context_window_basis": "Official model documentation; not a measured full-window API call",
@@ -13,7 +15,7 @@
     "installed_stdio_status": "Verified model, reasoning effort and context metadata via actual installed MCP config"
   },
   "automated_checks": {
-    "unittest_cases": 115,
+    "unittest_cases": 147,
     "result": "passed",
     "runtime": "Installed isolated Python 3.12 environment with requirements-mcp.txt",
     "skill_creator_frontmatter": "passed",
@@ -21,7 +23,33 @@
     "windows_powershell_launcher_handshake": "passed",
     "windows_config_merge_backup_and_dpapi_fake_key": "passed",
     "fixed_asset_manifest": "Original fixed assets and media catalog preserved",
-    "model_calls_in_tests": "Explicit mocked Responses results only; no paid API requests"
+    "model_calls_in_tests": "Explicit mocked Responses POST/GET results only; no paid API requests",
+    "mcp_tools": 8
+  },
+  "background_regressions": [
+    "Task lasting over 600 seconds in the mock is completed by subsequent short GET requests",
+    "Each analysis, plan, report and per-document review is POSTed exactly once",
+    "Repeated initial analysis uses a workspace input fingerprint and the same run",
+    "Pending and interrupted work resumes from persisted task and response IDs",
+    "Completed provider results remain local for rendering and receipt recovery",
+    "Unknown submission, failed or expired requests never automatically POST again",
+    "Per-request and per-run file locks prevent concurrent duplicate submissions",
+    "Review receipt interruption preserves the existing review timestamp on recovery",
+    "Historical cached plans cannot disagree with the current plan pointer",
+    "Old 0.10.1 completed analysis is reused without another analysis request",
+    "All 501 test media candidates and their restrictions remain present; original tier prices remain local"
+  ],
+  "legacy_read_only_check": {
+    "version": "0.10.1",
+    "user_reported_real_analysis": "Succeeded",
+    "user_reported_real_plan": "Two synchronous requests timed out at 600 seconds; provider state and fees not established",
+    "source_hashes_matched": 27,
+    "unchanged_progress_and_customer_files": 29,
+    "existing_curated_candidates": 380,
+    "original_candidate_payload_bytes": 389076,
+    "compact_candidate_payload_bytes": 126964,
+    "new_real_api_calls": 0,
+    "customer_file_writes": 0
   },
   "fictional_visual_review": {
     "source_version": "0.10.0; reused because fixed templates, renderer layout and fixture customer output are unchanged",
@@ -50,8 +78,8 @@
     "Official output contains exactly two PDFs and one media workbook"
   ],
   "not_verified": [
-    "Real OpenAI API call, account billing and gpt-6.1-sol access",
-    "WorkBuddy application UI end-to-end execution",
+    "Real 0.10.2 background provider calls and new full customer deliverables",
+    "WorkBuddy application UI end-to-end recovery of the real failed plan",
     "Multi-user remote hosting and isolation"
   ],
   "customer_artifacts": "No actual customer reports or collection originals changed",

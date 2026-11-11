@@ -30,7 +30,7 @@ def main():
         "assets/geo-diagnosis-template/doubao.png", "assets/geo-diagnosis-template/qwen.png",
         "assets/geo-diagnosis-template/deepseek.png",
         "requirements-mcp.txt", "scripts/geo_mcp.py", "scripts/geo_gpt.py",
-        "scripts/gpt_client.py", "scripts/gpt_evidence.py", "scripts/setup_local_mcp.ps1",
+        "scripts/gpt_client.py", "scripts/gpt_evidence.py", "scripts/gpt_tasks.py", "scripts/setup_local_mcp.ps1",
         "scripts/launch_local_mcp.ps1", "references/local-mcp.md", "references/workbuddy-mcp.example.json",
     }
     files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".ps1", ".html", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".png", ".svg"})

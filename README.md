@@ -2,9 +2,10 @@
 
 给WorkBuddy的内部业务技能：客户资料→三列人工AI回答采集→品牌与同行选择差距分析→固定8页诊断PDF、9页执行方案PDF和六档原价推荐媒体Excel。
 
-## 0.10.1 本地版的执行方式
+## 0.10.2 本地版的执行方式
 
 - WorkBuddy调度本地MCP，由GPT `gpt-6.1-sol`完成分析、方案和客户成稿，推理强度固定为API最高档`max`，模型上下文窗口1,050,000 tokens；现有脚本继续负责资源检索、量价核算与固定模板填充。最终成品再交GPT独立终审，检查原依据、模板与实际页图，通过后才交付。模型在MCP设置，连接后用`geo_status`核对。
+- 生成采用后台任务，任务ID先保存到本次run的requests目录。返回pending后每15至30秒调用`geo_resume_task`持续查询同一个任务，完成立即本地缓存，不重复POST付费生成。保持max推理强度，不靠降低档位处理长请求。
 - 按用户认可旧版的分析逻辑与版式，先解释品牌印象、同行差异、真实优势和商业场景，再推出内容、媒体、阶段交付与复核。
 - 主体纠错、合规和售后说明与已有事实支撑的业务内容并行，不一律先做整批品牌身份稿；原案例的试课、专业匹配等机制不作为其他客户默认事实。
 - 诊断恢复四列冲突表和双方分工表；执行恢复同行差异、四步2×2、三类媒体三卡、复核三列表和双档报价。
@@ -21,11 +22,11 @@
 
 ## 在WorkBuddy安装或更新
 
-从[公开GitHub仓库](https://github.com/zhuyi041107-cloud/geo-skill)获取0.10.1，或下载[0.10.1完整技能ZIP](dist/ruanwenjie-geo-0.10.1.zip)。将`.codebuddy/skills/ruanwenjie-geo`完整复制到目标项目同路径，保留脚本、背景、字体、媒体资源和依赖文件；ZIP内的顶层`ruanwenjie-geo`对应同一技能目录。先备份已有技能，客户工作目录和旧成品保持原样。
+从[公开GitHub仓库](https://github.com/zhuyi041107-cloud/geo-skill)获取0.10.2，或下载[0.10.2完整技能ZIP](dist/ruanwenjie-geo-0.10.2.zip)，具体版本以SKILL.md为准。将`.codebuddy/skills/ruanwenjie-geo`完整复制到目标项目同路径，保留脚本、背景、字体、媒体资源和依赖文件；ZIP内的顶层`ruanwenjie-geo`对应同一技能目录。先备份已有技能，客户工作目录和旧成品保持原样。
 
 可将这段直接交给WorkBuddy：
 
-> 从公开仓库https://github.com/zhuyi041107-cloud/geo-skill安装0.10.1到当前项目。先备份旧技能，完整复制.codebuddy/skills/ruanwenjie-geo，确认SKILL.md版本0.10.1。读取references/local-mcp.md，找到本机可用Python 3.10+，执行scripts/setup_local_mcp.ps1并把WorkBuddyProject设为当前项目，合并配置时保留其他MCP。密钥只使用本机环境变量或隐藏输入，不在聊天窗口索取或展示；尚未配置时先完成安装，再给我本机隐藏输入命令。新会话重连ruanwenjie-geo并调用geo_status，核对gpt-6.1-sol、max及1050000模型上下文窗口，分别报告连接状态与密钥状态。本次只安装，不重新生成客户报告。
+> 从公开仓库https://github.com/zhuyi041107-cloud/geo-skill获取0.10.2并更新当前项目。先备份旧技能，完整复制.codebuddy/skills/ruanwenjie-geo，确认SKILL.md版本0.10.2。读取references/local-mcp.md，找到本机可用Python 3.10+，执行scripts/setup_local_mcp.ps1并把WorkBuddyProject设为当前项目，合并配置时保留其他MCP。密钥只使用本机环境变量或隐藏输入，不在聊天窗口索取或展示；尚未配置时先完成安装，再给我本机隐藏输入命令。新会话重连ruanwenjie-geo并调用geo_status，核对gpt-6.1-sol、max及1050000模型上下文窗口，确认request_mode为background并有geo_resume_task工具，分别报告连接状态与密钥状态。本次只安装，不重新生成客户报告。
 
 **安装技能后还要配置本地MCP。**按[本地MCP安装与运行说明](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)执行`setup_local_mcp.ps1`，显式传入Python路径和WorkBuddy项目目录。脚本合并项目`.workbuddy/mcp.json`并保留其他MCP，配置`GEO_WORKSPACE`访问边界。需要保存密钥时使用`-SetApiKey`在本机隐藏输入；密钥用当前Windows用户DPAPI加密，不写入仓库或客户目录。
 
@@ -51,6 +52,14 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "技能目录\scripts\se
 
 推荐池来自media_recommendations，执行子集及两档费用来自placements和quote_options。两档资源清单及量价内部可追溯，宽推荐池标价总和不计客户支出。
 
+GPT返回pending时，WorkBuddy每15至30秒调用`geo_resume_task(run_dir)`继续同一任务；不重新调用原生成工具。`isError:false`、结果txt或JSON存在都不代表业务完成，只有`status:completed`且对应产物与业务字段齐备才能进入下一阶段。终审`status:completed, passed:false`表示审查完成但未通过，须修改复审；仅`status:completed`且`passed:true`、成品哈希未改变时才能`geo_publish`交付。后台请求设为store:false，仍有约10分钟的服务端临时保留窗口，需要持续查询并及时缓存完成结果，不承诺跨天恢复。POST未获得任务ID时标unknown，查询404或过期时明确停止，不自动重新付费生成。候选全量与六档原价保留本地，模型输入整理所需元数据，不按旧500项或800KB门槛要求同事手动收窄。
+
+当前已完成分析、方案失败任务的续跑指令：
+
+> 更新到0.10.2并重连MCP，保留当前项目已有分析完成的目标run目录中的全部分析、15份原始媒体候选和candidates-curated.json。复用这个run_dir，从geo_create_plan传入已有candidates-curated.json继续；不重跑geo_analyze_customer，不重新采集或检索。不要沿用旧mcp_pipeline.py按结果txt存在就跳过的判断。pending后每15至30秒调用geo_resume_task查询同一任务，只有status:completed且对应业务产物齐备才成稿与终审，终审passed:true才交付。保持gpt-6.1-sol／max。没有任务ID、404或过期时停止并报告，不自动重发付费请求。
+
+旧失败调用未保存服务端ID，不能凭本地run目录取回那次结果；上述方案续跑是明确授权的新请求，后续使用0.10.2的任务ID持续查询。
+
 ## 内置媒体资源
 
 随包网络媒体和自媒体目录保留资源身份、栏目、分类、地域、刊发条件、原记录索引及市场价格、超级代理、核心代理、高级代理、普通代理、普通会员六档原值。media.py的`--limit 0`读取相关检索全量再筛选；明确拒发剔除，限制保留。
@@ -59,7 +68,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "技能目录\scripts\se
 
 ## 开发验证
 
-0.10.1本地验收见[本地MCP验收记录](.codebuddy/skills/ruanwenjie-geo/references/local-mcp-verification.json)：安装后的独立环境中115项测试通过，真实SDK直连与Windows启动脚本握手通过，实际状态显示gpt-6.1-sol／max／1,050,000模型窗口。固定模板与版式未变，复用0.10.0虚构案例17页逐页对照及51项资源、306个六档价格单元格的一致性记录。模型响应使用明确的离线模拟，真实API调用、满窗口上下文与WorkBuddy界面端到端尚未验证。
+0.10.2验收见[本地MCP验收记录](.codebuddy/skills/ruanwenjie-geo/references/local-mcp-verification.json)：安装环境147项测试通过，包括超过600秒的模拟后台任务、同请求仅一次POST、断线GET恢复、重复初始分析复用run、终审中断恢复、历史缓存与当前版本一致、旧run不重分析续跑，以及8工具真实stdio握手。固定模板与版式未变，复用0.10.0虚构案例17页逐页对照及51项资源、306个六档价格单元格的一致性记录；本次虚构完整流程也实际生成17页PDF与两sheet推荐表。
+
+用户后续已报告真实分析成功、方案生成失败。本次0.10.2修复没有重新请求真实API；后台pending、任务ID、恢复与成品终审的真实端到端结果需用户继续验证，不宣称旧超时问题已经完整解决。
 
 ```text
 python -m pip install -r .codebuddy/skills/ruanwenjie-geo/requirements-mcp.txt

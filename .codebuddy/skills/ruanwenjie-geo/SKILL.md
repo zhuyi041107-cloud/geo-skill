@@ -2,7 +2,7 @@
 name: ruanwenjie-geo
 description: 为软文街内部同事根据客户素材和人工采集的AI回答，通过本地MCP调用GPT分析、成稿并逐页终审，按固定模板生成两PDF和双sheet六档原价推荐媒体表。
 metadata:
-  version: "0.10.1"
+  version: "0.10.2"
   display_name: "软文街GEO诊断与执行规划"
   author: "软文街"
 ---
@@ -15,7 +15,11 @@ WorkBuddy负责客户资料整理、问题设计和工具编排；本地MCP调�
 
 收到回答后先读[本地MCP安装与执行](references/local-mcp.md)，调用geo_status确认配置；按该文档依次调用分析、检索、计划、成稿、终审和交付工具。使用完整原答和全部可定位截图，API请求由工具加载本技能的业务规则。密钥缺失或调用失败时报告具体接入问题，保留内部进度，不能用WorkBuddy自行起草替代后声称GPT已完成。
 
-生成文件先留客户.work。geo_review_deliverables读取实际17页图片并与逐页原模板比较，另核事实、媒体原价、两档预算及服务分工。按终审意见修正并复审，最多两轮修正；仍不通过就保留待处理草稿并说明具体问题。只有geo_publish成功才交三件成品；该工具拒绝未通过终审或审核后有改动的文件。审核记录仅留内部。
+生成工具以后台任务提交并保存response_id。返回status=pending只代表已提交，每15至30秒调用geo_resume_task(run_dir)查询同一任务；status=completed且相应产物字段存在才推进，不以isError=false或结果文件非空判断完成。查询中断可以继续同一任务，完成结果留本地缓存；提交状态未知、过期或失败时保留记录并停止新POST。后台store=false仍有约10分钟临时响应保留窗口，应持续查询并及时落盘，不承诺跨天恢复。
+
+已有analysis.json、model-analysis.json和judged.xlsx的旧run直接复用分析及媒体候选，从geo_create_plan开始，不重做已成功步骤。运行中任务统一geo_resume_task；同一run有未完成请求时先处理该请求，不换参数再发另一笔。只有已完成生成但业务校验需要修改时，才用具体revision_instructions启动修正。
+
+生成文件先留客户.work。geo_review_deliverables读取实际17页图片并与逐页原模板比较，另核事实、媒体原价、两档预算及服务分工，两份文档分别保存请求和结果。终审status=completed且passed=true才可交付；按意见修正并复审最多两轮，仍不通过保留草稿和问题。只有geo_publish成功才交三件成品；该工具拒绝未通过终审或审核后有改动的文件。审核记录仅留内部。
 
 ## 按输入开始
 

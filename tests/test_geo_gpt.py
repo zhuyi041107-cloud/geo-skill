@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import copy
+import io
+from itertools import islice
 import json
 import os
 from pathlib import Path
@@ -115,7 +117,7 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
             result = self.draft()
         elif name == "geo_customer_report":
             result = gpt_client.report_to_api(copy.deepcopy(self.report_fixture))
-        elif name == "geo_final_review":
+        elif name.startswith("geo_final_review_"):
             count = 8 if payload["document"] == "diagnosis" else 9
             result = {
                 "overall_pass": not self.fail_review, "content_findings": [],
@@ -148,7 +150,7 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
             self.assertFalse((self.root / "未审输出").exists())
             reviewed = geo_gpt.review_deliverables(str(run))
             self.assertTrue(reviewed["passed"])
-            review_calls = [call for call in self.calls if call[0] == "geo_final_review"]
+            review_calls = [call for call in self.calls if call[0].startswith("geo_final_review_")]
             self.assertEqual([len(call[2]) for call in review_calls], [17, 19])
             self.assertTrue(all(Path(image["path"]).is_file() for call in review_calls for image in call[2]))
             self.assertTrue(all(self.screenshot in {Path(image["path"]) for image in call[2]} for call in review_calls))
@@ -176,6 +178,11 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
             book.close()
             with self.assertRaises(FileExistsError):
                 geo_gpt.publish(str(run), str(output))
+            # Rechecking identical, already-reviewed artifacts reuses the valid receipt.
+            with patch.object(gpt_client, "complete_json") as unused_model:
+                self.assertTrue(geo_gpt.review_deliverables(str(run))["passed"])
+                unused_model.assert_not_called()
+            geo_gpt.write_reports(str(run), revision_instructions="按本轮补充重新组织客户成稿")
             with patch.object(gpt_client, "complete_json", side_effect=gpt_client.GPTError("离线模拟API中断")):
                 with self.assertRaises(gpt_client.GPTError):
                     geo_gpt.review_deliverables(str(run))
@@ -223,6 +230,164 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
                 paid_call.assert_not_called()
+
+    def test_background_flow_survives_more_than_600_seconds_without_duplicate_posts(self):
+        responses, polls, posts = {}, {}, []
+        clock = [0]
+        opener = unittest.mock.Mock()
+
+        def remote(request, timeout):
+            if request.get_method() == "POST":
+                self.assertEqual(timeout, 90)
+                body = json.loads(request.data)
+                self.assertTrue(body["background"])
+                self.assertFalse(body["store"])
+                self.assertEqual(body["reasoning"], {"effort": "max"})
+                name = body["text"]["format"]["name"]
+                content = body["input"][0]["content"]
+                payload = json.loads(content[0]["text"])
+                if name.startswith("geo_final_review_"):
+                    self.assertTrue(any(item["type"] == "input_image" for item in content))
+                value = self.mocked_gpt(body["instructions"], payload, body["text"]["format"]["schema"], schema_name=name)
+                response_id = "resp_offline_" + str(len(posts) + 1)
+                responses[response_id] = {"id": response_id, "model": gpt_client.MODEL, "status": "completed",
+                    "output": [{"type": "message", "status": "completed", "content": [
+                        {"type": "output_text", "text": json.dumps(value, ensure_ascii=False)}]}]}
+                polls[response_id] = 0
+                posts.append(name)
+                value = {"id": response_id, "model": gpt_client.MODEL, "status": "queued"}
+            else:
+                self.assertEqual(request.get_method(), "GET")
+                self.assertEqual(timeout, 60)
+                response_id = request.full_url.rsplit("/", 1)[1]
+                polls[response_id] += 1
+                clock[0] += 400
+                value = ({"id": response_id, "model": gpt_client.MODEL, "status": "in_progress"}
+                         if polls[response_id] == 1 else responses[response_id])
+            return io.BytesIO(json.dumps(value, ensure_ascii=False).encode("utf-8"))
+
+        def drain(run):
+            for _ in range(10):
+                try:
+                    result = geo_gpt.resume_task(str(run))
+                    self.assertEqual(result["status"], "completed")
+                    return result
+                except gpt_client.GPTPending:
+                    continue
+            self.fail("Background task never completed")
+
+        opener.open.side_effect = remote
+        with patch.object(gpt_client.urllib.request, "build_opener", return_value=opener):
+            with self.assertRaises(gpt_client.GPTPending) as pending:
+                geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
+            run = Path(pending.exception.checkpoint_path).parent.parent
+            self.assertTrue((run / "task-current.json").is_file())
+            with self.assertRaises(gpt_client.GPTPending) as repeated:
+                geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
+            self.assertEqual(repeated.exception.checkpoint_path, pending.exception.checkpoint_path)
+            self.assertEqual(posts, ["geo_analysis"])
+            drain(run)
+            candidates = run / "candidates.json"
+            geo_gpt.write(candidates, {"candidates": self.candidates})
+            with self.assertRaises(gpt_client.GPTPending):
+                geo_gpt.create_plan(str(run), [str(candidates)])
+            self.assertEqual(posts.count("geo_plan"), 1)
+            # A repeated tool call safely retrieves the same request instead of charging again.
+            with self.assertRaises(gpt_client.GPTPending):
+                geo_gpt.create_plan(str(run), [str(candidates)])
+            self.assertEqual(posts.count("geo_plan"), 1)
+            created = drain(run)
+            self.assertEqual([item["total"] for item in created["budgets"]], ["20400.00", "28800.00"])
+            with self.assertRaises(gpt_client.GPTPending):
+                geo_gpt.write_reports(str(run))
+            drain(run)
+            with self.assertRaises(gpt_client.GPTPending):
+                geo_gpt.review_deliverables(str(run))
+            saved_finish = geo_gpt.gpt_tasks.finish_task
+
+            def interrupted(task, result, output_paths=()):
+                if task["kind"] == "review":
+                    raise RuntimeError("模拟终审文件已保存但完成收据写入前中断")
+                return saved_finish(task, result, output_paths)
+
+            with patch.object(geo_gpt.gpt_tasks, "finish_task", side_effect=interrupted):
+                with self.assertRaisesRegex(RuntimeError, "写入前中断"):
+                    drain(run)
+            review_path = geo_gpt.latest(run, "review")
+            saved_review = review_path.read_bytes()
+            self.assertTrue(drain(run)["passed"])
+            self.assertEqual(review_path.read_bytes(), saved_review)
+            self.assertEqual(posts, ["geo_analysis", "geo_plan", "geo_customer_report",
+                                     "geo_final_review_diagnosis", "geo_final_review_execution"])
+            self.assertGreater(clock[0], 600)
+            calls_before = opener.open.call_count
+            self.assertTrue(geo_gpt.resume_task(str(run))["passed"])
+            self.assertEqual(opener.open.call_count, calls_before)
+            published = geo_gpt.publish(str(run), str(self.root / "后台正式输出"))
+            self.assertEqual(len(published["files"]), 3)
+
+    def test_all_501_candidates_are_kept_and_only_redundant_price_fields_are_removed(self):
+        with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
+            analyzed = geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
+        run = Path(analyzed["run_dir"])
+        candidates = [{"source_sheet": sheet, "media_id": str(row["软文街id"]), "media_name": row["媒体名称"],
+                       "editorial_note": row["备注"], "tier_prices": {tier: row[tier] for tier in media.TIERS}}
+                      for sheet, _, row in islice(media.catalog_rows(media.CATALOG), 501)]
+        path = run / "many-candidates.json"
+        geo_gpt.write(path, {"candidates": candidates})
+        original = path.read_bytes()
+
+        def paused(_instructions, payload, _schema, **kwargs):
+            self.assertEqual(len(payload["candidates"]), 501)
+            self.assertEqual({geo_gpt.identity(row) for row in payload["candidates"]},
+                             {geo_gpt.identity(row) for row in candidates})
+            self.assertTrue(all("tier_prices" not in row for row in payload["candidates"]))
+            self.assertEqual([row["editorial_note"] for row in payload["candidates"]], [row["editorial_note"] for row in candidates])
+            raise gpt_client.GPTPending(kwargs["checkpoint_path"], "resp_offline_pool", "queued")
+
+        with patch.object(gpt_client, "complete_json", side_effect=paused):
+            with self.assertRaises(gpt_client.GPTPending):
+                geo_gpt.create_plan(str(run), [str(path)])
+        self.assertEqual(path.read_bytes(), original)
+
+    def test_old_run_analysis_and_candidates_are_reused_without_reanalysis(self):
+        with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
+            analyzed = geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
+        original = Path(analyzed["run_dir"])
+        legacy = self.root / ".work/gpt/legacy-0-10-1"
+        legacy.mkdir()
+        for name in ("project.json", "raw-evidence.json", "analysis.json", "model-analysis.json", "judged.xlsx"):
+            (legacy / name).write_bytes((original / name).read_bytes())
+        state = geo_gpt.read(original / "run.json")
+        state["run_id"] = legacy.name
+        geo_gpt.write(legacy / "run.json", state)
+        candidates = legacy / "candidates-curated.json"
+        geo_gpt.write(candidates, {"candidates": self.candidates})
+        before = {p.name: geo_gpt.digest(p) for p in legacy.iterdir() if p.is_file()}
+        self.calls.clear()
+        with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
+            created = geo_gpt.create_plan(str(legacy), [str(candidates)])
+        self.assertEqual(created["status"], "completed")
+        self.assertEqual([call[0] for call in self.calls], ["geo_plan"])
+        self.assertEqual({name: geo_gpt.digest(legacy / name) for name in before}, before)
+        self.assertTrue(Path(created["plan_file"]).is_file())
+
+    def test_historical_plan_cache_cannot_disagree_with_current_plan(self):
+        with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
+            analyzed = geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
+            run = Path(analyzed["run_dir"])
+            candidate_file = run / "candidates.json"
+            geo_gpt.write(candidate_file, {"candidates": self.candidates})
+            first = geo_gpt.create_plan(str(run), [str(candidate_file)])
+            second = geo_gpt.create_plan(str(run), [str(candidate_file)], revision_instructions="补充第二版业务安排")
+            active = (run / "task-current.json").read_bytes()
+            call_count = len(self.calls)
+            self.assertNotEqual(first["plan_file"], second["plan_file"])
+            with self.assertRaisesRegex(ValueError, "已有新版本"):
+                geo_gpt.create_plan(str(run), [str(candidate_file)])
+            self.assertEqual(geo_gpt.latest(run, "plan"), Path(second["plan_file"]))
+            self.assertEqual((run / "task-current.json").read_bytes(), active)
+            self.assertEqual(len(self.calls), call_count)
 
 
 if __name__ == "__main__":
