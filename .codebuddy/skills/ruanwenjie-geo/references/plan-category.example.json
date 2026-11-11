@@ -1,0 +1,3045 @@
+{
+  "plan_mode": "category_only",
+  "stages": [
+    {
+      "name": "选型与权限先行",
+      "objective": "先用选型和权限验收解释平台适用条件，主体信息同步确认。",
+      "deliverables": "18篇不同稿件各刊发1次，形成发布清单与阶段复核结论。",
+      "effect_target": "分别观察业务认知、自然候选和选择理由，用变化调整下一阶段。",
+      "start_date": "2026-11-16",
+      "end_date": "2026-12-13"
+    },
+    {
+      "name": "场景与治理深化",
+      "objective": "把权限能力与内容治理责任写成具体团队可核对的选择理由。",
+      "deliverables": "20篇不同稿件各刊发1次，形成发布清单与阶段复核结论。",
+      "effect_target": "分别观察业务认知、自然候选和选择理由，用变化调整下一阶段。",
+      "start_date": "2026-12-14",
+      "end_date": "2027-01-10"
+    },
+    {
+      "name": "部署与迁移展开",
+      "objective": "围绕部署、迁移和交接展开实施条件，避免平台能力与服务范围混淆。",
+      "deliverables": "18篇不同稿件各刊发1次，形成发布清单与阶段复核结论。",
+      "effect_target": "分别观察业务认知、自然候选和选择理由，用变化调整下一阶段。",
+      "start_date": "2027-01-11",
+      "end_date": "2027-02-07"
+    },
+    {
+      "name": "补强选择理由",
+      "objective": "用团队场景与费用边界补强采购比较，并复核前期选择理由。",
+      "deliverables": "16篇不同稿件各刊发1次，形成发布清单与阶段复核结论。",
+      "effect_target": "分别观察业务认知、自然候选和选择理由，用变化调整下一阶段。",
+      "start_date": "2027-02-08",
+      "end_date": "2027-03-07"
+    }
+  ],
+  "contents": [
+    {
+      "content_id": "C001",
+      "title": "品牌与平台运营责任怎样确认",
+      "content_group": "平台主体与服务责任",
+      "question_ids": [
+        "Q003"
+      ],
+      "keywords": [
+        "平台主体与服务责任"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-16",
+      "week": 1
+    },
+    {
+      "content_id": "C002",
+      "title": "知识平台与实施服务分别包含什么",
+      "content_group": "平台主体与服务责任",
+      "question_ids": [
+        "Q003"
+      ],
+      "keywords": [
+        "平台主体与服务责任"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-17",
+      "week": 1
+    },
+    {
+      "content_id": "C003",
+      "title": "知识管理员和员工各承担哪些工作",
+      "content_group": "平台主体与服务责任",
+      "question_ids": [
+        "Q003"
+      ],
+      "keywords": [
+        "平台主体与服务责任"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-18",
+      "week": 1
+    },
+    {
+      "content_id": "C004",
+      "title": "官方帮助页应明确哪些服务边界",
+      "content_group": "平台主体与服务责任",
+      "question_ids": [
+        "Q003"
+      ],
+      "keywords": [
+        "平台主体与服务责任"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-19",
+      "week": 1
+    },
+    {
+      "content_id": "C005",
+      "title": "哪些团队应先试部门知识库",
+      "content_group": "适用条件与试用判断",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "适用条件与试用判断"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-20",
+      "week": 1
+    },
+    {
+      "content_id": "C006",
+      "title": "文件盘能否满足当前找资料需求",
+      "content_group": "适用条件与试用判断",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "适用条件与试用判断"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-21",
+      "week": 1
+    },
+    {
+      "content_id": "C007",
+      "title": "企业知识平台试用要准备哪些真实问题",
+      "content_group": "适用条件与试用判断",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "适用条件与试用判断"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-22",
+      "week": 1
+    },
+    {
+      "content_id": "C008",
+      "title": "试用时如何验证答案出处可访问",
+      "content_group": "适用条件与试用判断",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "适用条件与试用判断"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-23",
+      "week": 2
+    },
+    {
+      "content_id": "C009",
+      "title": "小团队选平台应核对哪些维护条件",
+      "content_group": "适用条件与试用判断",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "适用条件与试用判断"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-24",
+      "week": 2
+    },
+    {
+      "content_id": "C010",
+      "title": "跨部门需求应如何确定首批范围",
+      "content_group": "适用条件与试用判断",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "适用条件与试用判断"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-25",
+      "week": 2
+    },
+    {
+      "content_id": "C011",
+      "title": "客服团队试用应观察哪些查找任务",
+      "content_group": "适用条件与试用判断",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "适用条件与试用判断"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-26",
+      "week": 2
+    },
+    {
+      "content_id": "C012",
+      "title": "试用结果怎样支持是否采购的决定",
+      "content_group": "适用条件与试用判断",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "适用条件与试用判断"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-27",
+      "week": 2
+    },
+    {
+      "content_id": "C013",
+      "title": "部门权限与文档权限怎样分别验收",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-28",
+      "week": 2
+    },
+    {
+      "content_id": "C014",
+      "title": "不同账号怎样测试同一问题",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-29",
+      "week": 2
+    },
+    {
+      "content_id": "C015",
+      "title": "员工离职后的知识访问应如何核对",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-11-30",
+      "week": 3
+    },
+    {
+      "content_id": "C016",
+      "title": "临时项目成员的访问期限如何管理",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-12-01",
+      "week": 3
+    },
+    {
+      "content_id": "C017",
+      "title": "文档权限变更后怎样复查答案",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-12-02",
+      "week": 3
+    },
+    {
+      "content_id": "C018",
+      "title": "知识问答怎样定位原文段落",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "选型与权限先行",
+      "scheduled_date": "2026-12-03",
+      "week": 3
+    },
+    {
+      "content_id": "C019",
+      "title": "文档版本不同应怎样显示出处",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-14",
+      "week": 5
+    },
+    {
+      "content_id": "C020",
+      "title": "引用标题正确但原文不可读该怎么办",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-15",
+      "week": 5
+    },
+    {
+      "content_id": "C021",
+      "title": "跨部门问答如何避免越权信息",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-16",
+      "week": 5
+    },
+    {
+      "content_id": "C022",
+      "title": "批量迁移后权限是否保持一致",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-17",
+      "week": 5
+    },
+    {
+      "content_id": "C023",
+      "title": "共享链接是否扩大文档访问范围",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-18",
+      "week": 5
+    },
+    {
+      "content_id": "C024",
+      "title": "管理员可见与员工可见如何区分",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-19",
+      "week": 5
+    },
+    {
+      "content_id": "C025",
+      "title": "权限测试需要保留哪些记录",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-20",
+      "week": 5
+    },
+    {
+      "content_id": "C026",
+      "title": "敏感文档应怎样决定是否入库",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-21",
+      "week": 6
+    },
+    {
+      "content_id": "C027",
+      "title": "答案引用与可验证事实有什么差别",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-22",
+      "week": 6
+    },
+    {
+      "content_id": "C028",
+      "title": "权限验收未通过时应怎样缩小上线范围",
+      "content_group": "权限与答案出处",
+      "question_ids": [
+        "Q002"
+      ],
+      "keywords": [
+        "权限与答案出处"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-23",
+      "week": 6
+    },
+    {
+      "content_id": "C029",
+      "title": "知识条目由谁负责确认",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-24",
+      "week": 6
+    },
+    {
+      "content_id": "C030",
+      "title": "文档更新后谁负责重新审核",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-25",
+      "week": 6
+    },
+    {
+      "content_id": "C031",
+      "title": "过期内容怎样下架和替换",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-26",
+      "week": 6
+    },
+    {
+      "content_id": "C032",
+      "title": "重复文件应怎样确定有效版本",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-27",
+      "week": 6
+    },
+    {
+      "content_id": "C033",
+      "title": "员工发现错误答案后怎样反馈",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-28",
+      "week": 7
+    },
+    {
+      "content_id": "C034",
+      "title": "知识管理员应检查哪些使用问题",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-29",
+      "week": 7
+    },
+    {
+      "content_id": "C035",
+      "title": "多部门资料怎样安排审核负责人",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-30",
+      "week": 7
+    },
+    {
+      "content_id": "C036",
+      "title": "临时通知和长期制度如何分开维护",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2026-12-31",
+      "week": 7
+    },
+    {
+      "content_id": "C037",
+      "title": "历史项目资料如何保留适用条件",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2027-01-01",
+      "week": 7
+    },
+    {
+      "content_id": "C038",
+      "title": "搜索没有结果时应先查什么",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "场景与治理深化",
+      "scheduled_date": "2027-01-02",
+      "week": 7
+    },
+    {
+      "content_id": "C039",
+      "title": "更新责任如何纳入岗位交接",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-11",
+      "week": 9
+    },
+    {
+      "content_id": "C040",
+      "title": "新增部门怎样接入既有维护流程",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-12",
+      "week": 9
+    },
+    {
+      "content_id": "C041",
+      "title": "官方帮助页如何说明问题处理方式",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-13",
+      "week": 9
+    },
+    {
+      "content_id": "C042",
+      "title": "试运行后如何调整知识分类",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-14",
+      "week": 9
+    },
+    {
+      "content_id": "C043",
+      "title": "高频问题怎样形成持续更新任务",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-15",
+      "week": 9
+    },
+    {
+      "content_id": "C044",
+      "title": "持续维护怎样避免只有入库没有使用",
+      "content_group": "知识治理与持续更新",
+      "question_ids": [
+        "Q005"
+      ],
+      "keywords": [
+        "知识治理与持续更新"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-16",
+      "week": 9
+    },
+    {
+      "content_id": "C045",
+      "title": "迁移文件前需要盘点哪些资料",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-17",
+      "week": 9
+    },
+    {
+      "content_id": "C046",
+      "title": "文件夹结构怎样影响知识入库",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-18",
+      "week": 10
+    },
+    {
+      "content_id": "C047",
+      "title": "已有标签能否直接沿用",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-19",
+      "week": 10
+    },
+    {
+      "content_id": "C048",
+      "title": "分批迁移怎样安排验收",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-20",
+      "week": 10
+    },
+    {
+      "content_id": "C049",
+      "title": "云端与专有部署应比较哪些约束",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-21",
+      "week": 10
+    },
+    {
+      "content_id": "C050",
+      "title": "客户选定平台后实施方还负责什么",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-22",
+      "week": 10
+    },
+    {
+      "content_id": "C051",
+      "title": "存量文档缺少负责人时如何处理",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-23",
+      "week": 10
+    },
+    {
+      "content_id": "C052",
+      "title": "上线范围怎样从单部门扩大",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-24",
+      "week": 10
+    },
+    {
+      "content_id": "C053",
+      "title": "管理员培训应覆盖哪些日常任务",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-25",
+      "week": 11
+    },
+    {
+      "content_id": "C054",
+      "title": "上线验收如何区分找得到和用得对",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-26",
+      "week": 11
+    },
+    {
+      "content_id": "C055",
+      "title": "实施交接时需要哪些清单",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-27",
+      "week": 11
+    },
+    {
+      "content_id": "C056",
+      "title": "迁移完成后如何安排首月问题收口",
+      "content_group": "部署迁移与上线",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "部署迁移与上线"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "部署与迁移展开",
+      "scheduled_date": "2027-01-28",
+      "week": 11
+    },
+    {
+      "content_id": "C057",
+      "title": "客服团队怎样验证回答可回到制度原文",
+      "content_group": "团队场景与案例",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "团队场景与案例"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-08",
+      "week": 13
+    },
+    {
+      "content_id": "C058",
+      "title": "研发团队怎样管理不同项目知识边界",
+      "content_group": "团队场景与案例",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "团队场景与案例"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-09",
+      "week": 13
+    },
+    {
+      "content_id": "C059",
+      "title": "人事制度问答怎样核对适用版本",
+      "content_group": "团队场景与案例",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "团队场景与案例"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-10",
+      "week": 13
+    },
+    {
+      "content_id": "C060",
+      "title": "新员工入职怎样设置首批知识入口",
+      "content_group": "团队场景与案例",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "团队场景与案例"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-11",
+      "week": 13
+    },
+    {
+      "content_id": "C061",
+      "title": "销售团队怎样整理可公开产品资料",
+      "content_group": "团队场景与案例",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "团队场景与案例"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-12",
+      "week": 13
+    },
+    {
+      "content_id": "C062",
+      "title": "经销商资料如何划定可访问范围",
+      "content_group": "团队场景与案例",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "团队场景与案例"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-13",
+      "week": 13
+    },
+    {
+      "content_id": "C063",
+      "title": "远程团队怎样明确内容维护责任",
+      "content_group": "团队场景与案例",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "团队场景与案例"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-14",
+      "week": 13
+    },
+    {
+      "content_id": "C064",
+      "title": "匿名实施案例怎样展示过程和适用条件",
+      "content_group": "团队场景与案例",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "团队场景与案例"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-15",
+      "week": 14
+    },
+    {
+      "content_id": "C065",
+      "title": "软件费用与实施服务费用怎样分开",
+      "content_group": "费用与采购比较",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "费用与采购比较"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-16",
+      "week": 14
+    },
+    {
+      "content_id": "C066",
+      "title": "采购前如何明确迁移范围",
+      "content_group": "费用与采购比较",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "费用与采购比较"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-17",
+      "week": 14
+    },
+    {
+      "content_id": "C067",
+      "title": "权限配置是否包含在实施报价中",
+      "content_group": "费用与采购比较",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "费用与采购比较"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-18",
+      "week": 14
+    },
+    {
+      "content_id": "C068",
+      "title": "知识维护费用应怎样确认",
+      "content_group": "费用与采购比较",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "费用与采购比较"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-19",
+      "week": 14
+    },
+    {
+      "content_id": "C069",
+      "title": "按账号与按服务范围报价各适合什么情况",
+      "content_group": "费用与采购比较",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "费用与采购比较"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-20",
+      "week": 14
+    },
+    {
+      "content_id": "C070",
+      "title": "试用未通过时如何约定后续工作",
+      "content_group": "费用与采购比较",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "费用与采购比较"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-21",
+      "week": 14
+    },
+    {
+      "content_id": "C071",
+      "title": "验收和售后应写清哪些交付边界",
+      "content_group": "费用与采购比较",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "费用与采购比较"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-22",
+      "week": 15
+    },
+    {
+      "content_id": "C072",
+      "title": "采购知识平台如何比较功能之外的持续投入",
+      "content_group": "费用与采购比较",
+      "question_ids": [
+        "Q001"
+      ],
+      "keywords": [
+        "费用与采购比较"
+      ],
+      "evidence": "虚构演示设定；正式项目使用客户确认材料与授权记录。",
+      "status": "已选",
+      "platform": "演示平台",
+      "stage": "补强选择理由",
+      "scheduled_date": "2027-02-23",
+      "week": 15
+    }
+  ],
+  "placements": [
+    {
+      "placement_id": "P001",
+      "content_id": "C001",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-17",
+      "stage": "选型与权限先行",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P002",
+      "content_id": "C002",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-18",
+      "stage": "选型与权限先行",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P003",
+      "content_id": "C003",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-19",
+      "stage": "选型与权限先行",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P004",
+      "content_id": "C004",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-20",
+      "stage": "选型与权限先行",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P005",
+      "content_id": "C005",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-21",
+      "stage": "选型与权限先行",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P006",
+      "content_id": "C006",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-22",
+      "stage": "选型与权限先行",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P007",
+      "content_id": "C007",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-23",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P008",
+      "content_id": "C008",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-24",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P009",
+      "content_id": "C009",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-25",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P010",
+      "content_id": "C010",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-26",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P011",
+      "content_id": "C011",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-27",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P012",
+      "content_id": "C012",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-28",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P013",
+      "content_id": "C013",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-29",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P014",
+      "content_id": "C014",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-11-30",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P015",
+      "content_id": "C015",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-01",
+      "stage": "选型与权限先行",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P016",
+      "content_id": "C016",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-02",
+      "stage": "选型与权限先行",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P017",
+      "content_id": "C017",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-03",
+      "stage": "选型与权限先行",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P018",
+      "content_id": "C018",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-04",
+      "stage": "选型与权限先行",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P019",
+      "content_id": "C019",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-15",
+      "stage": "场景与治理深化",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P020",
+      "content_id": "C020",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-16",
+      "stage": "场景与治理深化",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P021",
+      "content_id": "C021",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-17",
+      "stage": "场景与治理深化",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P022",
+      "content_id": "C022",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-18",
+      "stage": "场景与治理深化",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P023",
+      "content_id": "C023",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-19",
+      "stage": "场景与治理深化",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P024",
+      "content_id": "C024",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-20",
+      "stage": "场景与治理深化",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P025",
+      "content_id": "C025",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-21",
+      "stage": "场景与治理深化",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P026",
+      "content_id": "C026",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-22",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P027",
+      "content_id": "C027",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-23",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P028",
+      "content_id": "C028",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-24",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P029",
+      "content_id": "C029",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-25",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P030",
+      "content_id": "C030",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-26",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P031",
+      "content_id": "C031",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-27",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P032",
+      "content_id": "C032",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-28",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P033",
+      "content_id": "C033",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-29",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P034",
+      "content_id": "C034",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-30",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P035",
+      "content_id": "C035",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2026-12-31",
+      "stage": "场景与治理深化",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P036",
+      "content_id": "C036",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-01",
+      "stage": "场景与治理深化",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P037",
+      "content_id": "C037",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-02",
+      "stage": "场景与治理深化",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P038",
+      "content_id": "C038",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-03",
+      "stage": "场景与治理深化",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P039",
+      "content_id": "C039",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-12",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P040",
+      "content_id": "C040",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-13",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P041",
+      "content_id": "C041",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-14",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P042",
+      "content_id": "C042",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-15",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P043",
+      "content_id": "C043",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-16",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P044",
+      "content_id": "C044",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-17",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P045",
+      "content_id": "C045",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-18",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P046",
+      "content_id": "C046",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-19",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P047",
+      "content_id": "C047",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-20",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P048",
+      "content_id": "C048",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-21",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P049",
+      "content_id": "C049",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-22",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P050",
+      "content_id": "C050",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-23",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P051",
+      "content_id": "C051",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-24",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P052",
+      "content_id": "C052",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-25",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P053",
+      "content_id": "C053",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-26",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P054",
+      "content_id": "C054",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-27",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P055",
+      "content_id": "C055",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-28",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P056",
+      "content_id": "C056",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-01-29",
+      "stage": "部署与迁移展开",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P057",
+      "content_id": "C057",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-09",
+      "stage": "补强选择理由",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P058",
+      "content_id": "C058",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-10",
+      "stage": "补强选择理由",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P059",
+      "content_id": "C059",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-11",
+      "stage": "补强选择理由",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P060",
+      "content_id": "C060",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-12",
+      "stage": "补强选择理由",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P061",
+      "content_id": "C061",
+      "strategy_role": "权威媒体",
+      "quantity": 1,
+      "client_unit_price": "450.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-13",
+      "stage": "补强选择理由",
+      "strategy_basis": "展示已核实的主体与服务事实",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P062",
+      "content_id": "C062",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-14",
+      "stage": "补强选择理由",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P063",
+      "content_id": "C063",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-15",
+      "stage": "补强选择理由",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P064",
+      "content_id": "C064",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-16",
+      "stage": "补强选择理由",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P065",
+      "content_id": "C065",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-17",
+      "stage": "补强选择理由",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P066",
+      "content_id": "C066",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-18",
+      "stage": "补强选择理由",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P067",
+      "content_id": "C067",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-19",
+      "stage": "补强选择理由",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P068",
+      "content_id": "C068",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-20",
+      "stage": "补强选择理由",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P069",
+      "content_id": "C069",
+      "strategy_role": "行业媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-21",
+      "stage": "补强选择理由",
+      "strategy_basis": "说明行业场景、产品适配与使用条件",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P070",
+      "content_id": "C070",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-22",
+      "stage": "补强选择理由",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P071",
+      "content_id": "C071",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-23",
+      "stage": "补强选择理由",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    },
+    {
+      "placement_id": "P072",
+      "content_id": "C072",
+      "strategy_role": "自媒体",
+      "quantity": 1,
+      "client_unit_price": "200.00",
+      "status": "已选",
+      "scheduled_date": "2027-02-24",
+      "stage": "补强选择理由",
+      "strategy_basis": "解释用户疑问与使用过程",
+      "unit_price": null
+    }
+  ],
+  "fees": [],
+  "quote_options": [
+    {
+      "name": "高权重方案",
+      "placements": [
+        {
+          "placement_id": "P001",
+          "content_id": "C001",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-17",
+          "stage": "选型与权限先行",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P002",
+          "content_id": "C002",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-18",
+          "stage": "选型与权限先行",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P003",
+          "content_id": "C003",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-19",
+          "stage": "选型与权限先行",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P004",
+          "content_id": "C004",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-20",
+          "stage": "选型与权限先行",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P005",
+          "content_id": "C005",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-21",
+          "stage": "选型与权限先行",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P006",
+          "content_id": "C006",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-22",
+          "stage": "选型与权限先行",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P007",
+          "content_id": "C007",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-23",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P008",
+          "content_id": "C008",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-24",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P009",
+          "content_id": "C009",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-25",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P010",
+          "content_id": "C010",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-26",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P011",
+          "content_id": "C011",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-27",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P012",
+          "content_id": "C012",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-28",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P013",
+          "content_id": "C013",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-29",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P014",
+          "content_id": "C014",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-11-30",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P015",
+          "content_id": "C015",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-01",
+          "stage": "选型与权限先行",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P016",
+          "content_id": "C016",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-02",
+          "stage": "选型与权限先行",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P017",
+          "content_id": "C017",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-03",
+          "stage": "选型与权限先行",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P018",
+          "content_id": "C018",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-04",
+          "stage": "选型与权限先行",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P019",
+          "content_id": "C019",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-15",
+          "stage": "场景与治理深化",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P020",
+          "content_id": "C020",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-16",
+          "stage": "场景与治理深化",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P021",
+          "content_id": "C021",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-17",
+          "stage": "场景与治理深化",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P022",
+          "content_id": "C022",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-18",
+          "stage": "场景与治理深化",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P023",
+          "content_id": "C023",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-19",
+          "stage": "场景与治理深化",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P024",
+          "content_id": "C024",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-20",
+          "stage": "场景与治理深化",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P025",
+          "content_id": "C025",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-21",
+          "stage": "场景与治理深化",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P026",
+          "content_id": "C026",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-22",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P027",
+          "content_id": "C027",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-23",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P028",
+          "content_id": "C028",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-24",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P029",
+          "content_id": "C029",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-25",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P030",
+          "content_id": "C030",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-26",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P031",
+          "content_id": "C031",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-27",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P032",
+          "content_id": "C032",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-28",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P033",
+          "content_id": "C033",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-29",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P034",
+          "content_id": "C034",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-30",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P035",
+          "content_id": "C035",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2026-12-31",
+          "stage": "场景与治理深化",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P036",
+          "content_id": "C036",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-01",
+          "stage": "场景与治理深化",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P037",
+          "content_id": "C037",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-02",
+          "stage": "场景与治理深化",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P038",
+          "content_id": "C038",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-03",
+          "stage": "场景与治理深化",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P039",
+          "content_id": "C039",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-12",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P040",
+          "content_id": "C040",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-13",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P041",
+          "content_id": "C041",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-14",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P042",
+          "content_id": "C042",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-15",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P043",
+          "content_id": "C043",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-16",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P044",
+          "content_id": "C044",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-17",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P045",
+          "content_id": "C045",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-18",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P046",
+          "content_id": "C046",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-19",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P047",
+          "content_id": "C047",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-20",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P048",
+          "content_id": "C048",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-21",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P049",
+          "content_id": "C049",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-22",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P050",
+          "content_id": "C050",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-23",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P051",
+          "content_id": "C051",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-24",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P052",
+          "content_id": "C052",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-25",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P053",
+          "content_id": "C053",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-26",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P054",
+          "content_id": "C054",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-27",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P055",
+          "content_id": "C055",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-28",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P056",
+          "content_id": "C056",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-01-29",
+          "stage": "部署与迁移展开",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P057",
+          "content_id": "C057",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-09",
+          "stage": "补强选择理由",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P058",
+          "content_id": "C058",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-10",
+          "stage": "补强选择理由",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P059",
+          "content_id": "C059",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-11",
+          "stage": "补强选择理由",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P060",
+          "content_id": "C060",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-12",
+          "stage": "补强选择理由",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P061",
+          "content_id": "C061",
+          "strategy_role": "权威媒体",
+          "quantity": 1,
+          "client_unit_price": "600.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-13",
+          "stage": "补强选择理由",
+          "strategy_basis": "展示已核实的主体与服务事实",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P062",
+          "content_id": "C062",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-14",
+          "stage": "补强选择理由",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P063",
+          "content_id": "C063",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-15",
+          "stage": "补强选择理由",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P064",
+          "content_id": "C064",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-16",
+          "stage": "补强选择理由",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P065",
+          "content_id": "C065",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-17",
+          "stage": "补强选择理由",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P066",
+          "content_id": "C066",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-18",
+          "stage": "补强选择理由",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P067",
+          "content_id": "C067",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-19",
+          "stage": "补强选择理由",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P068",
+          "content_id": "C068",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-20",
+          "stage": "补强选择理由",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P069",
+          "content_id": "C069",
+          "strategy_role": "行业媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-21",
+          "stage": "补强选择理由",
+          "strategy_basis": "说明行业场景、产品适配与使用条件",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P070",
+          "content_id": "C070",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-22",
+          "stage": "补强选择理由",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P071",
+          "content_id": "C071",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-23",
+          "stage": "补强选择理由",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        },
+        {
+          "placement_id": "P072",
+          "content_id": "C072",
+          "strategy_role": "自媒体",
+          "quantity": 1,
+          "client_unit_price": "300.00",
+          "status": "已选",
+          "scheduled_date": "2027-02-24",
+          "stage": "补强选择理由",
+          "strategy_basis": "解释用户疑问与使用过程",
+          "unit_price": null
+        }
+      ],
+      "fees": []
+    }
+  ],
+  "service_scope": {
+    "writing_mode": "separate",
+    "work_items": [
+      {
+        "task": "内容策划",
+        "provider": "规划选题与素材结构，审核客户稿件并完成发布排版。",
+        "client": "提供现有资料，核准业务事实、案例授权与最终稿件。",
+        "included": true
+      },
+      {
+        "task": "媒体发布",
+        "provider": "匹配已列媒体，确认接稿条件并推进约定刊发。",
+        "client": "确认公开范围，按批次完成审核与定稿授权。",
+        "included": true
+      },
+      {
+        "task": "链接汇总",
+        "provider": "逐篇汇总实际发布链接、时间与刊发记录。",
+        "client": "核对交付清单，反馈链接或展示问题。",
+        "included": true
+      },
+      {
+        "task": "阶段复核",
+        "provider": "第4、8、12、16周复核认知、候选与选择理由，提出下一批调整。",
+        "client": "确认业务更新与新增材料，协同调整内容方向。",
+        "included": true
+      },
+      {
+        "task": "官网与争议处理",
+        "provider": "梳理需要统一的主体、服务边界和公开信息。",
+        "client": "负责官网实际修改、账号权限操作及真实争议处理。",
+        "included": false
+      }
+    ],
+    "review_schedule": "第4、8、12、16周",
+    "manual_writing": {
+      "unit_price": "100.00",
+      "original_unit_price": "200.00"
+    }
+  },
+  "logic_links": [
+    "围绕真实业务需求安排内容、三类传播与阶段复核。"
+  ]
+}

@@ -4,27 +4,25 @@ from __future__ import annotations
 import copy
 from datetime import date, datetime
 import hashlib
-from io import BytesIO
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 from uuid import uuid4
 
 import pymupdf as fitz
 
-import export_media_word
 import export_pdf
 import geo_data
 import gpt_client
 import gpt_evidence
 import gpt_tasks
-import media
 
 ROOT = Path(__file__).resolve().parents[1]
 ROLES = export_pdf.ROLES
-CUSTOMER_FILES = (*export_pdf.FILES.values(), "推荐媒体.xlsx")
+CUSTOMER_FILES = tuple(export_pdf.FILES.values())
 
 
 def obj(**properties):
@@ -37,6 +35,7 @@ def arr(items, **constraints):
 
 
 STR = {"type": "string", "minLength": 1}
+ISO_DATE = {"type": "string", "pattern": r"^\d{4}-\d{2}-\d{2}$"}
 BOOL = {"type": "boolean"}
 YES_NO = {"type": "string", "enum": ["是", "否"]}
 JUDGMENT = obj(sample_id=STR, mention=YES_NO, recommendation=YES_NO, reason=STR)
@@ -47,18 +46,15 @@ ANALYSIS_SCHEMA = obj(
     business_scenes=arr(obj(scene=STR, audience=STR, selection_reason=STR,
                             evidence_refs=arr(STR, minItems=1), priority=STR), minItems=1),
     fact_issues=arr(FINDING), content_directions=arr(STR, minItems=1),
-    media_queries=arr(STR, minItems=1), overall_conclusion=STR)
-IDENTITY = obj(source_sheet={"type": "string", "enum": list(media.SHEETS.values())}, media_id=STR)
+    media_queries=arr(STR), overall_conclusion=STR)
 PLAN_SCHEMA = obj(
     stages=arr(obj(name=STR, objective=STR, deliverables=STR, effect_target=STR,
-                   start_date=STR, end_date=STR), minItems=4, maxItems=4),
+                   start_date=ISO_DATE, end_date=ISO_DATE), minItems=4, maxItems=4),
     contents=arr(obj(content_id=STR, title=STR, content_group=STR,
                      question_ids=arr(STR, minItems=1), keywords=arr(STR, minItems=1),
-                     evidence=STR, stage=STR, scheduled_date=STR), minItems=1),
+                     evidence=STR, stage=STR, scheduled_date=ISO_DATE), minItems=1),
     allocations=arr(obj(content_id=STR, strategy_role={"type": "string", "enum": list(ROLES)},
-                        strategy_basis=STR, quantity={"type": "integer", "minimum": 1},
-                        ordinary=IDENTITY, higher=IDENTITY), minItems=1),
-    recommendations=arr(obj(resource=IDENTITY, reason=STR), minItems=1),
+                        strategy_basis=STR, quantity={"type": "integer", "minimum": 1}), minItems=1),
     work_items=arr(obj(task=STR, provider=STR, client=STR, included=BOOL), minItems=4, maxItems=6),
     review_schedule=STR, writing_mode={"type": "string", "enum": ["separate", "client_provided"]},
     logic_links=arr(STR, minItems=1))
@@ -150,7 +146,7 @@ def analyze_customer(workspace, project_file, answers_file):
     instructions = rules("report-thinking.md", "evidence-and-planning.md") + (
         "\n先逐sample_id判读全部已完成原答，区分提及与推荐；然后分析品牌印象、同行选择理由、"
         "真实优势和商业场景。judgments只包含采集状态已完成的样本，精确覆盖一次。"
-        "evidence_refs引用sample_id或客户资料字段；media_queries为便于本地媒体目录匹配的短词。")
+        "evidence_refs引用sample_id或客户资料字段；本版不检索具体媒体，media_queries填空数组。")
     sources = {str(p): digest(p) for p in (project_path, answers_path)}
     image_hashes = {str(p["path"]): digest(p["path"]) for p in images}
     signature = {"inputs": {os.path.normcase(p): sha for p, sha in {**sources, **image_hashes}.items()},
@@ -182,48 +178,20 @@ def analyze_customer(workspace, project_file, answers_file):
                          ANALYSIS_SCHEMA, images=images)])
             write(index, {"fingerprint": fingerprint, "run_dir": str(run),
                           "task_file": str(run / "tasks" / (task["task_id"] + ".json"))})
-    return execute_task(run, task)
+    return analysis_next(execute_task(run, task))
 
 
-def search_media(run_dir, query, kind="all", region=""):
-    run, _ = context(run_dir)
-    result = media.search_media(query=query, kind=kind, region=region, limit=0)
-    target = run / ("candidates-" + uuid4().hex[:8] + ".json")
-    write(target, result)
-    return {"candidate_file": str(target), "count": len(result["candidates"]),
-            "preview": result["candidates"][:15], "stats": result["stats"],
-            "note": "文件保留全量匹配；预览15项不是推荐数量。计划生成仅压缩重复字段，保留全部所选候选身份和限制。"}
+def analysis_next(result):
+    """Present current workflow guidance even when an older analysis receipt is reused."""
+    return {**result, "next": "调用geo_create_plan生成不指定媒体的分类方案"}
 
 
-def identity(record):
-    return record["source_sheet"], str(record["media_id"])
-
-
-def hydrate_plan(draft, candidates, project):
-    catalog = {identity(c): c for c in candidates}
-    originals = export_media_word.catalog_records(media.CATALOG)
-    def resource(item):
-        key = identity(item)
-        if key not in catalog:
-            raise ValueError("模型选择了候选目录之外的媒体ID：" + repr(key))
-        value = copy.deepcopy(catalog[key])
-        source = originals.get(key)
-        if not source:
-            raise ValueError("候选媒体不在内置原报价目录")
-        value.update(media_name=source["media_name"], source_file=source["source_file"],
-                     source_sheet=source["source_sheet"], source_row=int(source["source_row"]),
-                     category=source["category"], region=source["region"], entry_type=source["entry_type"],
-                     editorial_note=source["editorial_note"], quotation_date=source["quotation_date"],
-                     market_price=source["market_price"] or None,
-                     market_reference_price=source["market_price"] or None,
-                     tier_prices={tier: source[field] or None for tier, field in media.TIER_FIELDS.items()})
-        if media.restriction(value.get("editorial_note")) == "排除":
-            raise ValueError("明确拒发的媒体不能进入推荐或执行")
-        return value
+def hydrate_plan(draft, project):
+    """Build category-only allocations without inventing media identities or costs."""
     contents = copy.deepcopy(draft["contents"])
     ids = geo_data.unique(contents, "content_id", "内容")
     question_ids = {q["question_id"] for q in project["questions"]}
-    stages = draft["stages"]
+    stages = copy.deepcopy(draft["stages"])
     stage_ids = geo_data.unique(stages, "name", "阶段")
     for c in contents:
         if c["stage"] not in stage_ids or not set(c["question_ids"]).issubset(question_ids):
@@ -243,34 +211,28 @@ def hydrate_plan(draft, candidates, project):
         if role not in ROLES:
             raise ValueError("无效媒体策略角色")
         quantity = geo_data.positive_int(allocation["quantity"], "quantity")
-        for index, field in enumerate(("ordinary", "higher")):
-            p = resource(allocation[field])
-            p.update(placement_id=f"P{index}-{i:04d}", content_id=c["content_id"],
-                     strategy_role=role, strategy_basis=allocation["strategy_basis"], quantity=quantity,
-                     client_unit_price=str(export_pdf.QUOTE_RATES[index][role]), unit_price=None,
-                     status="已选", scheduled_date=c["scheduled_date"], stage=c["stage"])
-            placements[index].append(p)
+        for index in range(2):
+            placements[index].append({"placement_id": f"P{index}-{i:04d}", "content_id": c["content_id"],
+                "strategy_role": role, "strategy_basis": allocation["strategy_basis"], "quantity": quantity,
+                "client_unit_price": str(export_pdf.QUOTE_RATES[index][role]), "unit_price": None,
+                "status": "已选", "scheduled_date": c["scheduled_date"], "stage": c["stage"]})
     if {p["content_id"] for p in placements[0]} != ids:
-        raise ValueError("存在没有媒体配置的内容")
-    recommendations = []
-    for item in draft["recommendations"]:
-        p = resource(item["resource"])
-        p.update(description=item["reason"], status="需核实" if p["status"] == "需核实" else "推荐")
-        recommendations.append(p)
-    recommended = {identity(p) for p in recommendations}
-    if any(identity(p) not in recommended for ps in placements for p in ps):
-        raise ValueError("两档执行资源都须在独立媒体推荐池中")
+        raise ValueError("存在没有媒体类别配置的内容")
+    if (not project.get("start_date") or not project.get("end_date")) and (
+            "示例" not in draft["review_schedule"] or
+            not re.search(r"待(?:双方|客户)?确认|(?:需|须|尚未|未)确认", draft["review_schedule"])):
+        raise ValueError("项目起止日期未完整确认；复核说明须明确未确认排期为示例并待确认")
     scope = {"work_items": draft["work_items"], "review_schedule": draft["review_schedule"],
              "writing_mode": draft["writing_mode"],
              "manual_writing": {"unit_price": "100.00", "original_unit_price": "200.00"}
              if draft["writing_mode"] == "separate" else None}
-    plan = {"stages": stages, "contents": contents, "placements": placements[0], "fees": [],
+    plan = {"plan_mode": "category_only", "stages": stages, "contents": contents,
+            "placements": placements[0], "fees": [],
             "quote_options": [{"name": "高权重方案", "placements": placements[1], "fees": []}],
-            "media_recommendations": recommendations, "service_scope": scope, "logic_links": draft["logic_links"]}
+            "service_scope": scope, "logic_links": draft["logic_links"]}
     for index, ps in enumerate(placements):
         export_pdf.public_accounting(project, {**plan, "placements": ps}, index)
     export_pdf.service_scope(plan, len(contents), [geo_data.calculate_budget(project, {**plan, "placements": ps}) for ps in placements])
-    export_media_word.selected_rows(plan, export_media_word.catalog_records(media.CATALOG))
     return plan
 
 
@@ -309,16 +271,6 @@ def save_once(path, value):
         write(path, value)
 
 
-def candidate_records(run, paths):
-    records = {}
-    for path in paths:
-        for item in read(inside(path, run))["candidates"]:
-            records[identity(item)] = item
-    if not records:
-        raise ValueError("请先检索相关媒体目录")
-    return list(records.values())
-
-
 def execute_task(run, task):
     with gpt_tasks.task_lock(task):
         cached = gpt_tasks.cached_result(task)
@@ -350,7 +302,9 @@ def execute_task(run, task):
 
 def resume_task(run_dir):
     run, _ = context(run_dir)
-    return execute_task(run, gpt_tasks.load_current(run))
+    task = gpt_tasks.load_current(run)
+    result = execute_task(run, task)
+    return analysis_next(result) if task["kind"] == "analyze" else result
 
 
 def finish_analysis(run, task, result):
@@ -367,43 +321,54 @@ def finish_analysis(run, task, result):
     save_once(run / "model-analysis.json", result)
     return ({"run_dir": str(run), "analysis_file": str(run / "model-analysis.json"),
              "conclusion": result["overall_conclusion"], "media_queries": result["media_queries"],
-             "next": "使用geo_search_media检索具体资源，再调用geo_create_plan"},
+             "next": "调用geo_create_plan生成不指定媒体的分类方案"},
             [judged_path, run / "analysis.json", run / "model-analysis.json"])
 
 
-def create_plan(run_dir, candidate_files, revision_instructions=""):
+def planning_reference(run, project):
+    """Keep suggested dates stable across resumptions; never invent a confirmed start."""
+    if project.get("start_date"):
+        return project["start_date"]
+    match = re.match(r"^(\d{8})-", run.name)
+    if match:
+        try:
+            return datetime.strptime(match.group(1), "%Y%m%d").date().isoformat()
+        except ValueError:
+            pass
+    return None
+
+
+def create_plan(run_dir, revision_instructions="", retry_failed_response_id=""):
     run, state = context(run_dir)
     project = read(run / "project.json")
     if project.get("budget_limit") is not None and geo_data.money(project["budget_limit"], "budget_limit") < 12000:
         raise ValueError("客户明确硬上限低于媒体费最低12000元，无法形成当前报价，请先确认具体约束")
-    if not candidate_files:
-        raise ValueError("请先检索媒体目录")
-    paths = [str(inside(file, run)) for file in candidate_files]
-    candidates = candidate_records(run, paths)
-    fields = ("source_sheet", "media_id", "media_name", "category", "region", "portal", "entry_type", "editorial_note", "market_price", "status")
-    compact = [{key: item.get(key) for key in fields} for item in candidates]
     instructions = rules("report-thinking.md", "evidence-and-planning.md", "template-generation.md") + (
-        "\n据分析形成4个阶段的完整可执行计划。contents为独立稿，数量由客户需求确定；"
-        "allocations每项指定同一内容和策略角色在普通/高权重各使用的真实媒体身份，quantity同刊次；"
-        "角色依据必须据资源属性，不能仅以门户名或价格认定权威。两档媒体配置应实际有别。"
-        "recommendations为广泛相关资源池，不局限预算子集；媒体按给定source_sheet/media_id选择，价格由程序关联。"
-        "内容组应能放入固定4页分组表，stage和content_group名称简洁。工作分工须包含内容策划、媒体发布、链接汇总、阶段复核；"
-        "两档媒体发布费各至少12000元，按真实刊次计算，不能虚构补差项；写作另收费。"
+        "\n据分析形成4个阶段的完整计划。contents为独立稿，数量由客户需求确定；"
+        "allocations只指定内容、传播类别、该类用途和刊次，不列具体媒体、账号、栏目或资源ID。"
+        "普通/高权重两档同内容同刊次，具体媒体和刊发条件待确认，不宣称资源或效果已确认。"
+        "内容组和阶段名简洁。工作分工须包含内容策划、媒体发布、链接汇总、阶段复核；"
+        "两档媒体费各至少12000元，按类别单价和计划刊次计算，不能虚构补差项；写作另收费。"
         "默认writing_mode选separate，work_items不能将写作标为媒体费已含。客户明确供稿才选client_provided。"
-        "所有排期在project起止日期内。旧例稿量和预算不能复制给新客户。"
-        "候选已去除重复报价字段但保留全部身份与限制，六档原价由本地目录关联，不能捏造。")
+        "stages.start_date/end_date及contents.scheduled_date全部使用YYYY-MM-DD格式，内容日期落在所属阶段及项目约束内。"
+        "若项目未确认起止日期，只能提出示例日期并在review_schedule明确写日期与周期待确认；不得冒称客户已确认。"
+        "已含服务provider不使用AI起草、撰稿等词汇，即使是否定句；写作单列收费。"
+        "review_schedule末尾不写复核二字，系统会补充复核表述。旧例稿量和预算不能复制给新客户。")
     payload = {"project": project, "analysis": read(run / "model-analysis.json"),
-               "statistics": read(run / "analysis.json")["groups"], "candidates": compact,
+               "statistics": read(run / "analysis.json")["groups"], "planning_reference_date": planning_reference(run, project),
                "revision_instructions": revision_instructions}
-    inputs = task_inputs(run, state, [run / "project.json", run / "model-analysis.json", run / "analysis.json", *paths])
-    task = gpt_tasks.create_task(run, "plan", {"candidate_files": paths, "revision_instructions": revision_instructions}, inputs,
+    inputs = task_inputs(run, state, [run / "project.json", run / "model-analysis.json", run / "analysis.json"])
+    arguments = {"revision_instructions": revision_instructions, "retry_failed_response_id": retry_failed_response_id}
+    task = gpt_tasks.create_task(run, "plan", arguments, inputs,
         [request("geo_plan", instructions, payload, PLAN_SCHEMA, max_output_tokens=48000)])
     return execute_task(run, task)
 
 
 def finish_plan(run, task, draft):
     project = read(run / "project.json")
-    plan = hydrate_plan(draft, candidate_records(run, task["arguments"]["candidate_files"]), project)
+    if "candidate_files" in task["arguments"]:
+        raise ValueError("旧版含具体媒体的方案结果不能用于新版分类方案；保留原任务并明确创建新方案")
+    plan = hydrate_plan(draft, project)
     path = run / ("plan-" + task["task_id"] + ".json")
     save_once(path, plan)
     (run / "plan-current.json").write_text(json.dumps({"path": str(path)}), encoding="utf-8")
@@ -415,6 +380,8 @@ def finish_plan(run, task, draft):
 def write_reports(run_dir, revision_instructions=""):
     run, state = context(run_dir)
     project, plan = read(run / "project.json"), read(latest(run, "plan"))
+    if plan.get("plan_mode") != "category_only":
+        raise ValueError("当前计划含具体媒体，请先生成新版分类方案；原计划保留")
     analysis = read(run / "analysis.json")
     payload = {"project": project, "analysis": read(run / "model-analysis.json"), "statistics": analysis["groups"],
                "plan": plan, "report_date": date.today().isoformat(), "revision_instructions": revision_instructions}
@@ -426,6 +393,7 @@ def write_reports(run_dir, revision_instructions=""):
         "所有readOnly自动金额/数量/分工由本地程序计算，只填schema允许字段。"
         "第4执行页groups名称与plan.contents的content_group首次出现顺序一致，"
         "第6执行页items.title与plan.contents.stage首次出现顺序一致。"
+        "不推荐或列出具体媒体名称、账号、栏目，媒体条件与两档具体差异待确认；不得暗示已选定资源或保证刊登效果。"
         "客户品牌、主体、实际平台严格对应输入。精炼成稿以适应固定内容区，不塞满文本，页底写本客户具体结论。")
     inputs = task_inputs(run, state, [run / "project.json", run / "analysis.json", run / "model-analysis.json", latest(run, "plan")])
     task = gpt_tasks.create_task(run, "report", {"revision_instructions": revision_instructions}, inputs,
@@ -436,6 +404,8 @@ def write_reports(run_dir, revision_instructions=""):
 
 def finish_report(run, task, response):
     project, plan = read(run / "project.json"), read(task["context"]["plan_file"])
+    if plan.get("plan_mode") != "category_only":
+        raise ValueError("旧版含具体媒体的成稿任务不能作为新版分类方案导出")
     analysis = read(run / "analysis.json")
     report = gpt_client.report_from_api(response)
     if report["customer"]["brand"] not in project["brand_names"] or report["customer"]["company"] != project["client_name"]:
@@ -450,7 +420,6 @@ def finish_report(run, task, response):
     write(draft / "report.json", report)
     output = draft / "files"
     result = export_pdf.export_reports(report, output, project=project, plan=plan, review_root=draft / "pages")
-    export_media_word.export_xlsx({"project": project}, plan, output / "推荐媒体.xlsx")
     record = {"path": str(draft), "documents": result,
               "task_id": task["task_id"], "plan_file": task["context"]["plan_file"],
               "plan_sha256": digest(task["context"]["plan_file"])}
@@ -481,17 +450,8 @@ def review_deliverables(run_dir):
     report = read(Path(draft["path"]) / "report.json")
     for kind in export_pdf.FILES:
         export_pdf.prepare_document(kind, report, project, plan)
-    # Compare the actual workbook to a fresh deterministic export, including every tier cell.
-    import openpyxl
-    workbook = openpyxl.load_workbook(BytesIO(export_media_word.build_xlsx({"project": project}, plan)), data_only=False)
-    actual = openpyxl.load_workbook(Path(draft["path"]) / "files" / "推荐媒体.xlsx", data_only=False)
-    try:
-        if workbook.sheetnames != actual.sheetnames or any(
-            list(workbook[name].values) != list(actual[name].values) for name in workbook.sheetnames):
-            raise ValueError("推荐媒体成品与同源计划/原报价不一致")
-    finally:
-        workbook.close()
-        actual.close()
+    if plan.get("plan_mode") != "category_only":
+        raise ValueError("旧版含具体媒体的草稿不能作为新版分类方案终审")
     requests = []
     for kind, count in (("diagnosis", 8), ("execution", 9)):
         images = [{"label": "客户原始引用截图：" + name, "path": Path(name)} for name in state["evidence_images"]]
@@ -513,12 +473,13 @@ def review_deliverables(run_dir):
         instructions = rules("report-thinking.md", "template-generation.md", "evidence-and-planning.md") + (
             "\n你是独立终审，不继承起草结论。逐页比较本客户实际成品与原版式参考：布局、表格、字体、"
             "遮挡、溢出、客户名与旧例残留。参考文件仅用于版式，不要求照抄参考客户内容。"
-            "同时核对原始回答和客户依据、选择理由、三类媒体、两档预算、服务范围与分工、制作过程语句。"
+            "同时核对原始回答和客户依据、选择理由、三类媒体、两档预算、服务范围与分工、制作过程语句；"
+            "方案不指定具体媒体，检查没有虚构具体媒体、已确认的资源差异或效果承诺。"
             "page必须精确覆盖每页一次；有未解决问题就passed=false。fix无问题时写无需修改；"
             "content_findings记录内容/预算/媒体问题，无问题时为空。overall_pass只在所有检查通过时为true。")
         payload = {"document": kind, "customer_evidence": read(run / "raw-evidence.json"),
              "analysis": read(run / "model-analysis.json"), "project": project, "plan": plan,
-             "customer_report": report, "local_checks": "模板资产、原价全部单元格、两档预算和17页字段已通过本地校验"}
+             "customer_report": report, "local_checks": "模板资产、两档分类预算和17页字段已通过本地校验；具体媒体未指定"}
         requests.append(request("geo_final_review_" + kind, instructions, payload, review_schema, images=images))
     inputs = task_inputs(run, state, [*before, latest(run, "draft")])
     task = gpt_tasks.create_task(run, "review", {}, inputs, requests, context={"draft": draft, "snapshot": before})

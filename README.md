@@ -1,83 +1,34 @@
 # 软文街GEO诊断与执行规划
 
-给WorkBuddy的内部业务技能：客户资料→三列人工AI回答采集→品牌与同行选择差距分析→固定8页诊断PDF、9页执行方案PDF和六档原价推荐媒体Excel。
+WorkBuddy内部技能：客户资料 → 三列人工AI回答采集 → GPT分析品牌与同行选择差距 → 固定8页诊断PDF和9页执行方案PDF。新版0.11.0不检索或推荐具体媒体，不生成推荐媒体表，也不向模型发送媒体候选；旧客户文件和历史成果保留。
 
-## 0.10.2 本地版的执行方式
+## 执行方式
 
-- WorkBuddy调度本地MCP，由GPT `gpt-6.1-sol`完成分析、方案和客户成稿，推理强度固定为API最高档`max`，模型上下文窗口1,050,000 tokens；现有脚本继续负责资源检索、量价核算与固定模板填充。最终成品再交GPT独立终审，检查原依据、模板与实际页图，通过后才交付。模型在MCP设置，连接后用`geo_status`核对。
-- 生成采用后台任务，任务ID先保存到本次run的requests目录。返回pending后每15至30秒调用`geo_resume_task`持续查询同一个任务，完成立即本地缓存，不重复POST付费生成。保持max推理强度，不靠降低档位处理长请求。
-- 按用户认可旧版的分析逻辑与版式，先解释品牌印象、同行差异、真实优势和商业场景，再推出内容、媒体、阶段交付与复核。
-- 主体纠错、合规和售后说明与已有事实支撑的业务内容并行，不一律先做整批品牌身份稿；原案例的试课、专业匹配等机制不作为其他客户默认事实。
-- 诊断恢复四列冲突表和双方分工表；执行恢复同行差异、四步2×2、三类媒体三卡、复核三列表和双档报价。
-- 具体媒体仍从内置资源库筛选，客户方案按权威媒体、行业媒体、自媒体三类标用途、资源和数量；推荐表仍按来源分sheet1网络媒体、sheet2自媒体，六档原价保留。
-- 默认普通权重、高权重两档，同内容、同稿数、同刊次；每档媒体费最低12,000元，按三类实际刊次核算，不虚加补差。原目录价与采购价独立，规则见[证据与费用](.codebuddy/skills/ruanwenjie-geo/references/evidence-and-planning.md)。
-- 媒体费不含执行文章的AI起草、正文撰稿及人工修改。默认写作另收费，原价200元／篇、打包100元／独立稿；同时列媒体费、写作费及两档含写作总价。客户供稿不收写作费。
-- 意向预算budget_target不自动当硬上限，只有客户明确不能超过才填写budget_limit。按有价值的实际内容与资源规模计算两档；72篇与三类24／36／12是旧例验算数量，不强制新客户沿用。
-- 只给“问题、引用截图、答案”三列采集表，不限题数。收到任一平台回答即完成本轮报告，不催补模式、联网、时间、URL或其他平台。
-- 客户正文说明情况、分析、选择理由、动作与费用，制作规则、原答、采集过程和内部核算留.work。
+- 本地MCP调用GPT `gpt-6.1-sol`，推理`max`、后台提交。返回pending后每15至30秒用`geo_resume_task(run_dir)`查询同一任务，只有completed且业务产物齐备才推进。
+- 使用实际客户资料、原答和截图，区分品牌点名认知、自然候选与明确推荐；不编造未调查平台或未经证实的事实。
+- 按权威媒体、行业媒体、自媒体三类安排传播用途与计划刊次，但不列具体媒体、账号或栏目。普通、高权重两档同内容、同稿数、同刊次；具体媒体、刊发条件和两档实际权益差异待确认，不能冒称已落实或保证效果。
+- 两档各计划媒体费最低12,000元，写作默认单列原价200元/篇、打包100元/独立稿；客户供稿不收写作费。`budget_target`为意向预算，只有客户明确不能超过才设`budget_limit`。
+- 两份PDF先在客户`.work`生成；GPT独立终审读取实际17页和原模板，只有`status=completed`且`passed=true`、审后哈希未变才能`geo_publish`到新的交付目录。
+- 原资料、采集表、旧候选和旧成品保留。客户数据、原答、截图、请求结果与成品不上传公共仓库。
 
-默认三件成品：GEO诊断报告.pdf、品牌传播与GEO执行方案.pdf、推荐媒体.xlsx。客户原件与旧成品保留，更新技能本身不重做真实客户报告；维护验证使用虚构资料。
+完整规则：[SKILL.md](.codebuddy/skills/ruanwenjie-geo/SKILL.md)、[本地MCP安装与续跑](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)、[固定页式生成说明](.codebuddy/skills/ruanwenjie-geo/references/template-generation.md)。
 
-完整指引：[SKILL.md](.codebuddy/skills/ruanwenjie-geo/SKILL.md)、[固定页式生成说明](.codebuddy/skills/ruanwenjie-geo/references/template-generation.md)、[PDF契约](.codebuddy/skills/ruanwenjie-geo/references/pdf-output.md)。
+## 在WorkBuddy安装
 
-## 在WorkBuddy安装或更新
+从[GitHub仓库](https://github.com/zhuyi041107-cloud/geo-skill)获取0.11.0，或下载[0.11.0完整技能ZIP](dist/ruanwenjie-geo-0.11.0.zip)。备份旧技能后，把`.codebuddy/skills/ruanwenjie-geo`完整复制到项目相同路径；ZIP顶层`ruanwenjie-geo`即技能目录。仓库为历史兼容仍保留旧媒体脚本及目录，0.11.0 ZIP不包含这些文件，新MCP也不使用它们。客户工作目录和旧成品不动。安装后按[本地MCP说明](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)配置并重连，密钥仅使用本机环境变量或DPAPI隐藏输入，不在聊天中展示。
 
-从[公开GitHub仓库](https://github.com/zhuyi041107-cloud/geo-skill)获取0.10.2，或下载[0.10.2完整技能ZIP](dist/ruanwenjie-geo-0.10.2.zip)，具体版本以SKILL.md为准。将`.codebuddy/skills/ruanwenjie-geo`完整复制到目标项目同路径，保留脚本、背景、字体、媒体资源和依赖文件；ZIP内的顶层`ruanwenjie-geo`对应同一技能目录。先备份已有技能，客户工作目录和旧成品保持原样。仓库源码中的续跑文档包含2026-11-11真实验收补充；既有0.10.2 ZIP未重打，仍是原发布内容和原校验值。
+可交给WorkBuddy：
 
-可将这段直接交给WorkBuddy：
+> 从GitHub获取0.11.0并备份更新当前项目的ruanwenjie-geo技能；保留客户原件、已有分析、候选和旧成品。按references/local-mcp.md重连本地MCP，确认gpt-6.1-sol、max、background和geo_resume_task。本版不检索或推荐具体媒体，不传候选文件、不生成推荐表，仅在通过GPT终审后交付两份PDF。先检查现有run状态；失败、过期或未知时停止，不自动发起新的付费请求。
 
-> 从公开仓库https://github.com/zhuyi041107-cloud/geo-skill获取0.10.2并更新当前项目。先备份旧技能，完整复制.codebuddy/skills/ruanwenjie-geo，确认SKILL.md版本0.10.2。读取references/local-mcp.md，找到本机可用Python 3.10+，执行scripts/setup_local_mcp.ps1并把WorkBuddyProject设为当前项目，合并配置时保留其他MCP。密钥只使用本机环境变量或隐藏输入，不在聊天窗口索取或展示；尚未配置时先完成安装，再给我本机隐藏输入命令。新会话重连ruanwenjie-geo并调用geo_status，核对gpt-6.1-sol、max及1050000模型上下文窗口，确认request_mode为background并有geo_resume_task工具，分别报告连接状态与密钥状态。本次只安装，不重新生成客户报告。
+已有失败方案若要复用分析继续，只有用户明确授权新付费请求，才在`geo_create_plan`传入与当前失败检查点匹配的`retry_failed_response_id`；原任务与检查点保留，pending继续查新任务。失败、过期、未知或没有ID的情况不可通过篡改文件绕过。详细步骤见[本地MCP说明](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)。
 
-**安装技能后还要配置本地MCP。**按[本地MCP安装与运行说明](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)执行`setup_local_mcp.ps1`，显式传入Python路径和WorkBuddy项目目录。脚本合并项目`.workbuddy/mcp.json`并保留其他MCP，配置`GEO_WORKSPACE`访问边界。需要保存密钥时使用`-SetApiKey`在本机隐藏输入；密钥用当前Windows用户DPAPI加密，不写入仓库或客户目录。
+## 验证
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "技能目录\scripts\setup_local_mcp.ps1" -PythonExe "Python安装目录\python.exe" -WorkBuddyProject "WorkBuddy项目目录" -SetApiKey
-```
-
-在WorkBuddy中检查`ruanwenjie-geo`连接，再调用`geo_status`确认实际配置。未提供密钥仍可安装并检查连接，但GPT业务调用需要有效API Key及模型权限。安装技能不等于MCP已连接，密钥已配置也不等于真实API已验证。
-
-本地MCP依赖使用`requirements-mcp.txt`，其中复用原`requirements.txt`。渲染不需要浏览器、Node、另外安装字体或GEO云连接器。GPT分析、成稿和终审会调用OpenAI API并产生API费用；这与客户媒体投放和执行文章写作报价分别核算。仍由同事手动采集，不启动监测、操作平台账号、下单或实际发布媒体。
-
-[0.9.0 ZIP](dist/ruanwenjie-geo-0.9.0.zip)是历史版本，不含本地GPT MCP与本次新报价规则。技能目录与安装入口依据[官方项目说明](https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Project)、[官方技能说明](https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market)；安装与真实调用状态分别以本次实际验证为准。
-
-## 使用
-
-首次提供客户资料：
-
-> 按客户业务和采购决策生成有诊断价值的问题，给我“问题、引用截图、答案”三列采集表，等我回传。
-
-回传任意平台回答：
-
-> 使用本地GPT MCP，用现有回答直接完成诊断和执行方案，按固定模板写本客户的现状、同行差异、选择理由和商业场景。具体媒体分权威、行业、自媒体三类，普通和高权重两档同稿同刊，各档实际媒体费至少12,000元，写作单列收费并给含写作总价。意向预算不当硬上限，双方分工与费用包含范围一致。推荐媒体按网络/自媒体两sheet广泛列出并保留六档原价。实际成品经GPT独立终审，通过后只交两PDF和推荐媒体.xlsx，内部数据留.work。
-
-推荐池来自media_recommendations，执行子集及两档费用来自placements和quote_options。两档资源清单及量价内部可追溯，宽推荐池标价总和不计客户支出。
-
-GPT返回pending时，WorkBuddy每15至30秒调用`geo_resume_task(run_dir)`继续同一任务；不重新调用原生成工具。`isError:false`、结果txt或JSON存在都不代表业务完成，只有`status:completed`且对应产物与业务字段齐备才能进入下一阶段。终审`status:completed, passed:false`表示审查完成但未通过，须修改复审；仅`status:completed`且`passed:true`、成品哈希未改变时才能`geo_publish`交付。后台请求设为store:false，仍有约10分钟的服务端临时保留窗口，需要持续查询并及时缓存完成结果，不承诺跨天恢复。POST未获得任务ID时标unknown，查询404或过期时明确停止，不自动重新付费生成。候选全量与六档原价保留本地，模型输入整理所需元数据，不按旧500项或800KB门槛要求同事手动收窄。
-
-当前已完成分析、方案失败任务的续跑指令：
-
-> 更新到0.10.2并重连MCP，保留当前项目已有分析完成的目标run目录中的全部分析、15份原始媒体候选和candidates-curated.json。复用这个run_dir，从geo_create_plan传入已有candidates-curated.json继续；不重跑geo_analyze_customer，不重新采集或检索。不要沿用旧mcp_pipeline.py按结果txt存在就跳过的判断。pending后每15至30秒调用geo_resume_task查询同一任务，只有status:completed且对应业务产物齐备才成稿与终审，终审passed:true才交付。保持gpt-6.1-sol／max。没有任务ID、404或过期时停止并报告，不自动重发付费请求。
-
-旧失败调用未保存服务端ID，不能凭本地run目录取回那次结果；上述方案续跑是明确授权的新请求，后续使用0.10.2的任务ID持续查询。
-
-## 内置媒体资源
-
-随包网络媒体和自媒体目录保留资源身份、栏目、分类、地域、刊发条件、原记录索引及市场价格、超级代理、核心代理、高级代理、普通代理、普通会员六档原值。media.py的`--limit 0`读取相关检索全量再筛选；明确拒发剔除，限制保留。
-
-三类客户售价不覆盖六档目录价，也不冒称已核采购价。来源、报价日期明确的更新文件优先；真实缺价保留空值，不用比例反算。公开仓库按用户要求保留六档报价，不分发供应商身份、实际联系方式、原始报价XLSX、真实客户材料或实采回答。
-
-## 开发验证
-
-0.10.2验收见[本地MCP验收记录](.codebuddy/skills/ruanwenjie-geo/references/local-mcp-verification.json)：安装环境147项测试通过，包括超过600秒的模拟后台任务、同请求仅一次POST、断线GET恢复、重复初始分析复用run、终审中断恢复、历史缓存与当前版本一致、旧run不重分析续跑，以及8工具真实stdio握手。固定模板与版式未变，复用0.10.0虚构案例17页逐页对照及51项资源、306个六档价格单元格的一致性记录；本次虚构完整流程也实际生成17页PDF与两sheet推荐表。
-
-真实续跑验证：2026-11-11使用已完成分析的既有run，通过实际OpenAI后台请求、具体修正、两轮逐页终审和`geo_publish`生成三件成品。第一次方案与成稿均遇到本地校验或排版问题，实际经过修正后才通过；这不表示0.10.2无需修正即可自动一次成功。未重跑分析或媒体检索，客户素材、结果与请求记录未上传；真实MCP stdio运行不等于WorkBuddy界面已验收。恢复说明见[本地MCP安装与运行说明](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)。
+旧版0.10.2曾通过真实API续跑、付费修正和两轮终审生成三件旧版成品；另一次真实任务因海量媒体候选触发上下文超限。0.11.0采用新的无候选流程，不能把旧版真实运行冒称新版真实验收。[0.11.0验收记录](.codebuddy/skills/ruanwenjie-geo/references/local-mcp-verification-0.11.0.json)记录154项自动化测试通过；未运行新版真实付费全流程，也未验证WorkBuddy界面。维护时使用虚构资料，不重做或覆盖真实客户报告。
 
 ```text
 python -m pip install -r .codebuddy/skills/ruanwenjie-geo/requirements-mcp.txt
 python -m unittest discover -s tests -v
 python tools/package_skill.py
 ```
-
-本地版分别验证接口请求与错误处理、MCP握手、路径边界、方案与价格校验、终审及交付门槛；真实API和WorkBuddy界面运行以本次实际执行结果为准。维护者用虚构数据核固定17页、三类具体媒体、两档量价与服务范围，逐页查看PDF和两sheet价格，不重做真实客户报告。
-
-**历史0.9.0验收记录**见[旧版验收记录](.codebuddy/skills/ruanwenjie-geo/references/template-verification.json)：当时84项测试通过，两套虚构案例共34页PDF逐页检查；72稿验算例两档为20,400／28,800元，独立16稿例为4,200／6,000元。后者低于本次12,000元最低媒体费，不能用于新报价。旧版独立案例推荐媒体23项网络、11项自媒体，204个六档价格字段与目录逐值一致，中文空格路径迁移运行通过；这些只说明旧版结果，不作为0.10.0、真实API或WorkBuddy实机已通过的证据。

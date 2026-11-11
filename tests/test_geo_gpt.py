@@ -31,25 +31,6 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
             json.loads((SKILL / "references" / f"{name}.example.json").read_text(encoding="utf-8"))
             for name in ("project", "plan", "report")
         )
-        wanted = {geo_gpt.identity(item) for item in cls.plan_fixture["media_recommendations"]}
-        cls.candidates = []
-        for sheet, row_number, row in media.catalog_rows(media.CATALOG):
-            if (sheet, str(row["软文街id"])) not in wanted:
-                continue
-            cls.candidates.append({
-                "media_id": str(row["软文街id"]), "media_name": row["媒体名称"],
-                "source_sheet": sheet, "source_row": row_number,
-                "source_file": row["原报价文件"], "quotation_date": row["报价日期"],
-                "category": row["媒体分类"], "region": row["地区"], "portal": row["综合门户"],
-                "entry_type": row["入口类型"], "editorial_note": row["备注"],
-                "market_price": media.price(row["市场价格"]),
-                "market_reference_price": media.price(row["市场价格"]),
-                "tier_prices": {tier: media.price(row[tier]) for tier in media.TIERS},
-                "tier_price_source": f"{row['原报价文件']} / {sheet} / 第{row_number}行 / 原表六档报价",
-                "unit_price": None, "status": media.restriction(row["备注"]),
-            })
-        if {geo_gpt.identity(item) for item in cls.candidates} != wanted:
-            raise AssertionError("Fictional fixture references missing real media rows")
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="geo-gpt-offline-")
@@ -85,15 +66,8 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
             "contents": [{key: copy.deepcopy(item[key]) for key in fields} for item in plan["contents"]],
             "allocations": [
                 {"content_id": ordinary["content_id"], "strategy_role": ordinary["strategy_role"],
-                 "strategy_basis": ordinary["strategy_basis"], "quantity": ordinary["quantity"],
-                 "ordinary": {key: ordinary[key] for key in ("source_sheet", "media_id")},
-                 "higher": {key: higher[key] for key in ("source_sheet", "media_id")}}
-                for ordinary, higher in zip(plan["placements"], plan["quote_options"][0]["placements"])
-            ],
-            "recommendations": [
-                {"resource": {key: item[key] for key in ("source_sheet", "media_id")},
-                 "reason": item.get("recommendation_reason") or "按虚构客户的知识服务业务筛选。"}
-                for item in plan["media_recommendations"]
+                 "strategy_basis": ordinary["strategy_basis"], "quantity": ordinary["quantity"]}
+                for ordinary in plan["placements"]
             ],
             "work_items": copy.deepcopy(plan["service_scope"]["work_items"]),
             "review_schedule": plan["service_scope"]["review_schedule"],
@@ -134,9 +108,7 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
     def prepare_draft(self):
         analyzed = geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
         run = Path(analyzed["run_dir"])
-        candidate_file = run / "offline-candidates.json"
-        geo_gpt.write(candidate_file, {"candidates": self.candidates})
-        created = geo_gpt.create_plan(str(run), [str(candidate_file)])
+        created = geo_gpt.create_plan(str(run))
         self.assertEqual([item["total"] for item in created["budgets"]], ["20400.00", "28800.00"])
         geo_gpt.write_reports(str(run))
         return run
@@ -173,9 +145,11 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
                 with fitz.open(output / geo_gpt.export_pdf.FILES[kind]) as doc:
                     self.assertEqual(len(doc), count)
                 self.assertEqual((output / geo_gpt.export_pdf.FILES[kind]).read_bytes(), Path(record["documents"][kind]["pdf"]).read_bytes())
-            book = openpyxl.load_workbook(output / "推荐媒体.xlsx", read_only=True)
-            self.assertEqual(book.sheetnames, ["sheet1", "sheet2"])
-            book.close()
+            with fitz.open(output / geo_gpt.export_pdf.FILES["execution"]) as doc:
+                self.assertIn("具体媒体待确认", doc[4].get_text())
+                self.assertIn("具体媒体及权益待确认", doc[8].get_text())
+            self.assertEqual(len(published["files"]), 2)
+            self.assertFalse((output / "推荐媒体.xlsx").exists())
             with self.assertRaises(FileExistsError):
                 geo_gpt.publish(str(run), str(output))
             # Rechecking identical, already-reviewed artifacts reuses the valid receipt.
@@ -194,25 +168,48 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
                 geo_gpt.publish(str(run), str(self.root / "审核未通过输出"))
         self.assertEqual(source_bytes, self.answers.read_bytes())
 
-    def test_unknown_or_contaminated_media_cannot_enter_hydrated_plan(self):
+    def test_category_plan_contains_no_invented_media_or_purchase_prices(self):
+        plan = geo_gpt.hydrate_plan(self.draft(), self.project)
+        self.assertEqual(plan["plan_mode"], "category_only")
+        self.assertNotIn("media_recommendations", plan)
+        for placement in plan["placements"] + plan["quote_options"][0]["placements"]:
+            self.assertFalse({"media_id", "media_name", "source_sheet"} & placement.keys())
+            self.assertIsNone(placement["unit_price"])
+        changed = copy.deepcopy(plan)
+        changed["placements"][0]["media_name"] = "假造媒体"
+        with self.assertRaisesRegex(ValueError, "不指定媒体"):
+            geo_gpt.export_pdf.public_accounting(self.project, changed)
+
+    def test_planning_reference_is_stable_and_not_falsely_confirmed(self):
+        self.assertEqual(geo_gpt.planning_reference(Path("20261111-205804-example"), {}), "2026-11-11")
+        self.assertEqual(geo_gpt.planning_reference(Path("20261111-205804-example"), {"start_date": "2026-12-01"}), "2026-12-01")
+        self.assertIsNone(geo_gpt.planning_reference(Path("legacy-task"), {}))
+        self.assertIsNone(geo_gpt.planning_reference(Path("20261340-bad"), {}))
+
+    def test_plan_schema_rejects_relative_dates_and_validator_rejects_invalid_iso_date(self):
         draft = self.draft()
-        draft["allocations"][0]["ordinary"]["media_id"] = "UNKNOWN-OFFLINE-ID"
+        gpt_client.validate_json(draft, geo_gpt.PLAN_SCHEMA)
+        relative = copy.deepcopy(draft)
+        relative["contents"][0]["scheduled_date"] = "项目第01天"
+        with self.assertRaisesRegex(gpt_client.GPTError, "格式错误"):
+            gpt_client.validate_json(relative, geo_gpt.PLAN_SCHEMA)
+        invalid = copy.deepcopy(draft)
+        invalid["contents"][0]["scheduled_date"] = "2026-02-30"
         with self.assertRaises(ValueError):
-            geo_gpt.hydrate_plan(draft, self.candidates, self.project)
-        contaminated = copy.deepcopy(self.candidates)
-        target = next(item for item in contaminated if geo_gpt.identity(item) == geo_gpt.identity(self.draft()["allocations"][0]["ordinary"]))
-        canonical = next(item for item in self.candidates if geo_gpt.identity(item) == geo_gpt.identity(target))
-        target["tier_prices"]["超级代理"] = "0.01"
-        try:
-            plan = geo_gpt.hydrate_plan(self.draft(), contaminated, self.project)
-        except ValueError:
-            return
-        row = next(item for item in plan["placements"] if geo_gpt.identity(item) == geo_gpt.identity(canonical))
-        self.assertEqual(row["tier_prices"], canonical["tier_prices"], "Candidate-file edits must not become original quote data")
+            geo_gpt.hydrate_plan(invalid, self.project)
+
+    def test_missing_project_dates_require_provisional_schedule_disclosure(self):
+        project = {**self.project, "start_date": None, "end_date": None}
+        draft = self.draft()
+        draft["review_schedule"] = "第4、8、12、16周复核"
+        with self.assertRaisesRegex(ValueError, "示例并待确认"):
+            geo_gpt.hydrate_plan(draft, project)
+        draft["review_schedule"] = "未确认日期为示例，待双方确认；第4、8、12、16周"
+        self.assertEqual(geo_gpt.hydrate_plan(draft, project)["plan_mode"], "category_only")
 
     def test_intent_budget_is_not_a_ceiling_and_media_fee_minimum_is_enforced(self):
         project = {**self.project, "budget_target": "2000.00", "budget_limit": None}
-        plan = geo_gpt.hydrate_plan(self.draft(), self.candidates, project)
+        plan = geo_gpt.hydrate_plan(self.draft(), project)
         budget = geo_data.calculate_budget(project, plan)
         self.assertEqual(budget["client"]["total"], "20400.00")
         short = self.draft()
@@ -220,7 +217,7 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
         chosen_id = short["contents"][0]["content_id"]
         short["allocations"] = [item for item in short["allocations"] if item["content_id"] == chosen_id]
         with self.assertRaises(ValueError):
-            geo_gpt.hydrate_plan(short, self.candidates, project)
+            geo_gpt.hydrate_plan(short, project)
 
     def test_changed_project_business_facts_are_not_silently_replaced_by_old_workbook(self):
         for field, value in (("budget_limit", "15000.00"), ("services", ["用户刚补充的业务范围"])):
@@ -287,14 +284,12 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
             self.assertEqual(repeated.exception.checkpoint_path, pending.exception.checkpoint_path)
             self.assertEqual(posts, ["geo_analysis"])
             drain(run)
-            candidates = run / "candidates.json"
-            geo_gpt.write(candidates, {"candidates": self.candidates})
             with self.assertRaises(gpt_client.GPTPending):
-                geo_gpt.create_plan(str(run), [str(candidates)])
+                geo_gpt.create_plan(str(run))
             self.assertEqual(posts.count("geo_plan"), 1)
             # A repeated tool call safely retrieves the same request instead of charging again.
             with self.assertRaises(gpt_client.GPTPending):
-                geo_gpt.create_plan(str(run), [str(candidates)])
+                geo_gpt.create_plan(str(run))
             self.assertEqual(posts.count("geo_plan"), 1)
             created = drain(run)
             self.assertEqual([item["total"] for item in created["budgets"]], ["20400.00", "28800.00"])
@@ -324,31 +319,20 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
             self.assertTrue(geo_gpt.resume_task(str(run))["passed"])
             self.assertEqual(opener.open.call_count, calls_before)
             published = geo_gpt.publish(str(run), str(self.root / "后台正式输出"))
-            self.assertEqual(len(published["files"]), 3)
+            self.assertEqual(len(published["files"]), 2)
 
-    def test_all_501_candidates_are_kept_and_only_redundant_price_fields_are_removed(self):
+    def test_plan_request_excludes_all_media_candidates(self):
         with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
             analyzed = geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
         run = Path(analyzed["run_dir"])
-        candidates = [{"source_sheet": sheet, "media_id": str(row["软文街id"]), "media_name": row["媒体名称"],
-                       "editorial_note": row["备注"], "tier_prices": {tier: row[tier] for tier in media.TIERS}}
-                      for sheet, _, row in islice(media.catalog_rows(media.CATALOG), 501)]
-        path = run / "many-candidates.json"
-        geo_gpt.write(path, {"candidates": candidates})
-        original = path.read_bytes()
-
-        def paused(_instructions, payload, _schema, **kwargs):
-            self.assertEqual(len(payload["candidates"]), 501)
-            self.assertEqual({geo_gpt.identity(row) for row in payload["candidates"]},
-                             {geo_gpt.identity(row) for row in candidates})
-            self.assertTrue(all("tier_prices" not in row for row in payload["candidates"]))
-            self.assertEqual([row["editorial_note"] for row in payload["candidates"]], [row["editorial_note"] for row in candidates])
-            raise gpt_client.GPTPending(kwargs["checkpoint_path"], "resp_offline_pool", "queued")
-
+        def paused(_instructions, payload, schema, **kwargs):
+            self.assertNotIn("candidates", payload)
+            self.assertNotIn("recommendations", schema["properties"])
+            self.assertNotIn("ordinary", schema["properties"]["allocations"]["items"]["properties"])
+            raise gpt_client.GPTPending(kwargs["checkpoint_path"], "resp_offline_plan", "queued")
         with patch.object(gpt_client, "complete_json", side_effect=paused):
             with self.assertRaises(gpt_client.GPTPending):
-                geo_gpt.create_plan(str(run), [str(path)])
-        self.assertEqual(path.read_bytes(), original)
+                geo_gpt.create_plan(str(run))
 
     def test_old_run_analysis_and_candidates_are_reused_without_reanalysis(self):
         with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
@@ -362,29 +346,52 @@ class LocalGPTBusinessFlowTests(unittest.TestCase):
         state["run_id"] = legacy.name
         geo_gpt.write(legacy / "run.json", state)
         candidates = legacy / "candidates-curated.json"
-        geo_gpt.write(candidates, {"candidates": self.candidates})
+        geo_gpt.write(candidates, {"candidates": [{"legacy": "preserve"}]})
         before = {p.name: geo_gpt.digest(p) for p in legacy.iterdir() if p.is_file()}
         self.calls.clear()
         with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
-            created = geo_gpt.create_plan(str(legacy), [str(candidates)])
+            created = geo_gpt.create_plan(str(legacy))
         self.assertEqual(created["status"], "completed")
         self.assertEqual([call[0] for call in self.calls], ["geo_plan"])
         self.assertEqual({name: geo_gpt.digest(legacy / name) for name in before}, before)
         self.assertTrue(Path(created["plan_file"]).is_file())
 
+    def test_failed_legacy_plan_resumes_only_with_explicit_response_id_and_without_candidates(self):
+        with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
+            analyzed = geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
+        run = Path(analyzed["run_dir"])
+        state = geo_gpt.read(run / "run.json")
+        legacy_candidates = run / "legacy-candidates.json"
+        geo_gpt.write(legacy_candidates, {"candidates": [{"media_name": "旧候选须保留"}]})
+        old = geo_gpt.gpt_tasks.create_task(run, "plan", {"candidate_files": [str(legacy_candidates)]},
+            geo_gpt.task_inputs(run, state, [run / "project.json", run / "analysis.json", run / "model-analysis.json", legacy_candidates]),
+            [geo_gpt.request("geo_plan", "old plan", {"old": True}, geo_gpt.PLAN_SCHEMA)])
+        checkpoint = run / "requests" / (old["task_id"] + "-geo_plan.json")
+        geo_gpt.write(checkpoint, {"version": 1, "request_fingerprint": "a" * 64,
+            "response_id": "resp_old_failed", "status": "failed", "model": gpt_client.MODEL})
+        before = {p: p.read_bytes() for p in (checkpoint, legacy_candidates, run / "analysis.json", run / "model-analysis.json", run / "judged.xlsx")}
+        with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt) as paid:
+            with self.assertRaises(gpt_client.GPTError):
+                geo_gpt.create_plan(str(run))
+            paid.assert_not_called()
+            created = geo_gpt.create_plan(str(run), retry_failed_response_id="resp_old_failed")
+        self.assertEqual(created["status"], "completed")
+        self.assertEqual({p: p.read_bytes() for p in before}, before)
+        task = geo_gpt.gpt_tasks.load_current(run)
+        self.assertEqual(task["arguments"]["retry_failed_response_id"], "resp_old_failed")
+        self.assertNotIn("candidates", task["requests"][0]["payload"])
+
     def test_historical_plan_cache_cannot_disagree_with_current_plan(self):
         with patch.object(gpt_client, "complete_json", side_effect=self.mocked_gpt):
             analyzed = geo_gpt.analyze_customer(str(self.root), str(self.project_path), str(self.answers))
             run = Path(analyzed["run_dir"])
-            candidate_file = run / "candidates.json"
-            geo_gpt.write(candidate_file, {"candidates": self.candidates})
-            first = geo_gpt.create_plan(str(run), [str(candidate_file)])
-            second = geo_gpt.create_plan(str(run), [str(candidate_file)], revision_instructions="补充第二版业务安排")
+            first = geo_gpt.create_plan(str(run))
+            second = geo_gpt.create_plan(str(run), revision_instructions="补充第二版业务安排")
             active = (run / "task-current.json").read_bytes()
             call_count = len(self.calls)
             self.assertNotEqual(first["plan_file"], second["plan_file"])
             with self.assertRaisesRegex(ValueError, "已有新版本"):
-                geo_gpt.create_plan(str(run), [str(candidate_file)])
+                geo_gpt.create_plan(str(run))
             self.assertEqual(geo_gpt.latest(run, "plan"), Path(second["plan_file"]))
             self.assertEqual((run / "task-current.json").read_bytes(), active)
             self.assertEqual(len(self.calls), call_count)

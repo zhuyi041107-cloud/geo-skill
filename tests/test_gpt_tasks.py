@@ -189,6 +189,35 @@ class GPTTaskTests(unittest.TestCase):
             self.assertEqual(pointer.read_bytes(), original)
             self.assertEqual(len(list((self.run / "tasks").glob("*.json"))), 1)
 
+    def test_failed_plan_retry_requires_explicit_matching_response_id_and_preserves_history(self):
+        requests = [self.requests[0]]
+        old = self.create(kind="plan", arguments={"candidate_files": ["legacy"]}, requests=requests)
+        self.checkpoint(old, "diagnosis", "failed")
+        checkpoint = self.run / "requests" / (old["task_id"] + "-diagnosis.json")
+        original = checkpoint.read_bytes()
+        pointer = (self.run / "task-current.json").read_bytes()
+        for retry in ("", "resp_wrong", "malformed"):
+            with self.subTest(retry=retry), self.assertRaises(gpt_client.GPTError):
+                self.create(kind="plan", arguments={"revision_instructions": "重新规划", "retry_failed_response_id": retry}, requests=requests)
+            self.assertEqual((self.run / "task-current.json").read_bytes(), pointer)
+        new = self.create(kind="plan", arguments={"revision_instructions": "重新规划", "retry_failed_response_id": "resp_offline_fixture"}, requests=requests)
+        self.assertNotEqual(old["task_id"], new["task_id"])
+        self.assertEqual(checkpoint.read_bytes(), original)
+        self.assertTrue((self.run / "tasks" / (old["task_id"] + ".json")).exists())
+        self.assertEqual(gpt_tasks.load_current(self.run), new)
+
+    def test_failed_retry_does_not_override_pending_expired_unknown_or_other_phases(self):
+        requests = [self.requests[0]]
+        old = self.create(kind="plan", requests=requests)
+        for status in ("queued", "in_progress", "expired", "unknown", "submitting"):
+            self.checkpoint(old, "diagnosis", status)
+            with self.subTest(status=status), self.assertRaises(gpt_client.GPTError):
+                self.create(kind="plan", arguments={"retry_failed_response_id": "resp_offline_fixture"}, requests=requests)
+        self.checkpoint(old, "diagnosis", "failed")
+        with self.assertRaises(gpt_client.GPTError):
+            self.create(kind="report", arguments={"retry_failed_response_id": "resp_offline_fixture"}, requests=requests)
+        self.assertEqual(gpt_tasks.load_current(self.run), old)
+
     def test_only_explicit_same_phase_revision_can_replace_completed_requests_without_business_result(self):
         task = self.create()
         for name in ("diagnosis", "execution"):

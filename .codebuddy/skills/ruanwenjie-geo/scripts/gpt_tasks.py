@@ -118,10 +118,19 @@ def validate_inputs(task):
 
 
 def _check_active_task(run, task):
+    retry_id = task["arguments"].get("retry_failed_response_id", "")
+    if retry_id and (task["kind"] != "plan" or not isinstance(retry_id, str) or re.fullmatch(r"resp_[A-Za-z0-9_-]+", retry_id) is None):
+        raise gpt_client.GPTError("失败方案重试须明确提供有效response_id")
     if not (run / "task-current.json").exists():
+        if retry_id:
+            raise gpt_client.GPTError("没有可核对的失败方案任务，拒绝重试")
         return
     previous = load_current(run)
-    if previous["task_id"] == task["task_id"] or cached_result(previous) is not None:
+    if previous["task_id"] == task["task_id"]:
+        return
+    if cached_result(previous) is not None:
+        if retry_id:
+            raise gpt_client.GPTError("当前任务已完成，不接受失败任务重试授权")
         return
     # A different request must not turn an unfinished or ambiguous paid task into a fresh POST.
     with task_lock(previous):
@@ -135,6 +144,14 @@ def _check_active_task(run, task):
             status = state.get("status")
             if status in {"queued", "in_progress"}:
                 raise gpt_client.GPTError("已有GPT后台任务正在执行，请调用geo_resume_task；未创建新的付费请求")
+            if status == "failed" and retry_id:
+                if (previous["kind"] != "plan" or task["kind"] != "plan" or len(previous["requests"]) != 1
+                        or state.get("response_id") != retry_id or state.get("model") != previous["model"]
+                        or not isinstance(state.get("request_fingerprint"), str)
+                        or SHA256.fullmatch(state["request_fingerprint"]) is None):
+                    raise gpt_client.GPTError("失败方案重试授权与已保存任务不匹配，未创建付费请求")
+                # Explicitly authorized by matching the failed response ID; the old task and checkpoint remain untouched.
+                return
             if status != "completed":
                 raise gpt_client.GPTError("已有后台任务失败、过期或提交状态未确认，请人工核查；禁止新建付费请求")
             if (not isinstance(state.get("response_id"), str) or re.fullmatch(r"resp_[A-Za-z0-9_-]+", state["response_id"]) is None
@@ -142,6 +159,8 @@ def _check_active_task(run, task):
                     or state.get("model") != previous["model"] or not isinstance(state.get("result"), dict)):
                 raise gpt_client.GPTError("已有后台完成记录不完整，请人工核查；禁止新建付费请求")
             gpt_client.validate_json(state["result"], request["schema"])
+        if retry_id:
+            raise gpt_client.GPTError("当前请求不是已失败的方案，拒绝失败重试授权")
         revision = task["arguments"].get("revision_instructions")
         if task["kind"] != previous["kind"] or not isinstance(revision, str) or not revision.strip():
             raise gpt_client.GPTError("已有模型结果尚未完成本地校验，请先geo_resume_task；仅明确同阶段修正可创建新任务")

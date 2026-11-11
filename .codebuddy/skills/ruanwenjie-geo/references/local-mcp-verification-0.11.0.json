@@ -1,0 +1,24 @@
+{
+  "skill_version": "0.11.0",
+  "verified_on": "2026-11-11",
+  "automated_tests": {
+    "count": 154,
+    "result": "passed",
+    "scope": "Offline fictional business flow, background checkpoint behavior, explicit failed-plan authorization, two PDF delivery gates, stdio handshake and packaged server import",
+    "provider_calls": "Mocked only; no paid OpenAI request made in this verification"
+  },
+  "delivery": {
+    "files": ["GEO诊断报告.pdf", "品牌传播与GEO执行方案.pdf"],
+    "pages": [8, 9],
+    "media_candidates_sent_to_model": false,
+    "specific_media_recommendations": false,
+    "media_recommendation_workbook": false,
+    "quotation": "Two category-based price options, with actual resources and benefits not yet confirmed"
+  },
+  "not_verified": [
+    "0.11.0 real provider end-to-end generation and final review",
+    "WorkBuddy application UI installation or end-to-end execution",
+    "Real customer report regeneration"
+  ],
+  "privacy": "No customer material, model responses, credentials or real customer artifacts are included."
+}

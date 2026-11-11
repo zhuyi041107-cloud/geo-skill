@@ -44,9 +44,34 @@ class SkillPortabilityTests(unittest.TestCase):
                         self.assertEqual(len(raw), item["bytes"])
                 self.assertIn(prefix + "assets/geo-diagnosis-template/font.ttf", archive.namelist())
                 self.assertIn(prefix + "assets/geo-diagnosis-template/FONT-NOTICE.txt", archive.namelist())
-                self.assertIn(prefix + "references/media-catalog.csv.gz", archive.namelist())
+                self.assertNotIn(prefix + "references/media-catalog.csv.gz", archive.namelist())
+                self.assertNotIn(prefix + "scripts/media.py", archive.namelist())
+                self.assertNotIn(prefix + "scripts/export_media_word.py", archive.namelist())
+                self.assertIn(prefix + "references/plan-category.example.json", archive.namelist())
                 self.assertIn(prefix + "references/customer-report.schema.json", archive.namelist())
                 self.assertFalse(any(name.endswith(".html") for name in archive.namelist()))
+
+    def test_packaged_server_starts_without_legacy_media_modules(self):
+        with tempfile.TemporaryDirectory(prefix="geo-package-runtime-") as temp:
+            repo = Path(temp) / "repo"
+            source = repo / ".codebuddy/skills/ruanwenjie-geo"
+            shutil.copytree(SKILL, source, ignore=shutil.ignore_patterns("__pycache__"))
+            with patch.object(packager, "__file__", str(repo / "tools/package_skill.py")):
+                packager.main()
+            archive = repo / "dist" / "ruanwenjie-geo-0.11.0.zip"
+            install = Path(temp) / "install"
+            install.mkdir()
+            with ZipFile(archive) as z:
+                z.extractall(install)
+            scripts = install / "ruanwenjie-geo" / "scripts"
+            code = ("import asyncio,sys; sys.path.insert(0,sys.argv[1]); import geo_gpt,geo_mcp; "
+                    "tools=asyncio.run(geo_mcp.mcp.list_tools()); "
+                    "assert 'geo_search_media' not in {x.name for x in tools}; "
+                    "assert len(geo_gpt.CUSTOMER_FILES)==2; print('installed MCP ok')")
+            result = subprocess.run([sys.executable, "-I", "-c", code, str(scripts)],
+                                    capture_output=True, text=True, encoding="utf-8", timeout=60)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("installed MCP ok", result.stdout)
 
     def test_modified_fixed_asset_is_rejected_before_packaging(self):
         with tempfile.TemporaryDirectory(prefix="geo-release-invalid-") as temp:
@@ -72,7 +97,7 @@ class SkillPortabilityTests(unittest.TestCase):
             run = subprocess.run([
                 sys.executable, str(skill / "scripts/export_pdf.py"),
                 "--project", str(skill / "references/project.example.json"),
-                "--plan", str(skill / "references/plan.example.json"),
+                "--plan", str(skill / "references/plan-category.example.json"),
                 "--report", str(skill / "references/report.example.json"),
                 "--output-dir", str(output),
             ], cwd=root, env=env, capture_output=True, text=True, encoding="utf-8", timeout=120)

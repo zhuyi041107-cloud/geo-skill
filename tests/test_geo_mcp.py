@@ -49,7 +49,7 @@ class MCPProtocolTests(unittest.TestCase):
                     self.assertTrue(initialized.serverInfo.name)
                     tools = await session.list_tools()
                     self.assertEqual({t.name for t in tools.tools}, {
-                        "geo_status", "geo_analyze_customer", "geo_search_media", "geo_create_plan",
+                        "geo_status", "geo_analyze_customer", "geo_create_plan",
                         "geo_write_reports", "geo_review_deliverables", "geo_resume_task", "geo_publish"})
                     result = await session.call_tool("geo_status", {})
                     self.assertFalse(result.isError)
@@ -85,7 +85,7 @@ class MCPProtocolTests(unittest.TestCase):
             checkpoint = run / "requests" / "analysis.json"
             calls = [
                 ("geo_analyze_customer", "analyze_customer", (str(run), "project.json", "answers.xlsx")),
-                ("geo_create_plan", "create_plan", (str(run), ["candidates.json"])),
+                ("geo_create_plan", "create_plan", (str(run),)),
                 ("geo_write_reports", "write_reports", (str(run),)),
                 ("geo_review_deliverables", "review_deliverables", (str(run),)),
                 ("geo_resume_task", "resume_task", (str(run),)),

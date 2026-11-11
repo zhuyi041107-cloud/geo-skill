@@ -11,17 +11,14 @@ def main():
     repo = Path(__file__).resolve().parents[1]
     skill = repo / ".codebuddy/skills/ruanwenjie-geo"
     required = {
-        "SKILL.md", "requirements.txt", "scripts/geo_data.py", "scripts/media.py",
+        "SKILL.md", "requirements.txt", "scripts/geo_data.py",
         "scripts/export_pdf.py", "references/commands.md", "references/pdf-output.md",
-        "scripts/export_media_word.py", "references/media-word-output.md",
         "references/template-generation.md", "references/customer-report.schema.json",
-        "references/report.example.json", "references/project.example.json", "references/plan.example.json",
-        "references/report-thinking.md", "references/media-catalog.csv.gz",
+        "references/report.example.json", "references/project.example.json", "references/plan-category.example.json",
+        "references/report-thinking.md",
         "references/内部判读底表.xlsx",
         "templates/AI回答采集表.xlsx", "templates/软文街_GEO客户素材收集表.xlsx",
         "templates/GEO诊断报告版式示例.pdf", "templates/品牌传播与GEO执行方案版式示例.pdf",
-        "templates/推荐媒体模板.docx",
-        "templates/推荐媒体模板.xlsx",
         "scripts/render_geo_diagnosis.py", "scripts/check_client_report.py",
         "assets/report-assets-manifest.json", "assets/client-report-process-patterns.json",
         "assets/geo-diagnosis-template/backgrounds.pdf", "assets/geo-diagnosis-template/font.ttf",
@@ -33,7 +30,13 @@ def main():
         "scripts/gpt_client.py", "scripts/gpt_evidence.py", "scripts/gpt_tasks.py", "scripts/setup_local_mcp.ps1",
         "scripts/launch_local_mcp.ps1", "references/local-mcp.md", "references/workbuddy-mcp.example.json",
     }
-    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".ps1", ".html", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".png", ".svg"})
+    # Keep legacy source files in the repository, but omit media-recommendation tools and data from the new installable skill.
+    excluded = {"scripts/media.py", "scripts/export_media_word.py", "references/media-word-output.md",
+                "references/media-catalog.csv.gz", "references/plan.example.json",
+                "templates/推荐媒体模板.docx", "templates/推荐媒体模板.xlsx"}
+    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts
+                   and p.suffix in {".md", ".json", ".txt", ".py", ".ps1", ".html", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".png", ".svg"}
+                   and p.relative_to(skill).as_posix() not in excluded)
     relative = {p.relative_to(skill).as_posix() for p in files}
     if required - relative:
         raise ValueError("Missing release files: " + ", ".join(sorted(required - relative)))

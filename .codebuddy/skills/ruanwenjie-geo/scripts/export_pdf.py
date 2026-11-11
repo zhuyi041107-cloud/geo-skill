@@ -68,10 +68,16 @@ def public_accounting(project, plan, quote_index=0):
     validate_delivery_budget(budget)
     contents, placements, fees = selected(plan)
     if not contents or not placements:
-        raise ValueError("执行方案须有独立内容与具体媒体组合")
+        raise ValueError("执行方案须有独立内容与媒体类别配置")
+    category_only = plan.get("plan_mode") == "category_only"
     groups = {role: [] for role in ROLES}
     for item in placements:
-        if not all(isinstance(item.get(key), str) and item[key].strip() for key in ("media_id", "media_name", "source_sheet", "strategy_basis")):
+        if not isinstance(item.get("strategy_basis"), str) or not item["strategy_basis"].strip():
+            raise ValueError("有效刊发须有策略角色依据")
+        if category_only:
+            if any(item.get(key) not in (None, "") for key in ("media_id", "media_name", "source_sheet", "unit_price")):
+                raise ValueError("分类报价不指定媒体名称、来源或采购成本")
+        elif not all(isinstance(item.get(key), str) and item[key].strip() for key in ("media_id", "media_name", "source_sheet")):
             raise ValueError("有效刊发须有具体资源身份、来源表及策略角色依据")
         role = item.get("strategy_role")
         if role not in ROLES:
@@ -87,7 +93,7 @@ def public_accounting(project, plan, quote_index=0):
     for role, items in groups.items():
         quantity = sum(positive_int(p["quantity"], "quantity") for p in items)
         subtotal = sum((Decimal(str(p["client_unit_price"]))*positive_int(p["quantity"], "quantity") for p in items), Decimal(0))
-        resources = list(dict.fromkeys(p["media_name"] for p in items))
+        resources = [] if category_only else list(dict.fromkeys(p["media_name"] for p in items))
         summary[role] = {"quantity": quantity, "amount": subtotal, "resources": resources}
         media_lines.append(f"{role}{quantity}次 × {money(QUOTE_RATES[quote_index][role],budget['currency'])} = {money(subtotal,budget['currency'])}")
     if Decimal(budget["client"]["total"]) < MIN_MEDIA_FEE:
@@ -176,9 +182,10 @@ def prepare_document(kind, report, project=None, plan=None, analysis=None):
             return result
         if allocation(placements) != allocation(other_placements):
             raise ValueError("两档须有相同独立内容及每篇各策略类的刊发次数")
-        identities = lambda records: {(p["content_id"], p["source_sheet"], p["media_id"]) for p in records}
-        if identities(placements) == identities(other_placements):
-            raise ValueError("两档须有实际不同的媒体配置，不能只更改价格")
+        if plan.get("plan_mode") != "category_only":
+            identities = lambda records: {(p["content_id"], p["source_sheet"], p["media_id"]) for p in records}
+            if identities(placements) == identities(other_placements):
+                raise ValueError("两档须有实际不同的媒体配置，不能只更改价格")
         pages = doc["pages"]
         groups = defaultdict(list)
         for content in contents:
@@ -197,15 +204,18 @@ def prepare_document(kind, report, project=None, plan=None, analysis=None):
         for card in pages[4]["items"]:
             role = card["category"]
             ordinary, higher = accounting[0][1][role], accounting[1][1][role]
-            names = []
-            for label, info in [("普通", ordinary), ("高权重", higher)]:
-                text = "、".join(info["resources"][:2]) or "本期未配置"
-                if len(info["resources"]) > 2:
-                    text += f"等{len(info['resources'])}项"
-                names.append(label + "：" + text)
+            if plan.get("plan_mode") == "category_only":
+                names = ["具体媒体待确认" if ordinary["quantity"] else "本期未配置", "两档不指定具体资源"]
+            else:
+                names = []
+                for label, info in [("普通", ordinary), ("高权重", higher)]:
+                    text = "、".join(info["resources"][:2]) or "本期未配置"
+                    if len(info["resources"]) > 2:
+                        text += f"等{len(info['resources'])}项"
+                    names.append(label + "：" + text)
             card.update(resources="\n".join(names), quantity=f"{ordinary['quantity']}次",
                 amount="普通"+money(ordinary["amount"],budget["currency"])+" / 高"+money(higher["amount"],budget["currency"]))
-        pages[4]["subtitle"] = "＋".join(f"{r}{accounting[0][1][r]['quantity']}次" for r in ROLES) + f"，共{budget['publication_count']}次发布；两档内容及数量一致。"
+        pages[4]["subtitle"] = "＋".join(f"{r}{accounting[0][1][r]['quantity']}次" for r in ROLES) + f"，共{budget['publication_count']}次发布；" + ("两档同范围，具体媒体待确认。" if plan.get("plan_mode") == "category_only" else "两档内容及数量一致。")
         stages = {s["name"]: s for s in plan.get("stages", [])}
         selected_stages = list(dict.fromkeys(c.get("stage") for c in contents))
         if None in selected_stages or any(name not in stages for name in selected_stages):
@@ -251,7 +261,8 @@ def prepare_document(kind, report, project=None, plan=None, analysis=None):
             card.update(total=money(chosen["client"]["total"],chosen["currency"]),
                 scale=f"媒体发布费｜{chosen['content_count']}篇 / {chosen['publication_count']}次发布", media=media)
         pages[8].update(services=services, writing=writing)
-        pages[8]["subtitle"] = ("两档同稿量同刊次，基础服务与阶段复核已含；贵司供稿并负责专业审核。"
+        pages[8]["subtitle"] = ("两档同稿量同刊次；具体媒体及权益待确认。" if plan.get("plan_mode") == "category_only" else
+            "两档同稿量同刊次，基础服务与阶段复核已含；贵司供稿并负责专业审核。"
             if plan["service_scope"]["writing_mode"] == "client_provided" else
             "两档同稿量同刊次，含基础服务与阶段复核；媒体与写作分别报价。")
     config = {"customer": copy.deepcopy(report["customer"]), "purpose": report["purpose"], "pages": doc["pages"]}
