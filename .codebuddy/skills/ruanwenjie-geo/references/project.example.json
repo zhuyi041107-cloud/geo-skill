@@ -29,11 +29,11 @@
     "星栈协作台（虚构演示）"
   ],
   "public_sources": [],
-  "budget_target": "20000.00",
-  "budget_limit": "20000.00",
+  "budget_target": null,
+  "budget_limit": null,
   "currency": "CNY",
   "start_date": "2026-11-16",
-  "end_date": "2027-02-07",
+  "end_date": "2027-03-07",
   "questions": [
     {
       "question_id": "Q001",
@@ -85,5 +85,5 @@
     }
   ],
   "repeats": 1,
-  "_example_note": "品牌、对比候选、业务资料及回答情境为虚构示例；本轮问题只展示不同决策入口，不规定真实项目题数。真实媒体及市场参考价格仅用于预算结构演示。"
+  "_example_note": "主体、业务与回答均为虚构。两档报价随实际任务规模核算，72稿仅为本示例验算量；客户明确硬上限时按其限制重配规模。"
 }

@@ -1,5 +1,5 @@
 {
-  "version": "0.8.0",
+  "version": "0.9.0",
   "font": {
     "name": "Droid Sans Fallback Regular",
     "file": "assets/geo-diagnosis-template/font.ttf"
@@ -7,13 +7,13 @@
   "files": [
     {
       "path": "assets/client-report-process-patterns.json",
-      "sha256": "d0b3953b9d0cd6bbb921f5adbfe529eef31f6848d3fea7d2657399c654bf9d3d",
-      "bytes": 1330
+      "sha256": "b31293eaf5af08fafc8d3ed38306ad08a333fe1b1e3fdd72269ddd13d523c4d3",
+      "bytes": 2015
     },
     {
       "path": "assets/geo-diagnosis-template/backgrounds.pdf",
-      "sha256": "b43194bdda68dc63927062dbb1fc93feea3e9e6f06dd10d9b7284426f43508c6",
-      "bytes": 1782967
+      "sha256": "8e1c5a5c6c72b0e29b3e297d78916d356459cab269f36f53f0a2b0dc0b91f663",
+      "bytes": 95853
     },
     {
       "path": "assets/geo-diagnosis-template/deepseek.png",
@@ -42,13 +42,13 @@
     },
     {
       "path": "references/customer-report.schema.json",
-      "sha256": "22dafa3577bfea50b7f98220921e9d70fc0d2a145e040ed9aaac5884d95f5d15",
-      "bytes": 63769
+      "sha256": "7838029f8c548c18b9fa831b94d1d487b018b67af985177e4e127c72852f7d53",
+      "bytes": 43883
     },
     {
       "path": "assets/geo-execution-template/backgrounds.pdf",
-      "sha256": "65cc747cdff570bec0109947df09417ead1875a1f20941b8a180590b6c81d6e0",
-      "bytes": 68707
+      "sha256": "823f197f8a07e3f2b5156b6b35a7123b37601bd8551d396703fbf0ba9bf564d6",
+      "bytes": 88411
     }
   ]
 }

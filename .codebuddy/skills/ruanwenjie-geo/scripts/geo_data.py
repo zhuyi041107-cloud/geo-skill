@@ -591,11 +591,7 @@ def calculate_budget(project, plan):
             positive_int(p["quantity"], "quantity")
     limit = money(project.get("budget_limit"), "budget_limit")
     target = money(project.get("budget_target"), "budget_target")
-    target_source = "项目目标" if target is not None else "仅预算上限"
-    if target is None and limit is None:
-        target, target_source = Decimal("20000.00"), "技能默认建议"
-    if limit is None and target is not None:
-        limit = target
+    target_source = "项目目标" if target is not None else ("仅预算上限" if limit is not None else "按实际执行规模核算")
     if target is not None and limit is not None and target > limit:
         raise ValueError("budget_target不能高于budget_limit")
     for f in fees:
@@ -649,11 +645,9 @@ def calculate_budget(project, plan):
 
 
 def validate_delivery_budget(budget):
-    """Catch a token-sized proposal before it becomes a formal client plan."""
+    """Respect an explicit client ceiling without forcing spend toward a target."""
     subtotal = Decimal(budget["client"]["known_subtotal"])
-    target, limit = money(budget.get("target"), "target"), money(budget.get("limit"), "limit")
-    if target is not None and subtotal < target * Decimal("0.90"):
-        raise ValueError(f"正式方案已知费用{amount(subtotal)}元，未达到{amount(target)}元目标的90%；请按业务需要重新配置实际媒体、内容和次数，不能修改单价或添加补差额凑预算")
+    limit = money(budget.get("limit"), "limit")
     if limit is not None and subtotal > limit:
         raise ValueError(f"正式方案已知费用{amount(subtotal)}元超出预算上限{amount(limit)}元，请调整实际投放计划")
 

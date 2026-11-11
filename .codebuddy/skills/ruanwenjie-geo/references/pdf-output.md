@@ -1,10 +1,10 @@
-# 固定模板 PDF 填充
+# 固定模板PDF填写规范
 
-两个客户 PDF 使用同一套 1200×675 横版视觉模板：诊断固定 8 页，执行固定 9 页。`scripts/export_pdf.py` 是业务入口；共享渲染器保留随包无文字 PDF 背景，以固定坐标填文字和数据。ReportLab 绘制文字层，PyMuPDF 合成 PDF 与逐页预览。无需浏览器或 GEO 云端工具。
+两个PDF均为1200×675横版：诊断固定8页、执行固定9页，保留用户认可旧版的背景、表格、卡片、标题与字号。`scripts/export_pdf.py`是业务入口，共享渲染器只填固定文字区；ReportLab绘制文字层，PyMuPDF合成背景和预览。无需浏览器或云端工具。
 
-## 客户稿与内部工作分开
+## 客户配置与内部计划
 
-先按 [逐页生成说明](template-generation.md) 完成客户表述，再参考 [客户示例](report.example.json) 和 [schema](customer-report.schema.json) 填数据：
+先完整读[逐页生成说明](template-generation.md)，再参考[客户示例](report.example.json)和[schema](customer-report.schema.json)填写：
 
 ```json
 {
@@ -15,77 +15,71 @@
     "date": "2026-11-11",
     "observed_platforms": ["豆包"]
   },
-  "purpose": "品牌认知与业务场景建设",
+  "purpose": "本案业务目标",
   "diagnosis": {"pages": []},
   "execution": {"pages": []}
 }
 ```
 
-这是根结构示意，空 pages 不能导出；完整页结构直接使用随包示例和 schema。品牌、主体、日期替换为本案事实；`observed_platforms` 只列实际已有答案的平台，支持任意平台名。无专用图标的平台以文字呈现，未回传平台不添加占位。
+这是根结构，空pages不能导出。实际页标题、顺序、layout和字段按当前schema与示例，不从旧0.8客户JSON直接复用不同布局。`observed_platforms`只列实际有回答的平台；已知平台用图标，其他平台用文字，不能保留未调查平台标识。
 
-客户 JSON 仅存客户可见文案和页面数据。原始回答、截图、来源链、证据判读、采集条件、内部 ID 与 `logic_links` 放 `.work`，不嵌入客户稿、附录、HTML 或隐藏字段。渲染前后的文字检查用于拦截内部过程措辞，事实与业务语义仍需 WorkBuddy 审查。
+report只存客户可见稿；内部原答、截图、来源链、条件、ID、核算与logic_links保留.work。客户稿不手填computed数据，也不用额外字段夹带内部资料。
 
-## 逐页内容职责
+## 固定layout与作者填写范围
 
-| 诊断页 | 内容职责 |
-| --- | --- |
-| 1 GEO 品牌诊断 | 品牌、业务与核心判断 |
-| 2 品牌在 AI 中的认知现状 | 实际平台如何理解品牌、业务影响 |
-| 3 同行 AI 认知对比 | 真实相关竞品、差别与本品牌的选择理由 |
-| 4 品牌优势与已有基础 | 客户能支撑的产品、服务、案例和事实 |
-| 5 信息冲突汇总 | 具体冲突与影响；无冲突写已统一事项及维护重点 |
-| 6 重点业务场景布局 | 优势对应的需求场景、优先级和内容入口 |
-| 7 内容建设与执行分工 | 内容、信源及双方动作 |
-| 8 推进计划与阶段复核 | 阶段、交付、责任与观察目标 |
+| 诊断页 | layout | 作者填写职责 |
+| --- | --- | --- |
+| 1 | cover | 品牌业务、总体判断及封面文字 |
+| 2 | cards3 | 实际品牌印象、业务选择表现及主要影响 |
+| 3 | comparison3 | 相关同行与自身三卡比较，label／heading／body／footer |
+| 4 | table3 | 已有基础／贵司提供的服务信息／内容使用建议，三列表 |
+| 5 | table4 | 对比项／当前状态／具体差异／调整建议，四列表 |
+| 6 | scenes4 | 重点商业场景及首批、随后、暂缓理由 |
+| 7 | customer-items3 | headers与rows，工作事项／软文街负责／贵司配合 |
+| 8 | summary4 | 四项title／body，起步、首阶段、后续、持续复核 |
 
-| 执行页 | 固定 layout 与用途 |
-| --- | --- |
-| 1 | `cover`，执行目标与定位 |
-| 2 | `cards3`，关键问题与优先方向 |
-| 3 | `steps4`，建设路径和内容机制 |
-| 4 | `content-plan`，同名内容组的核心要点、预期作用，稿数来自 plan |
-| 5 | `media-plan`，媒体组合与信源分工；数量来自 plan |
-| 6 | `stages3`，1至4个实际阶段；日期、篇数、刊次和阶段费用来自 plan |
-| 7 | `customer-items3`，客户素材与配合事项 |
-| 8 | `cards3`，阶段目标和复核重点 |
-| 9 | `quotes`，真实报价、适用条件与服务范围 |
+| 执行页 | layout | 作者填写与自动内容 |
+| --- | --- | --- |
+| 1 | cover | 目标、核心选择理由、本期执行重点 |
+| 2 | cards3 | 当前印象／同行差异／目标认知 |
+| 3 | steps4-grid | 四步2×2，体现选择差距到内容发布及调整 |
+| 4 | content-plan | 与contents.content_group同名groups的name／detail／role；稿数自动 |
+| 5 | media-cards3 | 三items固定category为权威媒体／行业媒体／自媒体，作者role／focus；resources／quantity／amount自动 |
+| 6 | stages3 | 1至4实际阶段，作者工作和客户配合；日期、稿数、三类刊次和两档金额自动 |
+| 7 | customer-items3 | headers／rows从plan.service_scope.work_items注入，report不手填 |
+| 8 | review-table | 三列表的复核方向／观察重点／后续调整，明确实际复核节点 |
+| 9 | quotes | 两items固定name为普通权重方案／高权重方案，作者只写tag；total／scale／media自动，页级writing／services自动 |
 
-页面标题、必填项、表格行数和卡片限制以 schema 为准。售前方案讲清内容方向、规模、媒体分工、执行阶段和费用；逐篇详细排期留内部或签约后的内容大纲，不能用密集附表撑页。
+所有表头、行数和必填文字以当前schema为准。自动字段也必须经过客户语言检查；出现制作规则时改成对应客户事项，不把内部说明缩小藏进页底。
 
-## 固定版式边界
+## 具体选媒与三类汇总
 
-- 背景、字体、图标、字号、坐标、表格和卡片由发布模板固定。`assets/report-assets-manifest.json` 校验资源字节数与 SHA256；客户生成时只改报告数据。
-- 固定文字框会测量实际高度。超量或溢出会明确报错，修改本案文案使其简洁完整；不截断、缩字、自动增页或改模板绕过检查。
-- 诊断与执行各自页数、顺序和页面布局必须满足 schema。不要把原案例事实、老报价或行业默认结论当成新客户内容。
-- 文字提取用于检查内容，不能单独证明没有重叠或裁切。预览中的每页都需查看。
-- 字体随包提供，不要求同事寻找系统字体；字体及图片资源不能从安装目录漏拷。
+`placements.strategy_role`是客户方案三类角色，`strategy_basis`保存资源与刊发形态依据；不能用media_type或source_sheet二分类直接汇总方案。媒体页列三类的实际资源、用途、刊次与两档配置：每卡resources显示普通、高权重各两个代表资源，quantity是共同刊次，amount显示两档小计；完整候选见推荐媒体Excel。阶段页继续显示三类数量，费用页两档继续按同三类分项，保持一致。
 
-## 同源计划和费用
+推荐Excel仍按来源表分sheet1网络媒体、sheet2自媒体，取独立media_recommendations宽池；它不等于普通档或高档购买名单，六档原价也不等于两档客户售价。
 
-`plan.contents`、`placements`、`fees` 和 `stages` 是执行数量及费用的唯一核算来源。入口重新计算，向内容组、媒体页和报价页注入稿数、媒体组合与金额，向阶段卡注入日期、篇数、刊次和费用；客户 JSON 不手填另一套总价或阶段金额。`contents.content_group` 对应客户内容页的同名组，内部任务 ID 不传入渲染器。提供 analysis 时，其预算也须与当前 plan 一致。年度项目可按四个季度组织阶段；费用按实际任务归属和日期核算，不平均分摊。
+## 同源数量、服务和两档费用
 
-默认目标与上限为 20,000 元，正式建议已知费用为 18,000—20,000 元；有不同明确预算时从本轮 project 取值。只给上限、允许少花时目标可为空。不使用虚构服务费、抬价或重复刊发凑预算。未报价服务不写成已含交付，年度维护需要明确范围及费用边界。
+project、contents、stages、主placements、quote_options及service_scope是核算来源，作者只写业务解释。主plan为普通档，quote_options严格一项高权重真实配置，内容、独立稿数和每稿刊次相同。固定客户单价、人工增项和预算边界统一见[费用规则](evidence-and-planning.md#普通与高权重两档客户报价)。
 
-单套计划显示单套报价。确需普通/高权重两套方案时，主方案继续使用 plan 本身，`plan.quote_options` 数组仅提供一套备选的 `name`、真实 `placements` 与 `fees`，共享主计划的 `contents` 和 `stages`。两套稿量和刊发量相同，价格差来自实际媒体组合。客户 `quotes` 只写名称、角标、描述、重点和适用条件，备选名称与计划一致，不凭空补第二个价格。具体字段参考 schema 与生成器错误提示。
+入口向内容组注入稿数，向三类媒体卡注入具体资源、刊次和金额，向阶段注入日期、三类数量和两档费用。第9页同时给两档三类费用、基本服务和人工写稿完整总价；客户JSON不得手填另一套合计或收费scope覆盖同源数据。
 
-推荐媒体 Excel 来自独立 `media_recommendations`，与实际执行子集分开。宽推荐池不计总预算；Excel 中相同资源的六档报价继续取原目录，不能被执行方案价格覆盖。
+执行7从service_scope.work_items生成双方表，执行9按included项列基本服务；service_scope.writing_mode=ai_assisted时从manual_writing核可选人工增项，client_provided时显示客户供稿而不展示写稿增项。review_schedule明确复核节点。任务正文和服务范围有矛盾时先修计划，不用“另议”掩盖已承诺工作。
 
-## WorkBuddy 运行
+无明确budget_limit时按完整任务核两档。任一档超硬上限时重新配置实际范围，不改固定单价或藏增项。72稿与24／36／12是公式验算例，不是通用篇数或固定媒体比例。
 
-Python 3.10 或更新版本，安装本包 `requirements.txt`。依赖是 openpyxl、python-docx、ReportLab、PyMuPDF；模板渲染全部本地完成，无需 Node、Chrome、Edge、Codex 私有运行时或远程 GEO 连接器。
+## 生成和成品检查
+
+Python 3.10或更新版本，按requirements.txt安装openpyxl、python-docx、ReportLab、PyMuPDF。字体、背景、图标随包；无需Node、Chrome、Edge或Codex私有运行时。
 
 ```text
 python "技能目录/scripts/export_pdf.py" --analysis "客户目录/.work/analysis-final.json" --plan "客户目录/.work/plan.json" --report "客户目录/.work/report.json" --output-dir "客户目录/正式输出/客户PDF"
 ```
 
-默认 `--kind both`，也可选 `diagnosis` 或 `execution`。`--report`、`--output-dir` 必填；诊断可以独立导出。执行需 `--plan`，项目取 `--project` 或 `analysis.project`；内部项目不混进客户稿。先用 `--help` 查看当前入口选项。
+`--report`、`--output-dir`必填；默认`--kind both`，另可选diagnosis或execution。诊断可独立生成；执行需要plan，项目取`--project`或analysis.project。提供analysis时预算须和当前计划一致，实际参数用`--help`核对。
 
-同名输出保留，选择新的修订目录。指定PDF输出目录只新增 `GEO诊断报告.pdf`、`品牌传播与GEO执行方案.pdf`；PNG预览与审计记录自动保存在report.json同级的pdf-review子目录（通常为客户.work内），命令结果返回实际review_dir与audit路径。若直接读取技能内置虚构示例，预览改放输出父目录的.work，不写回技能。推荐媒体.xlsx用单独媒体入口生成。
+客户PDF目录只新增两PDF。PNG与审计自动放report同级pdf-review（通常在.work），结果返回review_dir和audit；直接使用技能示例时放输出父目录.work，不写回技能。推荐媒体.xlsx由媒体入口生成，同名成果拒绝覆盖，使用新版本目录。
 
-## 验收
+背景与schema由assets/report-assets-manifest.json按字节数及SHA256封版。客户生成只改数据，溢出时精简重复表达，不换模板、不截字、不缩字号或自动增页。导出后逐页看17张实际画面，核固定标题、表格、三类卡、分工、双档费用和中文；再核全部数量、服务范围、两sheet原价，文本提取不能替代视觉。
 
-维护者逐页对照随包模板与填充样例，确认背景、标题、网格、卡片、表格、页脚、字体与页面完整性。新执行模板同时核对其固定 9 页职责，不把诊断页简单改名当执行方案。
-
-客户生成后逐页检查可读性与业务内容：现状、影响、选择理由、内容和信源分工、阶段安排、报价应承接；每页无溢出、重叠、缺字或残留内部过程。两个 PDF 的数量费用与 plan 一致，媒体 Excel 两个 sheet 与原价格一致。
-
-公开仓库只放无客户文字背景、schema、字体图标和虚构示例；真实客户 PDF、原文、截图与实采回答不上传。本地生成和逐页检查、ZIP 迁移验证、WorkBuddy 安装实测分别记录，不互相替代。
+公开仓库只放清除客户文字的背景、配套资源和虚构示例，真实客户PDF、截图、回答和本地审计不上传。修改skill以虚构资料验证，不重做客户旧报告。本地渲染、迁移安装和WorkBuddy界面实测分别记录。

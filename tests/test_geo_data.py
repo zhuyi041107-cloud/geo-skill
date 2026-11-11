@@ -400,25 +400,22 @@ class GeoDataTests(unittest.TestCase):
         b = geo.calculate_budget(self.project, plan)
         self.assertEqual((b["content_count"], b["placement_count"], b["publication_count"]), (1, 2, 5))
 
-    def test_default_twenty_thousand_budget_rejects_token_proposals(self):
-        project = dict(self.project, budget_limit=None)
+    def test_budget_has_no_implicit_target_floor_or_ceiling(self):
+        project = dict(self.project, budget_limit=None, budget_target=None)
         plan = self.plan()
         plan["fees"] = []
         plan["placements"][0].update(client_unit_price="2015.00", quantity=1)
         budget = geo.calculate_budget(project, plan)
-        self.assertEqual((budget["target"], budget["limit"]), ("20000.00", "20000.00"))
-        with self.assertRaisesRegex(ValueError, "未达到"):
-            geo.validate_delivery_budget(budget)
-        plan["placements"][0]["client_unit_price"] = "19800.00"
-        geo.validate_delivery_budget(geo.calculate_budget(project, plan))
-        plan["placements"][0]["client_unit_price"] = "20100.00"
+        self.assertEqual((budget["target"], budget["limit"]), (None, None))
+        geo.validate_delivery_budget(budget)
+        project["budget_target"] = "20000.00"
+        budget = geo.calculate_budget(project, plan)
+        self.assertEqual((budget["target"], budget["limit"]), ("20000.00", None))
+        geo.validate_delivery_budget(budget)
+        project["budget_limit"] = "22000.00"
+        plan["placements"][0]["client_unit_price"] = "23000.00"
         with self.assertRaisesRegex(ValueError, "超出"):
             geo.validate_delivery_budget(geo.calculate_budget(project, plan))
-        # An explicit smaller budget is a client override, not the skill default.
-        project.update(budget_limit="2200.00", budget_target="2200.00")
-        plan["placements"][0]["client_unit_price"] = "2015.00"
-        geo.validate_delivery_budget(geo.calculate_budget(project, plan))
-
 
     def test_old_client_sheet_uses_labels_instead_of_row_numbers(self):
         wb = openpyxl.Workbook()

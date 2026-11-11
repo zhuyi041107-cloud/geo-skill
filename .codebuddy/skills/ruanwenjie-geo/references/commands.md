@@ -26,7 +26,7 @@ WorkBuddy 据资料维护 `.work/project.json`，结构参考 [project.example.j
 - `project_id`、`client_name`、`brand_names`；可补 `industry`、`services`、`regions`、`audience`、`advantages`、`competitors`、`public_sources`。
 - `questions` 每项含 `question_id`、`type`（自然需求/品牌认知）、`intent`（认知/推荐/决策/对比/其他）、`theme`、`text`、`priority`。
 - `contexts` 每项含 `platform`、`mode`、`online`、`round`。沿用用户约定：网页端、联网、本轮日期；有明确历史记录则保留。模式、时间、模型名不转成同事必填项；不编造时分秒。
-- `budget_target`、`budget_limit` 未另给要求时均为 `"20000.00"`；`currency` 为 `CNY`。金额用十进制字符串。明确只给上限、允许少花时目标可为 null。
+- `budget_target` 仅记录本轮明确目标，`budget_limit` 只记录明确硬上限；未给时为 null，旧版本默认不继承为本轮预算，目标不自动变硬上限。`currency` 为 `CNY`，金额用十进制字符串。
 - `start_date`、`end_date` 写建议执行期；年度安排区分已计费建设与后续维护，不能把未报价的全年服务写成已含。
 - `repeats` 初轮通常为 1。内部 ID、分类和日期由 WorkBuddy 维护。
 
@@ -75,17 +75,20 @@ python "技能目录/scripts/media.py" --query "职场" --region "山西" --kind
 
 - `stages` 写 `name`、`objective`、`deliverables`、`effect_target`。
 - `contents` 为核算用内容任务，含 `content_id`、`title`、`question_ids`、`content_group`、`stage`、`scheduled_date`、`status`；`content_group` 使用具体业务方向名称，供内容规划页匹配同名组并自动计篇。可补关键词、事实依据、内容形式、信源角色与检查日。售前报告汇总方向、篇数和阶段，不把内部逐篇任务表完整打印给客户。
-- `placements` 只放实际执行子集，含资源身份、原报价来源、刊发次数、日期与对客单价；其他费用放 `fees`。同稿多站发布计 1 篇内容、多次刊发，默认一稿一发，额外分发有明确约定才安排。
+- 主 `placements` 是普通权重实际配置，含资源ID、媒体名、source_sheet、原价来源、刊次、日期和client_unit_price，另须有strategy_role（权威媒体／行业媒体／自媒体）及strategy_basis。quote_options严格一项高权重方案，含name、实际placements和fees，共享contents/stages，两档同内容、同每稿刊次。固定双档的fees为空：基本服务归service_scope，人工撰写使用manual_writing增项，不重复列收费记录。同稿多站计一稿多次刊发，额外分发有明确约定才安排。
 - `media_recommendations` 是独立的宽推荐池，至少含 `media_id`、`media_name`、`source_sheet`，可沿用目录字段并补推荐理由。状态为推荐、候选或需核实；不需要刊次或执行金额，不回退用 placements 代替。
-- `logic_links` 留内部，串联诊断发现、事实依据、选择理由、内容或客户动作、媒体角色、阶段与检查日。内容、媒体和投入要解决对应缺口，共享任务只计费一次。
+- `logic_links` 留内部，串联品牌印象及同行差距、事实、选择理由、内容或客户动作、三类媒体作用、阶段与检查日，共享任务只计费一次。
+- `service_scope.work_items` 每项含task、provider、client、included，任务名唯一，必含精确任务“内容策划”“媒体发布”“链接汇总”“阶段复核”且included=true；双方分工和含服务清单同源。review_schedule写具体复核节点。writing_mode为ai_assisted时，内容策划含AI起草与人工简单修改，manual_writing含unit_price="100.00"及original_unit_price="200.00"；client_provided时客户供稿，不列写稿增项。完整结构参考plan.example，不在report另写一套服务承诺。
 
-使用目录建议价时，`unit_price` 保留 null，`client_unit_price` 填市场参考价，同时保留 `price_tier=市场价格`、`quotation_date` 和清楚的 `price_basis`；只有已确认客户报价才替换。未报价的写作、页面建设、复核和维护不作为已含刚性交付。
+客户售价按[两档费用规则](evidence-and-planning.md#普通与高权重两档客户报价)：普通三类450／200／200元每次，高权重600／300／300元每次。market_price及tier_prices保留目录原值；unit_price只有已核采购价才填，未知为null，不将市场价或客户售价冒充采购成本。每档保留具体资源、刊发形态与角色依据，已知采购价高于客户售价时重配资源。
+
+基本服务包含策划、AI起草与人工简单修改、媒体发布、链接汇总和阶段复核。人工撰稿为可选增项，原价200元／篇、打包100元／独立稿；入口展示两档媒体合计及含人工总价。官方载体实际操作、事实审核和真实争议处理由客户承担，额外承接工作有明确范围和价格。
 
 ```text
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --plan "工作目录/.work/plan.json" --out "工作目录/.work/analysis-final.json"
 ```
 
-默认实际执行已知费用为 18,000—20,000 元。目标与上限来自本轮明确要求；不抬价或虚加差额凑预算。推荐池不计入预算。执行 PDF 重新计算计划并检查上限与目标，提供 analysis 时还会核对预算一致性。
+执行PDF重新计算两档配置、三类刊次和费用。只有明确budget_limit才做硬上限检查，任一档不适配时重配实际规模，不改单价或隐藏增项；推荐池不计预算。提供analysis时还核对普通档预算是否与当前plan一致。原例72稿及24／36／12仅验算，不强制每个客户采用。
 
 ## 6. 固定背景填充两份客户 PDF
 
@@ -95,7 +98,7 @@ python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/�
 python "技能目录/scripts/export_pdf.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --output-dir "工作目录/正式输出/客户PDF"
 ```
 
-入口只填固定文字槽与数据区，保留原背景、坐标、字号和 1200×675 页面。文字溢出时精简客户表述，不缩字、截断、增页或改模板。执行金额和数量按同源 plan 注入；单套计划只显示一套真实报价。详细字段与运行选项以随包 `--help` 和 schema 为准。
+入口只填固定文字槽与数据区，保留原背景、坐标、字号和 1200×675 页面。文字溢出时精简客户表述，不缩字、截断、增页或改模板。执行金额、三类媒体数据、双方分工和基本服务从同源plan注入；两档为普通权重与高权重，report不得另填一套价格或服务范围。详细字段与运行选项以随包 `--help` 和 schema 为准。
 
 ## 7. 推荐媒体 Excel
 

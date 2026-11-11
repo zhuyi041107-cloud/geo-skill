@@ -1,38 +1,113 @@
 {
-  "skill_version": "0.8.0",
+  "skill_version": "0.9.0",
   "verified_on": "2026-11-11",
-  "scope": "Local fixed-template rendering and portable installation with fictional client data",
+  "scope": "Local skill, fixed templates and portable installation; fictional data only",
   "automated_checks": {
-    "unittest_cases": 73,
+    "unittest_cases": 84,
     "result": "passed",
     "skill_creator_frontmatter": "passed",
     "asset_manifest": "9 resources checked by size and SHA256",
-    "relocated_install": "Chinese and space-containing path, Python-only PATH, both PDFs generated"
+    "relocated_install": "Chinese and space-containing path; Python-only PATH; both PDFs generated"
   },
   "template_visual_review": {
-    "diagnosis": {"pages": 8, "reviewed_pages": [1, 2, 3, 4, 5, 6, 7, 8], "result": "passed"},
-    "execution": {"pages": 9, "reviewed_pages": [1, 2, 3, 4, 5, 6, 7, 8, 9], "result": "passed"},
-    "reviewed_features": ["backgrounds", "titles", "rounded cards", "tables", "prices", "footers", "Chinese text", "platform marks", "clipping and overlap"],
-    "execution_source": "Text-free and platform-icon-free backgrounds derived from the supplied nine-page reference",
-    "sample_content": "Fictional; historical client facts and quoted sample prices are not defaults"
+    "diagnosis": {
+      "pages": 8,
+      "reviewed_pages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "result": "passed"
+    },
+    "execution": {
+      "pages": 9,
+      "reviewed_pages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "result": "passed"
+    },
+    "features": [
+      "per-page original backgrounds",
+      "four-column conflict table",
+      "bilateral responsibility tables",
+      "2x2 steps",
+      "three media role cards",
+      "review table",
+      "two price cards",
+      "original color hierarchy",
+      "font sizes",
+      "clipping and overlap"
+    ],
+    "backgrounds": "Derived from the user-approved eight-page and nine-page references; original client text, metadata, links and platform images removed"
   },
-  "independent_manual_input_forward_test": {
+  "pricing_reference_check": {
+    "independent_articles": 72,
+    "publications": 72,
+    "role_counts": {
+      "authority": 24,
+      "industry": 36,
+      "self_media": 12
+    },
+    "ordinary_cny": 20400,
+    "higher_cny": 28800,
+    "optional_manual_writing_cny": 7200,
+    "full_manual_totals_cny": [
+      27600,
+      36000
+    ],
+    "example_only_not_a_fixed_content_quota": true
+  },
+  "independent_forward_test": {
     "platforms_returned": 1,
     "diagnosis_pages_reviewed": 8,
     "execution_pages_reviewed": 9,
-    "content_groups": 4,
-    "independent_articles": 8,
-    "publications": 8,
-    "stages": 3,
-    "stage_amounts_cny": [7200, 8000, 3400],
-    "total_cny": 18600,
-    "network_recommendations": 28,
-    "self_media_recommendations": 24,
-    "original_tier_prices_compared": 312,
+    "independent_articles": 16,
+    "publications": 16,
+    "role_counts": {
+      "authority": 4,
+      "industry": 8,
+      "self_media": 4
+    },
+    "stages": 4,
+    "ordinary_cny": 4200,
+    "higher_cny": 6000,
+    "optional_manual_writing_cny": 1600,
+    "full_manual_totals_cny": [
+      5800,
+      7600
+    ],
+    "network_recommendations": 23,
+    "self_media_recommendations": 11,
+    "tier_price_cells_compared": 204,
     "media_sheets_rendered_and_reviewed": 2,
     "result": "passed"
   },
+  "question_generation_review": [
+    "Explicit purchasing task when testing provider candidates",
+    "One main decision per question",
+    "Industry context for ambiguous brand recognition",
+    "Relevant peer comparison",
+    "Knowledge answers and prompted risk topics do not become recommendation failures"
+  ],
   "unchanged_media_catalog_sha256": "8ad7259cee3372bd381ea52d76c9928b80763c1ff2018a6b19aaba8ba7a2707e",
-  "not_verified": ["WorkBuddy UI installation and execution", "Real AI platform results", "Media publication or paid services"],
-  "private_evidence_policy": "Client originals, raw answers, source PDFs, screenshots and local review logs are not included in the public repository"
+  "original_client_reports_rebuilt": false,
+  "not_verified": [
+    "WorkBuddy UI installation and execution",
+    "Live media acceptance or confirmed procurement costs",
+    "Real AI platform performance"
+  ],
+  "private_evidence_policy": "Original client files, raw answers, source PDFs and screenshots remain outside the repository"
 }
