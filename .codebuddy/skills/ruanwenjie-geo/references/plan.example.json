@@ -6168,11 +6168,11 @@
     }
   ],
   "service_scope": {
-    "writing_mode": "ai_assisted",
+    "writing_mode": "separate",
     "work_items": [
       {
         "task": "内容策划",
-        "provider": "规划选题、AI起草及人工简单修改，按事实审核后形成发布稿。",
+        "provider": "规划选题与素材结构，审核客户稿件并完成发布排版。",
         "client": "提供现有资料，核准业务事实、案例授权与最终稿件。",
         "included": true
       },

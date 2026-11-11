@@ -1,0 +1,59 @@
+{
+  "skill_version": "0.10.1",
+  "verified_on": "2026-11-11",
+  "scope": "Local Windows stdio MCP, offline API contracts and fictional report fixtures",
+  "model_configuration": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "max",
+    "model_context_window_tokens": 1050000,
+    "context_window_basis": "Official model documentation; not a measured full-window API call",
+    "truncation": "disabled",
+    "analysis_and_review_max_output_tokens": 32000,
+    "api_parameter_test": "Mocked request payload verifies max; no fabricated context_window request parameter",
+    "installed_stdio_status": "Verified model, reasoning effort and context metadata via actual installed MCP config"
+  },
+  "automated_checks": {
+    "unittest_cases": 115,
+    "result": "passed",
+    "runtime": "Installed isolated Python 3.12 environment with requirements-mcp.txt",
+    "skill_creator_frontmatter": "passed",
+    "stdio_sdk_handshake": "passed",
+    "windows_powershell_launcher_handshake": "passed",
+    "windows_config_merge_backup_and_dpapi_fake_key": "passed",
+    "fixed_asset_manifest": "Original fixed assets and media catalog preserved",
+    "model_calls_in_tests": "Explicit mocked Responses results only; no paid API requests"
+  },
+  "fictional_visual_review": {
+    "source_version": "0.10.0; reused because fixed templates, renderer layout and fixture customer output are unchanged",
+    "diagnosis_pages_reviewed": [1, 2, 3, 4, 5, 6, 7, 8],
+    "execution_pages_reviewed": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "reference_comparison": "Original templates compared page by page; passed",
+    "media_workbook": "sheet1: 28 network resources, 16 columns; sheet2: 23 self-media resources, 17 columns",
+    "original_tier_price_cells_compared": 306,
+    "result": "passed"
+  },
+  "pricing_checks": {
+    "minimum_media_fee_per_option_cny": "12000.00",
+    "writing": "Separate charge; original 200.00, package 100.00 CNY per independent article; client-provided copy is not charged",
+    "budget_target": "Reference only; not converted to a ceiling",
+    "budget_limit": "Explicit client ceiling applies to media plus commissioned writing",
+    "fixture_media_fees": ["20400.00", "28800.00"],
+    "fixture_writing_fee": "7200.00",
+    "fixture_combined_totals": ["27600.00", "36000.00"]
+  },
+  "delivery_gate_checks": [
+    "No delivery without passing final review",
+    "Every actual PDF page and corresponding reference page is sent as an image",
+    "Original collected screenshots are included in final review",
+    "Changed final artifacts or original evidence invalidate delivery",
+    "Interrupted re-review revokes the previous pass",
+    "Official output contains exactly two PDFs and one media workbook"
+  ],
+  "not_verified": [
+    "Real OpenAI API call, account billing and gpt-6.1-sol access",
+    "WorkBuddy application UI end-to-end execution",
+    "Multi-user remote hosting and isolation"
+  ],
+  "customer_artifacts": "No actual customer reports or collection originals changed",
+  "github_upload": "Tracked separately in Git commit history; local verification does not certify upload"
+}

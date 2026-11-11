@@ -144,7 +144,7 @@ def validate(config, kind="diagnosis"):
 
 
 def render(config, out, kind="diagnosis", png_scale=1.15, pdf_name=None):
-    import fitz
+    import pymupdf as fitz
     from reportlab.pdfgen import canvas
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont

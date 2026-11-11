@@ -17,7 +17,7 @@ PATTERNS = json.loads((Path(__file__).resolve().parents[1] /
 
 def extract(path):
     if path.suffix.lower() == ".pdf":
-        import fitz
+        import pymupdf as fitz
         with fitz.open(path) as doc:
             return [(i + 1, page.get_text()) for i, page in enumerate(doc)]
     if path.suffix.lower() in {".txt", ".md"}:

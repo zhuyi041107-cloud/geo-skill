@@ -8,3 +8,7 @@ client-data/
 *.log
 .DS_Store
 Thumbs.db
+.workbuddy/mcp.json
+.workbuddy/mcp.json.backup-*
+.env
+.env.*

@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "ruanwenjie-geo": {
+      "type": "stdio",
+      "command": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "args": [
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "D:\\geo skill\\geo-skill\\.codebuddy\\skills\\ruanwenjie-geo\\scripts\\launch_local_mcp.ps1",
+        "-PythonExe",
+        "C:\\Users\\YOUR_USER\\AppData\\Local\\RuanwenjieGEO\\runtime\\Scripts\\python.exe",
+        "-ServerPath",
+        "D:\\geo skill\\geo-skill\\.codebuddy\\skills\\ruanwenjie-geo\\scripts\\geo_mcp.py"
+      ],
+      "env": {
+        "GEO_WORKSPACE": "D:\\geo skill\\geo-skill"
+      },
+      "timeout": 1800000
+    }
+  }
+}

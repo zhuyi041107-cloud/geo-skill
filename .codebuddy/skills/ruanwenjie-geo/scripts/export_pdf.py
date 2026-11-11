@@ -54,6 +54,7 @@ ROLES = ("权威媒体", "行业媒体", "自媒体")
 QUOTE_NAMES = ("普通权重方案", "高权重方案")
 QUOTE_RATES = ({"权威媒体": Decimal("450"), "行业媒体": Decimal("200"), "自媒体": Decimal("200")},
                {"权威媒体": Decimal("600"), "行业媒体": Decimal("300"), "自媒体": Decimal("300")})
+MIN_MEDIA_FEE = Decimal("12000")
 
 
 def public_accounting(project, plan, quote_index=0):
@@ -89,6 +90,8 @@ def public_accounting(project, plan, quote_index=0):
         resources = list(dict.fromkeys(p["media_name"] for p in items))
         summary[role] = {"quantity": quantity, "amount": subtotal, "resources": resources}
         media_lines.append(f"{role}{quantity}次 × {money(QUOTE_RATES[quote_index][role],budget['currency'])} = {money(subtotal,budget['currency'])}")
+    if Decimal(budget["client"]["total"]) < MIN_MEDIA_FEE:
+        raise ValueError(f"{QUOTE_NAMES[quote_index]}媒体发布费须至少12000元，请调整真实媒体配置与刊次；不得用写作费、虚增服务费或补差项凑足")
     return budget, summary, "\n".join(media_lines)
 
 
@@ -110,6 +113,9 @@ def service_scope(plan, content_count, budgets):
         raise ValueError("已含服务须明确内容策划、媒体发布、链接汇总和阶段复核，工作事项不得重复")
     if not isinstance(scope.get("review_schedule"), str) or not scope["review_schedule"].strip():
         raise ValueError("须写明已含阶段复核的具体节点")
+    included_work = "；".join(item["task"] + "：" + item["provider"] for item in scope["work_items"] if item["included"])
+    if any(word in included_work for word in ("AI起草", "人工简单修改", "人工撰写", "代写", "撰稿", "写稿", "稿件撰写", "文章撰写", "文章写作")):
+        raise ValueError("媒体与基础服务不含稿件撰写，请将写作服务单列收费；客户稿件审核与发布排版可列为已含")
     mode = scope.get("writing_mode")
     if mode == "client_provided":
         if scope.get("manual_writing") not in (None, {}):
@@ -118,20 +124,24 @@ def service_scope(plan, content_count, budgets):
             raise ValueError("客户供稿项目的软文街工作不应承诺代写或人工撰稿")
         services = "已含" + "、".join(included) + "；贵司供稿并负责专业审核。"
         writing = "贵司提供定稿及公开授权；本方案不含代写或人工撰写增项。"
-    elif mode == "ai_assisted":
+    elif mode == "separate":
         manual = scope.get("manual_writing", {})
         from geo_data import money as parsed_money
         if not isinstance(manual, dict) or set(manual) != {"unit_price", "original_unit_price"} or parsed_money(manual["unit_price"], "人工撰稿单价") != Decimal("100") or parsed_money(manual["original_unit_price"], "人工撰稿原价") != Decimal("200"):
             raise ValueError("人工撰写增项须按原价200元/篇、打包100元/独立稿明确")
-        included_work = "；".join(item["provider"] for item in scope["work_items"] if item["included"])
-        if "AI起草" not in included_work or "人工简单修改" not in included_work:
-            raise ValueError("已含稿件服务须在分工中明确AI起草和人工简单修改")
-        services = "已含" + "、".join(included) + "；AI起草及人工简单修改不另收费。"
+        services = "已含" + "、".join(included) + "；稿件撰写另收费。"
         extra = Decimal("100") * content_count
-        writing = f"人工撰写原价200元/篇，打包100元/篇，{content_count}篇共{money(extra)}。\n"
-        writing += "全量人工撰写合计：普通" + money(Decimal(budgets[0]["client"]["total"])+extra) + "；高权重" + money(Decimal(budgets[1]["client"]["total"])+extra) + "。"
+        for index, budget in enumerate(budgets):
+            limit = parsed_money(budget.get("limit"), "budget_limit")
+            total = Decimal(budget["client"]["total"]) + extra
+            if limit is not None and total > limit:
+                raise ValueError(f"{QUOTE_NAMES[index]}媒体与写作总额{money(total)}超出预算上限{money(limit)}，请调整实际执行范围")
+        writing = f"写作另计：原价200元/篇，打包100元/独立稿，{content_count}篇共{money(extra)}。\n"
+        writing += "媒体＋写作总额：普通" + money(Decimal(budgets[0]["client"]["total"])+extra) + "；高权重" + money(Decimal(budgets[1]["client"]["total"])+extra) + "。"
+    elif mode == "ai_assisted":
+        raise ValueError("ai_assisted免费写作模式已停用，请使用separate写作另计或client_provided客户供稿")
     else:
-        raise ValueError("writing_mode须明确ai_assisted或client_provided")
+        raise ValueError("writing_mode须明确separate或client_provided")
     return rows, services, writing, scope["review_schedule"]
 
 
@@ -243,7 +253,7 @@ def prepare_document(kind, report, project=None, plan=None, analysis=None):
         pages[8].update(services=services, writing=writing)
         pages[8]["subtitle"] = ("两档同稿量同刊次，基础服务与阶段复核已含；贵司供稿并负责专业审核。"
             if plan["service_scope"]["writing_mode"] == "client_provided" else
-            "两档同稿量同刊次，含AI起草及人工简单修改；人工撰写增项另列。")
+            "两档同稿量同刊次，含基础服务与阶段复核；媒体与写作分别报价。")
     config = {"customer": copy.deepcopy(report["customer"]), "purpose": report["purpose"], "pages": doc["pages"]}
     errors = renderer.validate(config, kind)
     if errors:

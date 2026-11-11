@@ -29,8 +29,11 @@ def main():
         "assets/geo-diagnosis-template/FONT-NOTICE.txt",
         "assets/geo-diagnosis-template/doubao.png", "assets/geo-diagnosis-template/qwen.png",
         "assets/geo-diagnosis-template/deepseek.png",
+        "requirements-mcp.txt", "scripts/geo_mcp.py", "scripts/geo_gpt.py",
+        "scripts/gpt_client.py", "scripts/gpt_evidence.py", "scripts/setup_local_mcp.ps1",
+        "scripts/launch_local_mcp.ps1", "references/local-mcp.md", "references/workbuddy-mcp.example.json",
     }
-    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".html", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".png", ".svg"})
+    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix in {".md", ".json", ".txt", ".py", ".ps1", ".html", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".png", ".svg"})
     relative = {p.relative_to(skill).as_posix() for p in files}
     if required - relative:
         raise ValueError("Missing release files: " + ", ".join(sorted(required - relative)))

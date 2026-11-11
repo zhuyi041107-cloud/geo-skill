@@ -61,7 +61,8 @@ class ExportPdfTests(unittest.TestCase):
             self.assertIn('高权重：', card['resources'])
         self.assertEqual(config['pages'][6]['headers'], ['工作事项', '软文街负责', '贵司配合'])
         self.assertIn('不含该项实际执行', config['pages'][6]['rows'][-1][1])
-        self.assertIn('AI起草及人工简单修改不另收费', config['pages'][8]['services'])
+        self.assertIn('稿件撰写另收费', config['pages'][8]['services'])
+        self.assertIn('媒体＋写作总额', config['pages'][8]['writing'])
         self.assertIn('第4、8、12、16周', config['pages'][7]['subtitle'])
 
     def test_both_real_resource_configurations_and_identical_per_article_role_counts_are_required(self):
@@ -129,6 +130,63 @@ class ExportPdfTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '超出预算上限'):
             self.prepare(report, project, plan)
 
+    def test_intended_budget_does_not_cap_either_actual_quote(self):
+        report, project, plan = self.fixture()
+        project['budget_target'] = '10000.00'
+        project['budget_limit'] = None
+        config = self.prepare(report, project, plan)
+        self.assertEqual([c['total'] for c in config['pages'][8]['items']], ['¥20,400.00', '¥28,800.00'])
+
+    def test_explicit_ceiling_includes_selected_writing_but_not_client_provided_writing(self):
+        report, project, plan = self.fixture()
+        project['budget_limit'] = '30000.00'
+        with self.assertRaisesRegex(ValueError, '高权重方案媒体与写作总额¥36,000.00超出预算上限¥30,000.00'):
+            self.prepare(report, project, plan)
+        project['budget_limit'] = '36000.00'
+        config = self.prepare(report, project, plan)
+        self.assertIn('高权重¥36,000.00', config['pages'][8]['writing'])
+        project['budget_limit'] = '30000.00'
+        plan['service_scope'].update(writing_mode='client_provided', manual_writing=None)
+        config = self.prepare(report, project, plan)
+        self.assertEqual(config['pages'][8]['items'][1]['total'], '¥28,800.00')
+        self.assertIn('贵司提供定稿', config['pages'][8]['writing'])
+
+    def test_media_fee_floor_uses_real_publications_and_is_checked_for_both_tiers(self):
+        _, project, plan = self.fixture()
+        for quote_index, rate, quantity in ((0, '200.00', 60), (1, '300.00', 40)):
+            chosen = copy.deepcopy(plan)
+            item = copy.deepcopy(plan['placements'][0])
+            item.update(strategy_role='行业媒体', client_unit_price=rate, quantity=quantity)
+            chosen['placements'] = [item]
+            budget, _, _ = export_pdf.public_accounting(project, chosen, quote_index)
+            self.assertEqual(budget['client']['total'], '12000.00')
+            item['quantity'] -= 1
+            with self.subTest(quote_index=quote_index), self.assertRaisesRegex(ValueError, '至少12000'):
+                export_pdf.public_accounting(project, chosen, quote_index)
+        chosen = copy.deepcopy(plan)
+        chosen['placements'] = chosen['placements'][:2]
+        for item, quantity in zip(chosen['placements'], (29, 30)):
+            item.update(strategy_role='行业媒体', client_unit_price='200.00', quantity=quantity)
+        budget = calculate_budget(project, chosen)
+        self.assertEqual(Decimal(budget['client']['total']) + 100 * budget['content_count'], Decimal('12000'))
+        with self.assertRaisesRegex(ValueError, '不得用写作费'):
+            export_pdf.public_accounting(project, chosen)
+
+    def test_writing_is_separate_and_old_free_writing_mode_is_rejected(self):
+        report, project, plan = self.fixture()
+        config = self.prepare(report, project, plan)
+        self.assertIn('72篇共¥7,200.00', config['pages'][8]['writing'])
+        self.assertIn('普通¥27,600.00；高权重¥36,000.00', config['pages'][8]['writing'])
+        self.assertNotIn('AI起草', config['pages'][8]['services'])
+        self.assertNotIn('AI起草', config['pages'][8]['subtitle'])
+        plan['service_scope']['writing_mode'] = 'ai_assisted'
+        with self.assertRaisesRegex(ValueError, '免费写作模式已停用'):
+            self.prepare(report, project, plan)
+        plan['service_scope']['writing_mode'] = 'separate'
+        plan['service_scope']['work_items'][0]['provider'] = '提供选题、AI起草及人工简单修改。'
+        with self.assertRaisesRegex(ValueError, '写作服务单列收费'):
+            self.prepare(report, project, plan)
+
     def test_service_scope_is_required_and_both_public_pages_share_it(self):
         report, project, plan = self.fixture()
         del plan['service_scope']
@@ -181,7 +239,7 @@ class ExportPdfTests(unittest.TestCase):
         self.assertIn('72篇共¥7,200.00', config['pages'][8]['writing'])
         self.assertIn('73次发布', config['pages'][8]['items'][0]['scale'])
 
-    def test_small_real_scope_is_not_forced_to_seventy_two_or_twenty_thousand(self):
+    def test_small_real_scope_is_not_forced_to_seventy_two_but_has_minimum_media_fee(self):
         report, project, plan = self.fixture()
         plan['contents'] = plan['contents'][:8]
         plan['placements'] = plan['placements'][:8]
@@ -190,10 +248,16 @@ class ExportPdfTests(unittest.TestCase):
         names = list(dict.fromkeys(c['content_group'] for c in plan['contents']))
         report['execution']['pages'][3]['groups'] = [g for g in report['execution']['pages'][3]['groups'] if g['name'] in names]
         report['execution']['pages'][5]['items'] = report['execution']['pages'][5]['items'][:1]
+        with self.assertRaisesRegex(ValueError, '至少12000'):
+            self.prepare(report, project, plan)
+        for records in (plan['placements'], plan['quote_options'][0]['placements']):
+            for item in records:
+                item['quantity'] = 4
         config = self.prepare(report, project, plan)
         self.assertIn('8篇', config['pages'][8]['items'][0]['scale'])
-        self.assertEqual(config['pages'][8]['items'][0]['total'], '¥3,100.00')
-        self.assertEqual(config['pages'][8]['items'][1]['total'], '¥4,200.00')
+        self.assertEqual(config['pages'][8]['items'][0]['total'], '¥12,400.00')
+        self.assertEqual(config['pages'][8]['items'][1]['total'], '¥16,800.00')
+        self.assertIn('8篇共¥800.00', config['pages'][8]['writing'])
 
     def test_stale_analysis_and_incomplete_actual_prices_are_rejected(self):
         report, project, plan = self.fixture()

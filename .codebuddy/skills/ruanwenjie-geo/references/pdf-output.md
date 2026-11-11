@@ -1,6 +1,6 @@
 # 固定模板PDF填写规范
 
-两个PDF均为1200×675横版：诊断固定8页、执行固定9页，保留用户认可旧版的背景、表格、卡片、标题与字号。`scripts/export_pdf.py`是业务入口，共享渲染器只填固定文字区；ReportLab绘制文字层，PyMuPDF合成背景和预览。无需浏览器或云端工具。
+两个PDF均为1200×675横版：诊断固定8页、执行固定9页，保留用户认可旧版的背景、表格、卡片、标题与字号。`scripts/export_pdf.py`是本地渲染入口，共享渲染器只填固定文字区；ReportLab绘制文字层，PyMuPDF合成背景和预览。渲染无需浏览器或GEO云端工具；本地MCP流程另调用OpenAI API分析、成稿与成品终审。
 
 ## 客户配置与内部计划
 
@@ -60,13 +60,13 @@ report只存客户可见稿；内部原答、截图、来源链、条件、ID、
 
 ## 同源数量、服务和两档费用
 
-project、contents、stages、主placements、quote_options及service_scope是核算来源，作者只写业务解释。主plan为普通档，quote_options严格一项高权重真实配置，内容、独立稿数和每稿刊次相同。固定客户单价、人工增项和预算边界统一见[费用规则](evidence-and-planning.md#普通与高权重两档客户报价)。
+project、contents、stages、主placements、quote_options及service_scope是核算来源，作者只写业务解释。主plan为普通档，quote_options严格一项高权重真实配置，内容、独立稿数和每稿刊次相同。每档媒体费按实际刊次核算且最低12,000元，不虚加补差，写作另收费。固定客户单价、写作费和预算边界统一见[费用规则](evidence-and-planning.md#普通与高权重两档客户报价)。
 
-入口向内容组注入稿数，向三类媒体卡注入具体资源、刊次和金额，向阶段注入日期、三类数量和两档费用。第9页同时给两档三类费用、基本服务和人工写稿完整总价；客户JSON不得手填另一套合计或收费scope覆盖同源数据。
+入口向内容组注入稿数，向三类媒体卡注入具体资源、刊次和金额，向阶段注入日期、三类数量和两档费用。第9页同时给两档三类媒体费用、媒体费已含服务、独立写作费和含写作总价；客户JSON不得手填另一套合计或收费scope覆盖同源数据。
 
-执行7从service_scope.work_items生成双方表，执行9按included项列基本服务；service_scope.writing_mode=ai_assisted时从manual_writing核可选人工增项，client_provided时显示客户供稿而不展示写稿增项。review_schedule明确复核节点。任务正文和服务范围有矛盾时先修计划，不用“另议”掩盖已承诺工作。
+执行7从service_scope.work_items生成双方表，执行9按included项列基本服务；这些基础工作只含选题、大纲与素材方向等约定服务，不含执行文章的AI起草、正文撰稿或人工修改。service_scope.writing_mode=separate为默认写作单独收费分支，从manual_writing按原价200元／篇、打包100元／独立稿核写作费；client_provided时显示客户供稿且不收写作费。旧ai_assisted免费含起草模式不再适用。review_schedule明确复核节点。任务正文和服务范围有矛盾时先修计划，不用“另议”掩盖已承诺工作。
 
-无明确budget_limit时按完整任务核两档。任一档超硬上限时重新配置实际范围，不改固定单价或藏增项。72稿与24／36／12是公式验算例，不是通用篇数或固定媒体比例。
+budget_target为意向预算，不自动成为硬上限；客户明确不能超过时才设budget_limit。无明确硬上限按完整任务核两档，每档实际媒体费均须达到12,000元。任一档超硬上限时重新配置实际范围，不改固定单价或藏写作费；最低媒体费与硬上限无法同时满足时明确说明冲突，不导出不合规报价。72稿与24／36／12是公式验算例，不是通用篇数或固定媒体比例。
 
 ## 生成和成品检查
 
