@@ -77,8 +77,18 @@
     "Interrupted re-review revokes the previous pass",
     "Official output contains exactly two PDFs and one media workbook"
   ],
+  "real_api_continuation_2026_11_11": {
+    "version": "0.10.2",
+    "execution": "Installed local MCP over stdio using real background GPT provider requests; existing analysis and candidate files reused",
+    "plan": "Previously cached plan needed ISO dates. Three explicit plan revision requests were used: date normalization, service-scope wording, and a review-schedule correction. Each request was submitted once and resumed via its own checkpoint.",
+    "report": "Three explicit report requests: original generation, an overflow correction, and a correction following final-review feedback. Each request was submitted once and resumed via its own checkpoint.",
+    "final_reviews": "Two complete review rounds, with one background provider request per document in each round. First review failed; after correction both PDFs and all 17 pages passed the second review.",
+    "publication": "geo_publish succeeded after the second review, producing two PDFs and a two-sheet workbook in a fresh local output directory.",
+    "source_protection": "Existing analysis, evidence, collection workbooks, selected candidate file and prior deliverables retained matching pre-run SHA-256 hashes; no customer files or provider responses are included in this repository.",
+    "limits": "This used explicit paid revision requests and does not establish a one-pass or unattended success; WorkBuddy application UI was not tested."
+  },
   "not_verified": [
-    "Real 0.10.2 background provider calls and new full customer deliverables",
+    "One-pass real 0.10.2 generation without explicit revisions",
     "WorkBuddy application UI end-to-end recovery of the real failed plan",
     "Multi-user remote hosting and isolation"
   ],

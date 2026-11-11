@@ -22,7 +22,7 @@
 
 ## 在WorkBuddy安装或更新
 
-从[公开GitHub仓库](https://github.com/zhuyi041107-cloud/geo-skill)获取0.10.2，或下载[0.10.2完整技能ZIP](dist/ruanwenjie-geo-0.10.2.zip)，具体版本以SKILL.md为准。将`.codebuddy/skills/ruanwenjie-geo`完整复制到目标项目同路径，保留脚本、背景、字体、媒体资源和依赖文件；ZIP内的顶层`ruanwenjie-geo`对应同一技能目录。先备份已有技能，客户工作目录和旧成品保持原样。
+从[公开GitHub仓库](https://github.com/zhuyi041107-cloud/geo-skill)获取0.10.2，或下载[0.10.2完整技能ZIP](dist/ruanwenjie-geo-0.10.2.zip)，具体版本以SKILL.md为准。将`.codebuddy/skills/ruanwenjie-geo`完整复制到目标项目同路径，保留脚本、背景、字体、媒体资源和依赖文件；ZIP内的顶层`ruanwenjie-geo`对应同一技能目录。先备份已有技能，客户工作目录和旧成品保持原样。仓库源码中的续跑文档包含2026-11-11真实验收补充；既有0.10.2 ZIP未重打，仍是原发布内容和原校验值。
 
 可将这段直接交给WorkBuddy：
 
@@ -70,7 +70,7 @@ GPT返回pending时，WorkBuddy每15至30秒调用`geo_resume_task(run_dir)`继�
 
 0.10.2验收见[本地MCP验收记录](.codebuddy/skills/ruanwenjie-geo/references/local-mcp-verification.json)：安装环境147项测试通过，包括超过600秒的模拟后台任务、同请求仅一次POST、断线GET恢复、重复初始分析复用run、终审中断恢复、历史缓存与当前版本一致、旧run不重分析续跑，以及8工具真实stdio握手。固定模板与版式未变，复用0.10.0虚构案例17页逐页对照及51项资源、306个六档价格单元格的一致性记录；本次虚构完整流程也实际生成17页PDF与两sheet推荐表。
 
-用户后续已报告真实分析成功、方案生成失败。本次0.10.2修复没有重新请求真实API；后台pending、任务ID、恢复与成品终审的真实端到端结果需用户继续验证，不宣称旧超时问题已经完整解决。
+真实续跑验证：2026-11-11使用已完成分析的既有run，通过实际OpenAI后台请求、具体修正、两轮逐页终审和`geo_publish`生成三件成品。第一次方案与成稿均遇到本地校验或排版问题，实际经过修正后才通过；这不表示0.10.2无需修正即可自动一次成功。未重跑分析或媒体检索，客户素材、结果与请求记录未上传；真实MCP stdio运行不等于WorkBuddy界面已验收。恢复说明见[本地MCP安装与运行说明](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)。
 
 ```text
 python -m pip install -r .codebuddy/skills/ruanwenjie-geo/requirements-mcp.txt
