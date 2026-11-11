@@ -1,142 +1,112 @@
 # 数据与命令
 
-## 对外只交三列表
+本 skill 只使用本地 Python、随包模板与媒体目录。问题由 WorkBuddy 根据客户资料生成；同事到 AI 网页端提问并回传三列表。GEO 云端工具、自动问答采集、付费查询与监测服务不属于本流程。
 
-业务同事只填写“问题、引用截图、答案”。每个AI平台一份文件，平台放在文件名里；其余字段内部处理。收到任意平台回传后直接完成本轮诊断报告和执行方案文件，不等齐平台、不先停在聊天判读摘要。下面的命令都是内部步骤，不向用户讲解操作流水账。
+替换下面的“技能目录”为安装路径、“工作目录”为客户文件夹。路径始终加引号；使用当前环境可用的 Python 3.10 或更新版本。客户资料、原答、内部 JSON 与核算放客户目录，不写回技能目录。
 
-以下命令由WorkBuddy内部执行。报告生成前完整读template-generation.md，再读template-contract.json及templates/pdf-template-manifest.json对应profile/kind的数据位；report-thinking.md约束证据判断。替换“技能目录”为安装路径，“工作目录”为客户独立文件夹；使用当前环境Python，路径加引号。先检查 `python -c "import openpyxl, bs4, pypdf, docx"`；依requirements安装公共依赖。PDF使用本机Chrome/Edge与原微软雅黑常规/粗体，不能另造PDF脚本或替换字体。
+先检查依赖：
 
-默认客户成品只有诊断PDF、执行方案PDF和一个推荐媒体.xlsx（sheet1网络媒体、sheet2自媒体）。内部JSON、判读和核算放.work，不作为正式输出或聊天附件。已有原件可以原位读取，不搬动。步骤5只重算内部analysis，默认流程不运行export-excel。
+```text
+python -c "import openpyxl, docx, fitz, reportlab"
+python -m pip install -r "技能目录/requirements.txt"
+```
 
-下面输出目录是示意。旧成品已存在时保留旧文件，直接选择新版本目录（例如正式输出/修订1），不要求用户清空文件或重复确认覆盖。
+仅缺依赖时运行安装命令。PDF 使用随包字体、空白背景和图标，无需浏览器、Node 或 GEO 连接器。既有成品保留；输出同名文件被拒绝时直接选择新的修订目录。
 
-## 1. 客户资料与核心问题
+## 1. 读取客户资料与生成问题
 
 ```text
 python "技能目录/scripts/geo_data.py" inspect-client --input "工作目录/软文街_GEO客户素材收集表.xlsx" --out "工作目录/.work/client-fields.json"
 ```
 
-WorkBuddy据实际业务维护project.json，参考 [虚构项目格式](project.example.json)。问题先通过工作流程中的真实需求、具体诊断用途和信息增量判断；题数由有效场景决定，不设固定数量，不照搬示例题或按分类凑行业科普问卷。自然需求与点名认知/口碑/对比在内部分类。
+WorkBuddy 据资料维护 `.work/project.json`，结构参考 [project.example.json](project.example.json)。提取品牌、运营主体、服务、客群、地域、优势、竞品和推广目标。问题按 [问题生成流程](workflow.md) 筛选：每题影响具体业务判断，相近问法合并，不按数量或分类凑题。
 
-project主要字段：
+内部字段：
 
-- project_id、client_name、brand_names；可选industry、services、regions、audience、advantages、competitors、public_sources。
-- questions：每项question_id、type（自然需求/品牌认知）、intent（认知/推荐/决策/对比/其他）、theme、text、priority。
-- contexts：每项platform、mode、online、round。默认沿用用户约定：mode为网页端，online为是，日期为当前本轮日期；原材料有明确记录时优先保留。具体模型名不臆造，也不要求用户逐行填模式或联网。
-- repeats：初轮通常1。budget_target为本次建议执行目标、budget_limit为费用上限；本业务默认目标及上限均为"20000.00"，用户明确其他预算时覆盖。不要沿用旧project的null漏掉本轮目标。只有明确“仅上限、无需接近该金额”时目标可null。执行start_date/end_date按要求周期填写；年度方案覆盖全年，未给时由WorkBuddy形成建议日期。金额用十进制字符串。
-- 缺少采集日期时由内部按本轮约定记录当前日期，不捏造精确时分秒。没有新对话记录不作为缺项、不催补；已明确的历史采样条件仍保留。
+- `project_id`、`client_name`、`brand_names`；可补 `industry`、`services`、`regions`、`audience`、`advantages`、`competitors`、`public_sources`。
+- `questions` 每项含 `question_id`、`type`（自然需求/品牌认知）、`intent`（认知/推荐/决策/对比/其他）、`theme`、`text`、`priority`。
+- `contexts` 每项含 `platform`、`mode`、`online`、`round`。沿用用户约定：网页端、联网、本轮日期；有明确历史记录则保留。模式、时间、模型名不转成同事必填项；不编造时分秒。
+- `budget_target`、`budget_limit` 未另给要求时均为 `"20000.00"`；`currency` 为 `CNY`。金额用十进制字符串。明确只给上限、允许少花时目标可为 null。
+- `start_date`、`end_date` 写建议执行期；年度安排区分已计费建设与后续维护，不能把未报价的全年服务写成已含。
+- `repeats` 初轮通常为 1。内部 ID、分类和日期由 WorkBuddy 维护。
 
-这些JSON和ID不是人工采集任务。
-
-## 2. 生成三列采集表
-
-单个平台/context：
+## 2. 交付三列采集表
 
 ```text
 python "技能目录/scripts/geo_data.py" prepare --project "工作目录/.work/project.json" --out "工作目录/豆包-AI回答采集表.xlsx"
 ```
 
-多个平台/context时使用输出目录，脚本按平台/模式分别生成文件：
+多个平台使用 `--out-dir "工作目录/待采集"` 替代 `--out`，按平台分别生成。人工表只有“问题、引用截图、答案”：问题预填，同事填写截图与完整回答，平台写文件名。截图可嵌入单元格，或写附件路径；长答案可另存文本并注明位置。无来源填“未展示”。不另要求手抄 URL 或填写模式、联网与时间。
 
-```text
-python "技能目录/scripts/geo_data.py" prepare --project "工作目录/.work/project.json" --out-dir "工作目录/待采集"
-```
+问题表交付后等待回传，WorkBuddy 不自动到各 AI 平台执行提问。
 
-工作表只有“问题、引用截图、答案”三列，问题预填，另两列空白。向同事提供三句说明：按平台分文件，逐题新对话；粘贴来源截图和完整答案；回传表格与截图附件。没有来源写“未展示”，失败在答案中注明。不要额外要求手抄URL清单或采集条件。
-
-截图可以直接嵌入Excel，也可以在单元格填附件名/路径。长答案超出单元格容量时另存文本附件并写明位置，保留完整原件。
-
-## 3. 导入回传结果，内部判读
-
-按对应project和context转成内部工作底表：
+## 3. 导入已有回答并内部判读
 
 ```text
 python "技能目录/scripts/geo_data.py" normalize --input "工作目录/豆包-AI回答采集表.xlsx" --project "工作目录/.work/project.json" --context 1 --out "工作目录/.work/内部判读-豆包.xlsx"
 ```
 
-`import-collection`是同一命令的别名。context采用project.contexts中的1起始序号，也支持唯一平台名。平台从文件名和会话直接识别，无法确认具体名称时用“本次回传平台”继续，不为标签停下追问。
+`context` 为 `project.contexts` 的 1 起始序号或唯一平台名。平台从文件名和会话识别，不明确时用“本次回传平台”继续。图片偏到相邻列按问题行兼容处理，原件保持不变。
 
-收到一个平台就立即分析和导出全部成品。用户之后另行回传其他平台时，才使用上一份内部底表作为base增量更新，不覆盖已采答案：
+收到任意一个平台就完成本轮全部成品。已判读资料直接复用，不要求补平台或重采。后来回传其他平台时，可用 `--base "工作目录/.work/内部判读-豆包.xlsx"` 增量合并。未回传平台不列 0、不算缺项。
 
-```text
-python "技能目录/scripts/geo_data.py" normalize --base "工作目录/.work/内部判读-豆包.xlsx" --input "工作目录/DeepSeek-AI回答采集表.xlsx" --project "工作目录/.work/project.json" --context 2 --out "工作目录/.work/内部判读-全部平台.xlsx"
-```
-
-每次都对当前底表运行analyze并继续导出；只展示实际回传平台。未回传平台不列0、不算缺项，也不催用户补采。
-
-normalize按题目对应内部ID，保留原文，按问题行关联截图；同一行图片偏到相邻列也接受。图片关联和必要兼容内部完成，原件不改，不要求同事修表。个别来源无法对应时留待核验并继续其他答案与完整报告。旧版内部底表也可直接analyze，无需重填。
-
-内部底表位于references/内部判读底表.xlsx。WorkBuddy只在此维护：
-
-- 回答记录：品牌提及/推荐（是、否、待判）、引用展示（已展示、未展示、待核验、不适用），并保留原回答与截图证据位置。
-- 引用明细：截图可见网站、标题、支持内容、核验状态与证据位置。有完整URL时才填写URL；没有URL但有截图时可保留待核验，不能伪称已查证正文。
-- 缺少日期或网页条件按本轮约定内部处理；新对话未记录不构成交付缺项。不要额外向用户索取模式、联网、时间、截图修正或其他平台数据。
+内部底表使用 `references/内部判读底表.xlsx`。WorkBuddy 判读品牌提及、推荐及可见引用；来源记录网站、标题、支持内容和证据位置。有 URL 才填 URL，截图没有 URL 仍可分析可见来源结构，具体正文支持性保持待核验。
 
 ```text
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --out "工作目录/.work/analysis.json"
 ```
 
-analysis在.work保留原文、证据和统计；自然题与点名题分开计数，内部可核对出现次数/有效数。客户按原模板直接说明品牌表现，不追加样本指标页或观察基础段。截图用于来源结构判断，未知事实局部保留确认条件，不拼造URL，也不自动额外采样。
+内部统计区分自然需求和点名认知。客户稿使用情况与影响表述；具体主体、资质、收费或案例未确认，在对应事实旁简短说明，不追加采集过程或通用样本免责声明。
 
-## 4. 按报价选媒体
+## 4. 按随包报价广泛选媒
 
 ```text
 python "技能目录/scripts/media.py" --query "科技" --region "山西" --kind network --limit 0 --out "工作目录/.work/media-network-candidates.json"
 python "技能目录/scripts/media.py" --query "职场" --region "山西" --kind self --limit 0 --out "工作目录/.work/media-self-candidates.json"
 ```
 
-默认读取随包references/media-catalog.csv.gz，支持network/self/all。明确拒收GEO的资源排除；结果带真实媒体、原记录索引、市场参考价、报价日期与脱敏限制。WorkBuddy按业务适配选用并写理由，不将候选排序当AI能力排名。内置market_price用于建议媒体发布预算，内部成本仍未知。
+默认读取 `references/media-catalog.csv.gz`。业务、受众、地域、题材分别检索，检查 `truncated=false`，筛选并去重全部相关结果；不能只读默认前 30 条。明确拒发排除，条件资源保留限制。推荐数量与资源标价总额不受执行预算限制。
 
-查询词仅为例，按客户业务、受众和稿件方向分开多次检索，两类结果分别筛选去重。`--limit 0`返回全部相关匹配，不能只读默认前30条就停止。推荐池不按预算、单价上限或计划刊发量削减，明确不适配和拒发资源除外；有条件的保留发布限制，不宣称已确认可发。价格区间仅供后续执行选配，不用于限制可推荐数量。
+用户有更新报价时可用 `--input` 指定 XLSX，`--tier` 选其原档位；没有更新文件也可使用随包目录完成。六档价格保留原值，不推导采购价、折扣或成本。
 
-用户另提供原始更新报价时，可用--input指定.xlsx并以--tier指定其原档位；没有这份文件也能完成选媒，不催用户重复上传。具体媒体、实际刊发形态、数量和参考价写入计划，不能用TBD或类型占位替代。
+## 5. 形成内部执行计划与核算
 
-## 5. 计划与预算
+参考 [plan.example.json](plan.example.json)。先从诊断事实形成业务场景和品牌选择理由，再确定内容组、信源分工、阶段交付和费用。
 
-参见 [虚构计划格式](plan.example.json)。contents记录内容ID、标题、目标问题、事实依据、排期与状态；placements记录媒体、原价来源、单价、刊发次数、对客单价和日期；fees记录其他费用。内部价与对客价分别填，未知为null。已选/待执行/已发布计入预算；候选/取消/排除不计。一个内容多站刊发只计一篇内容，刊发次数独立求和。
+- `stages` 写 `name`、`objective`、`deliverables`、`effect_target`。
+- `contents` 为核算用内容任务，含 `content_id`、`title`、`question_ids`、`content_group`、`stage`、`scheduled_date`、`status`；`content_group` 使用具体业务方向名称，供内容规划页匹配同名组并自动计篇。可补关键词、事实依据、内容形式、信源角色与检查日。售前报告汇总方向、篇数和阶段，不把内部逐篇任务表完整打印给客户。
+- `placements` 只放实际执行子集，含资源身份、原报价来源、刊发次数、日期与对客单价；其他费用放 `fees`。同稿多站发布计 1 篇内容、多次刊发，默认一稿一发，额外分发有明确约定才安排。
+- `media_recommendations` 是独立的宽推荐池，至少含 `media_id`、`media_name`、`source_sheet`，可沿用目录字段并补推荐理由。状态为推荐、候选或需核实；不需要刊次或执行金额，不回退用 placements 代替。
+- `logic_links` 留内部，串联诊断发现、事实依据、选择理由、内容或客户动作、媒体角色、阶段与检查日。内容、媒体和投入要解决对应缺口，共享任务只计费一次。
 
-- `stages`：每项name、objective、deliverables、effect_target。name与每篇已选contents.stage准确对应，写实际阶段目标、刚性交付和希望观察的变化。
-- `contents`补全keywords、source_layer、content_form、key_facts、observation_port、checkpoint；target_question可写真实目标问题，否则由question_ids对应project.questions.text。周次从start_date与计划日期计算，阶段的周量/篇数/次数与费用自动汇总。
-- `placements`保留media_type、source_sheet、source_row、media_id、category、region、entry_type、editorial_note及报价依据，只用于实际执行媒体明细与预算；推荐媒体Excel另读media_recommendations。
-- `media_recommendations`是独立的宽推荐池，推荐媒体Excel只读此数组。每项至少media_id、media_name、source_sheet，保留目录字段与六档原价；可加recommendation_reason，status为推荐/候选/需核实（省略默认推荐）。它不需要placement_id、刊发次数或执行金额，不回退使用placements。网络、自媒体归属按来源sheet。
-- `logic_links`按template-generation.md写诊断优先项/建议标签与事实依据、希望形成的选择理由、实际文章或客户动作、媒体角色、阶段、检查日期。执行PDF会检查覆盖、引用和时点；语义与费用承诺由WorkBuddy逐项核对。
-- 平台型report执行budget节填写`quote_card`的name、focus、suitability，其余金额与配置从同源plan计算；不重建已删除的阶段/季度预算和实际媒体组合表。目标场景按三块两列写，服务型排期第三列亦为媒体类型。表格足以说明时paragraphs可空，避免重复。
-- 初期集中建设与后期维护应在同一年度计划中明确日期、内容、次数和计费范围；另期未计费维护不能写成全年已经包含。
-
-使用内置目录时，`unit_price`保留null；将所选资源的`market_reference_price`填入`client_unit_price`计算建议预算，同时保留`price_tier=市场价格`、`quotation_date`与`price_basis=市场参考价，用于建议预算，执行价格另行确认`。只有已有明确客户报价时才用该报价替换对客单价。不要把全部价格留空，也不要凭空加价或补内部成本。
+使用目录建议价时，`unit_price` 保留 null，`client_unit_price` 填市场参考价，同时保留 `price_tier=市场价格`、`quotation_date` 和清楚的 `price_basis`；只有已确认客户报价才替换。未报价的写作、页面建设、复核和维护不作为已含刚性交付。
 
 ```text
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --plan "工作目录/.work/plan.json" --out "工作目录/.work/analysis-final.json"
 ```
 
-WorkBuddy先按原模板推导业务与选择理由，完成广泛推荐池，再配置执行子集和阶段投入。analysis预算只核placements与fees，media_recommendations不计费用。推荐媒体Excel仅借analysis.project识别客户，不要求analysis.budget存在、匹配或达到2万元。内部底稿不交客户；未报价服务不列为已含交付。
+默认实际执行已知费用为 18,000—20,000 元。目标与上限来自本轮明确要求；不抬价或虚加差额凑预算。推荐池不计入预算。执行 PDF 重新计算计划并检查上限与目标，提供 analysis 时还会核对预算一致性。
 
-重算后的budget含target、target_source、limit。执行PDF检查实际执行费用至少达到明确目标90%且不超上限；这不限制推荐媒体Excel数量或资源总标价。检查失败时调整真实执行配置，不篡改单价、目标或增加虚构差额。
+## 6. 固定背景填充两份客户 PDF
 
-## 6. 客户PDF
-
-由WorkBuddy按 [原模板完整生成说明](template-generation.md) 撰写结构化report.json，使用 [PDF导出说明](pdf-output.md) 生成两份PDF。report.template_profile选择platform/service，diagnosis/execution各包含summary和完整sections；章节key、层级、原表头与source取对应contract。旧版泛叙述report需重新组织，不能直接套新排版。source=report的业务矩阵逐项写清；source=plan的数量/媒体/排期/预算由脚本计算；source=diagnosis的决策路径复用原诊断。内部编号和处理过程不进入正文。
-
-正文只替换模板中的客户情况、分析与方案，不额外添加“本轮以若干网页端回答为观察基础”、样本说明、题型判读教程或按模板制作等前言。采集条件留analysis内部；原模板已有平台/端口栏只填该栏值。具体资质、主体或收费未确认时，在对应业务事实旁简短说明。
+完整阅读 [逐页生成说明](template-generation.md) 与 [PDF 契约](pdf-output.md)，参考 [客户配置示例](report.example.json) 及 [schema](customer-report.schema.json)。客户成稿 JSON 独立组织，根包含 `schema_version: "2.0"`、`customer`、`purpose`、`diagnosis.pages`（8 页）、`execution.pages`（9 页）；不混入原答、截图、内部映射和核算台账。
 
 ```text
 python "技能目录/scripts/export_pdf.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --output-dir "工作目录/正式输出/客户PDF"
 ```
 
-## 7. 推荐媒体Excel
+入口只填固定文字槽与数据区，保留原背景、坐标、字号和 1200×675 页面。文字溢出时精简客户表述，不缩字、截断、增页或改模板。执行金额和数量按同源 plan 注入；单套计划只显示一套真实报价。详细字段与运行选项以随包 `--help` 和 schema 为准。
 
-按 [原媒体表对应规范](media-word-output.md) 使用随包templates/推荐媒体模板.xlsx生成一个Excel，sheet1放网络媒体、sheet2放自媒体：
+## 7. 推荐媒体 Excel
 
 ```text
 python "技能目录/scripts/export_media_word.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --output "工作目录/正式输出/推荐媒体.xlsx"
 ```
 
-三件成品实际生成并检查后交付。只给两份PDF和推荐媒体Excel，不把内部JSON/明细工作表当客户成品，也不列补平台、模式或时间的待办。
+沿用 [原媒体表规范](media-word-output.md) 和 `templates/推荐媒体模板.xlsx`，只交一个工作簿：sheet1 网络媒体、sheet2 自媒体，原 16/17 列、分组、配色与六档价格保持。脚本名为兼容旧使用保留，默认 `.xlsx` 输出；不另交 Word。
 
-## 8. 按需诊断/执行明细Excel（不属于默认客户交付）
+## 8. 验收与交付
 
-仅当用户明确要求诊断/执行明细Excel时调用；推荐媒体.xlsx使用上一步，不调用此命令。`--audience internal`导内部核算，存.work；`--audience client`导用户明确需要的客户明细；`--audience both`仅用于明确要求两种版本的情况。默认是internal，不自动生成客户诊断/执行明细工作簿。
+逐页检查 8 页诊断与 9 页执行：客户逻辑、事实、费用、模板位置、完整文字与无重叠裁切；打开或渲染两张媒体 sheet 核对资源归类、推荐完整性与六档原价。只给客户两份 PDF 和推荐媒体.xlsx，内部 JSON、判读与核算留 `.work`。
 
-```text
-python "技能目录/scripts/geo_data.py" export-excel --project "工作目录/.work/project.json" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --audience internal --out-dir "工作目录/.work/核算"
-```
+判读工作簿和 analysis/plan JSON 留在内部即可；本版已移除旧的诊断/执行明细 Excel 导出链路，不将内部底稿另包装为客户附件。

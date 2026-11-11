@@ -41,7 +41,8 @@
       "observation_port": "网页端",
       "target_question": "知桥协同是做什么的，适合哪些团队？",
       "key_facts": "平台承载文档入库、权限检索与出处问答；实施范围和后续维护另按责任表确认。",
-      "checkpoint": "第4周检查"
+      "checkpoint": "第4周检查",
+      "content_group": "平台与服务边界"
     },
     {
       "content_id": "C002",
@@ -63,7 +64,8 @@
       "observation_port": "网页端",
       "target_question": "适合中小企业的企业知识服务平台有哪些？",
       "key_facts": "比较资料类型、权限粒度、内容负责人和运维资源；功能数量不代替适配判断。",
-      "checkpoint": "第4周检查"
+      "checkpoint": "第4周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C003",
@@ -85,7 +87,8 @@
       "observation_port": "网页端",
       "target_question": "知桥协同是做什么的，适合哪些团队？",
       "key_facts": "文件存放与经过审核的可检索知识不同；平台保留文档状态及版本。",
-      "checkpoint": "第4周检查"
+      "checkpoint": "第4周检查",
+      "content_group": "平台与服务边界"
     },
     {
       "content_id": "C004",
@@ -107,7 +110,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台的文档权限和答案出处怎么核验？",
       "key_facts": "答案出处需要定位到可访问原文及其版本；只显示文件名不足以完成事实核验。",
-      "checkpoint": "第4周检查"
+      "checkpoint": "第4周检查",
+      "content_group": "权限与出处核验"
     },
     {
       "content_id": "C005",
@@ -129,7 +133,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台的文档权限和答案出处怎么核验？",
       "key_facts": "管理员按角色、文档范围与离职变更核对权限；员工看不到的文档不应由问答绕过。",
-      "checkpoint": "第4周检查"
+      "checkpoint": "第4周检查",
+      "content_group": "权限与出处核验"
     },
     {
       "content_id": "C006",
@@ -151,7 +156,8 @@
       "observation_port": "网页端",
       "target_question": "知桥协同是做什么的，适合哪些团队？",
       "key_facts": "制度、客服和项目交接资料可先划定一个部门试用；资料无人维护时先确定负责人。",
-      "checkpoint": "第4周检查"
+      "checkpoint": "第4周检查",
+      "content_group": "平台与服务边界"
     },
     {
       "content_id": "C007",
@@ -173,7 +179,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台的文档权限和答案出处怎么核验？",
       "key_facts": "验收核对答案、原文片段、文档版本与访问权限，明确每项结果及其适用条件。",
-      "checkpoint": "第4周检查"
+      "checkpoint": "第4周检查",
+      "content_group": "权限与出处核验"
     },
     {
       "content_id": "C008",
@@ -195,7 +202,8 @@
       "observation_port": "网页端",
       "target_question": "适合中小企业的企业知识服务平台有哪些？",
       "key_facts": "缺文件、文件难找和有文档却无答案是不同问题；先识别资料与管理缺口再选平台。",
-      "checkpoint": "第4周检查"
+      "checkpoint": "第4周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C009",
@@ -217,7 +225,8 @@
       "observation_port": "网页端",
       "target_question": "适合中小企业的企业知识服务平台有哪些？",
       "key_facts": "按资料进入、审核发布、员工检索和反馈修订四段检查平台，明确管理员与员工各自责任。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C010",
@@ -239,7 +248,8 @@
       "observation_port": "网页端",
       "target_question": "知桥协同与澄页知识云、星栈协作台怎样按场景选择？",
       "key_facts": "知识沉淀与即时协作承担不同任务，应按资料管理、知识获取与协同流转分别比较适用条件。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C011",
@@ -261,7 +271,8 @@
       "observation_port": "网页端",
       "target_question": "适合中小企业的企业知识服务平台有哪些？",
       "key_facts": "客服口径先由业务负责人确认，知识管理员维护版本；平台功能不能替代业务审批。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C012",
@@ -283,7 +294,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台的文档权限和答案出处怎么核验？",
       "key_facts": "文档授权、索引可见范围与回答引用须同步复核；人员调岗和离职后及时核对访问权限。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "权限与出处核验"
     },
     {
       "content_id": "C013",
@@ -305,7 +317,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台的文档权限和答案出处怎么核验？",
       "key_facts": "引用位置、文档时间与适用对象共同决定能否采纳；带来源不等于答案对所有情况都适用。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "权限与出处核验"
     },
     {
       "content_id": "C014",
@@ -327,7 +340,8 @@
       "observation_port": "网页端",
       "target_question": "知桥协同与澄页知识云、星栈协作台怎样按场景选择？",
       "key_facts": "数据范围、运维能力、访问方式和接口要求先确认；专有部署只作评估方向，不承诺默认提供。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C015",
@@ -349,7 +363,8 @@
       "observation_port": "网页端",
       "target_question": "知桥协同与澄页知识云、星栈协作台怎样按场景选择？",
       "key_facts": "席位、功能模块、资料整理、接口实施与维护责任分别确认；不以未评估金额代替正式报价。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C016",
@@ -371,7 +386,8 @@
       "observation_port": "网页端",
       "target_question": "适合中小企业的企业知识服务平台有哪些？",
       "key_facts": "先盘点格式、版本、重复资料和权限，再决定迁移顺序；不将全部历史文档自动视为可发布知识。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C017",
@@ -393,7 +409,8 @@
       "observation_port": "网页端",
       "target_question": "知桥协同与澄页知识云、星栈协作台怎样按场景选择？",
       "key_facts": "按知识检索、文档协作和项目流转三类任务比较工具；知桥协同定位于受控知识获取。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "知识平台选型"
     },
     {
       "content_id": "C018",
@@ -415,7 +432,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台的文档权限和答案出处怎么核验？",
       "key_facts": "分别用知识管理员和不同部门员工核对可见文档与出处，未授权信息不得跨部门展示。",
-      "checkpoint": "第8周检查"
+      "checkpoint": "第8周检查",
+      "content_group": "权限与出处核验"
     },
     {
       "content_id": "C019",
@@ -437,7 +455,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台上线后谁负责更新，怎样验收可用性？",
       "key_facts": "业务负责人确认内容，知识管理员发布版本，平台服务方维护约定系统事项；三种责任不能混写。",
-      "checkpoint": "第12周检查"
+      "checkpoint": "第12周检查",
+      "content_group": "持续使用"
     },
     {
       "content_id": "C020",
@@ -459,7 +478,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台上线后谁负责更新，怎样验收可用性？",
       "key_facts": "入职资料按有效期、部门和角色发布；员工反馈进入复核队列，由责任人确认后更新。",
-      "checkpoint": "第12周检查"
+      "checkpoint": "第12周检查",
+      "content_group": "持续使用"
     },
     {
       "content_id": "C021",
@@ -481,7 +501,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台上线后谁负责更新，怎样验收可用性？",
       "key_facts": "验收覆盖检索可达、出处可开、权限正确和更新可追溯，逐项确认交付是否满足使用要求。",
-      "checkpoint": "第12周检查"
+      "checkpoint": "第12周检查",
+      "content_group": "持续使用"
     },
     {
       "content_id": "C022",
@@ -503,7 +524,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台上线后谁负责更新，怎样验收可用性？",
       "key_facts": "为制度、产品和项目知识分别指定业务责任人与复核周期；无人负责的资料标注待确认而非自动有效。",
-      "checkpoint": "第12周检查"
+      "checkpoint": "第12周检查",
+      "content_group": "持续使用"
     },
     {
       "content_id": "C023",
@@ -525,7 +547,8 @@
       "observation_port": "网页端",
       "target_question": "知桥协同是做什么的，适合哪些团队？",
       "key_facts": "先提供可公开的示范文档、角色权限和典型问题；敏感资料使用脱敏样例，合同主体与服务范围先核对。",
-      "checkpoint": "第12周检查"
+      "checkpoint": "第12周检查",
+      "content_group": "平台与服务边界"
     },
     {
       "content_id": "C024",
@@ -547,7 +570,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台上线后谁负责更新，怎样验收可用性？",
       "key_facts": "反馈写清文档、问题与适用场景；业务负责人复核内容，管理员更新版本，保留处理记录。",
-      "checkpoint": "第12周检查"
+      "checkpoint": "第12周检查",
+      "content_group": "持续使用"
     },
     {
       "content_id": "C025",
@@ -569,7 +593,8 @@
       "observation_port": "网页端",
       "target_question": "企业知识平台上线后谁负责更新，怎样验收可用性？",
       "key_facts": "复盘资料责任、权限变更、失效内容和未解决问题；刊发、搜索可见与AI提及分别记录。",
-      "checkpoint": "第12周检查"
+      "checkpoint": "第12周检查",
+      "content_group": "持续使用"
     },
     {
       "content_id": "C026",
@@ -591,7 +616,8 @@
       "observation_port": "网页端",
       "target_question": "适合中小企业的企业知识服务平台有哪些？",
       "key_facts": "团队有资料负责人、访问范围和持续更新机制，才具备试用基础；不把任何企业都写成适用对象。",
-      "checkpoint": "第12周检查"
+      "checkpoint": "第12周检查",
+      "content_group": "知识平台选型"
     }
   ],
   "placements": [

@@ -1,289 +1,38 @@
 {
-  "version": "0.7.0",
-  "render_chain": "sealed HTML -> text/row binding -> local Chromium PDF",
-  "unit_tests_passed": 80,
-  "original_content_replay_pages": 53,
-  "raw_client_material_published": false,
-  "profiles": {
-    "platform-diagnosis.html": {
-      "template_sha256": "87154b82cfca7fec3ca9ab0cf2e821678b7b11360059427079dbc01259eab11c",
-      "reference_sha256": "028ba6eac07444a32f7729b038909f072e24f222775642ec2b97df3be0dbbd2a",
-      "reference_pages": 6,
-      "replay_pages": 6,
-      "all_pages_reviewed": true,
-      "original_regular_and_bold_verified": true,
-      "layout_components_checked": [
-        "封面/图卡/原列宽/章序/合并策略/续表/排期/页脚"
-      ],
-      "page_reviews": [
-        {
-          "page": 1,
-          "checked": true
-        },
-        {
-          "page": 2,
-          "checked": true
-        },
-        {
-          "page": 3,
-          "checked": true
-        },
-        {
-          "page": 4,
-          "checked": true
-        },
-        {
-          "page": 5,
-          "checked": true
-        },
-        {
-          "page": 6,
-          "checked": true
-        }
-      ]
-    },
-    "platform-execution.html": {
-      "template_sha256": "7abf0e231ee458633ef2bf6042f158a410fbe1c5f19768845bfaa8232f824965",
-      "reference_sha256": "45a1d5a5f089d8ce678456c7f8d8a23c5cff49ab5783aaaef01d5b3e1b3f1329",
-      "reference_pages": 18,
-      "replay_pages": 18,
-      "all_pages_reviewed": true,
-      "original_regular_and_bold_verified": true,
-      "layout_components_checked": [
-        "封面/图卡/原列宽/章序/合并策略/续表/排期/页脚"
-      ],
-      "page_reviews": [
-        {
-          "page": 1,
-          "checked": true
-        },
-        {
-          "page": 2,
-          "checked": true
-        },
-        {
-          "page": 3,
-          "checked": true
-        },
-        {
-          "page": 4,
-          "checked": true
-        },
-        {
-          "page": 5,
-          "checked": true
-        },
-        {
-          "page": 6,
-          "checked": true
-        },
-        {
-          "page": 7,
-          "checked": true
-        },
-        {
-          "page": 8,
-          "checked": true
-        },
-        {
-          "page": 9,
-          "checked": true
-        },
-        {
-          "page": 10,
-          "checked": true
-        },
-        {
-          "page": 11,
-          "checked": true
-        },
-        {
-          "page": 12,
-          "checked": true
-        },
-        {
-          "page": 13,
-          "checked": true
-        },
-        {
-          "page": 14,
-          "checked": true
-        },
-        {
-          "page": 15,
-          "checked": true
-        },
-        {
-          "page": 16,
-          "checked": true
-        },
-        {
-          "page": 17,
-          "checked": true
-        },
-        {
-          "page": 18,
-          "checked": true
-        }
-      ]
-    },
-    "service-diagnosis.html": {
-      "template_sha256": "99203a01c55e26e68ef8b77e227751a12de6218d6441622539a22ec054f6a862",
-      "reference_sha256": "4d1c6f9f39181758d06b0c5d2bb1eac6fed9fbe6760b1d21c12072c6ba248017",
-      "reference_pages": 12,
-      "replay_pages": 12,
-      "all_pages_reviewed": true,
-      "original_regular_and_bold_verified": true,
-      "layout_components_checked": [
-        "封面/图卡/原列宽/章序/合并策略/续表/排期/页脚"
-      ],
-      "page_reviews": [
-        {
-          "page": 1,
-          "checked": true
-        },
-        {
-          "page": 2,
-          "checked": true
-        },
-        {
-          "page": 3,
-          "checked": true
-        },
-        {
-          "page": 4,
-          "checked": true
-        },
-        {
-          "page": 5,
-          "checked": true
-        },
-        {
-          "page": 6,
-          "checked": true
-        },
-        {
-          "page": 7,
-          "checked": true
-        },
-        {
-          "page": 8,
-          "checked": true
-        },
-        {
-          "page": 9,
-          "checked": true
-        },
-        {
-          "page": 10,
-          "checked": true
-        },
-        {
-          "page": 11,
-          "checked": true
-        },
-        {
-          "page": 12,
-          "checked": true
-        }
-      ]
-    },
-    "service-execution.html": {
-      "template_sha256": "806d3095e7b007e48c3fee1f84385370e73ff7f1de4ddafc3098b44d60ccf8ce",
-      "reference_sha256": "5f9e93ac92b395a96148acf297d5e065ff7ca8ad9288bc38a509764a8d23984a",
-      "reference_pages": 17,
-      "replay_pages": 17,
-      "all_pages_reviewed": true,
-      "original_regular_and_bold_verified": true,
-      "layout_components_checked": [
-        "封面/图卡/原列宽/章序/合并策略/续表/排期/页脚"
-      ],
-      "page_reviews": [
-        {
-          "page": 1,
-          "checked": true
-        },
-        {
-          "page": 2,
-          "checked": true
-        },
-        {
-          "page": 3,
-          "checked": true
-        },
-        {
-          "page": 4,
-          "checked": true
-        },
-        {
-          "page": 5,
-          "checked": true
-        },
-        {
-          "page": 6,
-          "checked": true
-        },
-        {
-          "page": 7,
-          "checked": true
-        },
-        {
-          "page": 8,
-          "checked": true
-        },
-        {
-          "page": 9,
-          "checked": true
-        },
-        {
-          "page": 10,
-          "checked": true
-        },
-        {
-          "page": 11,
-          "checked": true
-        },
-        {
-          "page": 12,
-          "checked": true
-        },
-        {
-          "page": 13,
-          "checked": true
-        },
-        {
-          "page": 14,
-          "checked": true
-        },
-        {
-          "page": 15,
-          "checked": true
-        },
-        {
-          "page": 16,
-          "checked": true
-        },
-        {
-          "page": 17,
-          "checked": true
-        }
-      ]
-    }
+  "skill_version": "0.8.0",
+  "verified_on": "2026-11-11",
+  "scope": "Local fixed-template rendering and portable installation with fictional client data",
+  "automated_checks": {
+    "unittest_cases": 73,
+    "result": "passed",
+    "skill_creator_frontmatter": "passed",
+    "asset_manifest": "9 resources checked by size and SHA256",
+    "relocated_install": "Chinese and space-containing path, Python-only PATH, both PDFs generated"
   },
-  "limits": [
-    "原稿私有同文重放检查模板，不代表新客户事实已核验或效果达成。",
-    "客户内容改变后自然分页，不固定为原参考页数。",
-    "保留少量行内换行、抗锯齿、内边距微差；服务型维护有一行续页位置差异。",
-    "WorkBuddy宿主内安装运行未在本次操作。"
-  ],
-  "validated_guards": [
-    "模板完整性",
-    "文字转义与无脚本注入",
-    "同源总量及费用不可覆盖",
-    "必填文字/独立说明不留空",
-    "其他已列费用明细可见",
-    "状态格短值",
-    "原图卡与表型",
-    "已有输出拒绝覆盖"
-  ]
+  "template_visual_review": {
+    "diagnosis": {"pages": 8, "reviewed_pages": [1, 2, 3, 4, 5, 6, 7, 8], "result": "passed"},
+    "execution": {"pages": 9, "reviewed_pages": [1, 2, 3, 4, 5, 6, 7, 8, 9], "result": "passed"},
+    "reviewed_features": ["backgrounds", "titles", "rounded cards", "tables", "prices", "footers", "Chinese text", "platform marks", "clipping and overlap"],
+    "execution_source": "Text-free and platform-icon-free backgrounds derived from the supplied nine-page reference",
+    "sample_content": "Fictional; historical client facts and quoted sample prices are not defaults"
+  },
+  "independent_manual_input_forward_test": {
+    "platforms_returned": 1,
+    "diagnosis_pages_reviewed": 8,
+    "execution_pages_reviewed": 9,
+    "content_groups": 4,
+    "independent_articles": 8,
+    "publications": 8,
+    "stages": 3,
+    "stage_amounts_cny": [7200, 8000, 3400],
+    "total_cny": 18600,
+    "network_recommendations": 28,
+    "self_media_recommendations": 24,
+    "original_tier_prices_compared": 312,
+    "media_sheets_rendered_and_reviewed": 2,
+    "result": "passed"
+  },
+  "unchanged_media_catalog_sha256": "8ad7259cee3372bd381ea52d76c9928b80763c1ff2018a6b19aaba8ba7a2707e",
+  "not_verified": ["WorkBuddy UI installation and execution", "Real AI platform results", "Media publication or paid services"],
+  "private_evidence_policy": "Client originals, raw answers, source PDFs, screenshots and local review logs are not included in the public repository"
 }

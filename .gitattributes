@@ -2,8 +2,11 @@
 *.py text eol=lf
 *.md text eol=lf
 *.json text eol=lf
+*.txt text eol=lf
 *.html text eol=lf
 *.pdf binary
 *.xlsx binary
 *.pptx binary
 *.zip binary
+*.ttf binary
+*.png binary

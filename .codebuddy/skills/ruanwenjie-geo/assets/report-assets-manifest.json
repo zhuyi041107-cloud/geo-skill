@@ -1,0 +1,54 @@
+{
+  "version": "0.8.0",
+  "font": {
+    "name": "Droid Sans Fallback Regular",
+    "file": "assets/geo-diagnosis-template/font.ttf"
+  },
+  "files": [
+    {
+      "path": "assets/client-report-process-patterns.json",
+      "sha256": "d0b3953b9d0cd6bbb921f5adbfe529eef31f6848d3fea7d2657399c654bf9d3d",
+      "bytes": 1330
+    },
+    {
+      "path": "assets/geo-diagnosis-template/backgrounds.pdf",
+      "sha256": "b43194bdda68dc63927062dbb1fc93feea3e9e6f06dd10d9b7284426f43508c6",
+      "bytes": 1782967
+    },
+    {
+      "path": "assets/geo-diagnosis-template/deepseek.png",
+      "sha256": "996d0f9d73a48b1f0ff7e2b62886a8a56334f08c9bb7db74c268bcd106b205c7",
+      "bytes": 6518
+    },
+    {
+      "path": "assets/geo-diagnosis-template/doubao.png",
+      "sha256": "c7cabc930581744d2dc1130d181de01fb20561d664b22a823da5d4e8b66e9c6a",
+      "bytes": 38501
+    },
+    {
+      "path": "assets/geo-diagnosis-template/FONT-NOTICE.txt",
+      "sha256": "a0f9a12530a61fa4ac15b0a9a189af536790a53f8c7b6d9f620b53acc1a3d575",
+      "bytes": 10899
+    },
+    {
+      "path": "assets/geo-diagnosis-template/font.ttf",
+      "sha256": "ee38813ea00c3e32add4268fff7fff9e39417b4913cb13be2415164a47807cc2",
+      "bytes": 3556308
+    },
+    {
+      "path": "assets/geo-diagnosis-template/qwen.png",
+      "sha256": "f6baac553cb6627de2d13a081d00e26f78230d816df282f30d1b31cc40be8df6",
+      "bytes": 3469
+    },
+    {
+      "path": "references/customer-report.schema.json",
+      "sha256": "22dafa3577bfea50b7f98220921e9d70fc0d2a145e040ed9aaac5884d95f5d15",
+      "bytes": 63769
+    },
+    {
+      "path": "assets/geo-execution-template/backgrounds.pdf",
+      "sha256": "65cc747cdff570bec0109947df09417ead1875a1f20941b8a180590b6c81d6e0",
+      "bytes": 68707
+    }
+  ]
+}

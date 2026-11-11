@@ -34,7 +34,6 @@
   "currency": "CNY",
   "start_date": "2026-11-16",
   "end_date": "2027-02-07",
-  "template_profile": "platform",
   "questions": [
     {
       "question_id": "Q001",
