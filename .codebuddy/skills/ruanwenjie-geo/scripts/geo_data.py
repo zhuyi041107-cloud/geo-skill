@@ -671,6 +671,10 @@ def main(argv=None):
     p.add_argument("--context", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--base")
+    p = sub.add_parser("judge")
+    p.add_argument("--input", required=True)
+    p.add_argument("--judgments", required=True)
+    p.add_argument("--out", required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "inspect-client":
@@ -679,6 +683,10 @@ def main(argv=None):
             write_json(prepare(read_json(args.project), args.out, args.out_dir))
         elif args.command in {"normalize", "import-collection"}:
             write_json(normalize_collection(args.input, read_json(args.project), args.context, args.out, args.base))
+        elif args.command == "judge":
+            from gpt_evidence import judged_copy
+            result = judged_copy(args.input, read_json(args.judgments), args.out)
+            write_json({"output": str(Path(args.out).resolve()), "counts": result["counts"]})
         elif args.command == "analyze":
             write_json(analyze(args.input, read_json(args.plan) if args.plan else None), args.out)
     except (ValueError, KeyError, OSError, json.JSONDecodeError) as exc:

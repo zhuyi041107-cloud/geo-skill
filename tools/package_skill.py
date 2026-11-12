@@ -15,7 +15,7 @@ def main():
         "scripts/export_pdf.py", "references/commands.md", "references/pdf-output.md",
         "references/template-generation.md", "references/customer-report.schema.json",
         "references/report.example.json", "references/project.example.json", "references/plan-category.example.json",
-        "references/report-thinking.md",
+        "references/report-thinking.md", "references/workflow.md", "references/evidence-and-planning.md",
         "references/内部判读底表.xlsx",
         "templates/AI回答采集表.xlsx", "templates/软文街_GEO客户素材收集表.xlsx",
         "templates/GEO诊断报告版式示例.pdf", "templates/品牌传播与GEO执行方案版式示例.pdf",
@@ -26,17 +26,10 @@ def main():
         "assets/geo-diagnosis-template/FONT-NOTICE.txt",
         "assets/geo-diagnosis-template/doubao.png", "assets/geo-diagnosis-template/qwen.png",
         "assets/geo-diagnosis-template/deepseek.png",
-        "requirements-mcp.txt", "scripts/geo_mcp.py", "scripts/geo_gpt.py",
-        "scripts/gpt_client.py", "scripts/gpt_evidence.py", "scripts/gpt_tasks.py", "scripts/setup_local_mcp.ps1",
-        "scripts/launch_local_mcp.ps1", "references/local-mcp.md", "references/workbuddy-mcp.example.json",
+        "scripts/gpt_evidence.py",
     }
-    # Keep legacy source files in the repository, but omit media-recommendation tools and data from the new installable skill.
-    excluded = {"scripts/media.py", "scripts/export_media_word.py", "references/media-word-output.md",
-                "references/media-catalog.csv.gz", "references/plan.example.json",
-                "templates/推荐媒体模板.docx", "templates/推荐媒体模板.xlsx"}
-    files = sorted(p for p in skill.rglob("*") if p.is_file() and "__pycache__" not in p.parts
-                   and p.suffix in {".md", ".json", ".txt", ".py", ".ps1", ".html", ".xlsx", ".pdf", ".docx", ".gz", ".ttf", ".png", ".svg"}
-                   and p.relative_to(skill).as_posix() not in excluded)
+    # Only ship the standalone workflow; historical API/MCP tools stay in the repository.
+    files = sorted(skill / name for name in required if (skill / name).is_file())
     relative = {p.relative_to(skill).as_posix() for p in files}
     if required - relative:
         raise ValueError("Missing release files: " + ", ".join(sorted(required - relative)))

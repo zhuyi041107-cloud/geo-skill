@@ -1,34 +1,42 @@
 # 软文街GEO诊断与执行规划
 
-WorkBuddy内部技能：客户资料 → 三列人工AI回答采集 → GPT分析品牌与同行选择差距 → 固定8页诊断PDF和9页执行方案PDF。新版0.11.0不检索或推荐具体媒体，不生成推荐媒体表，也不向模型发送媒体候选；旧客户文件和历史成果保留。
+**0.12.0恢复无需MCP的使用方式。** WorkBuddy直接完成问题设计、回答判读、品牌与同行分析、方案成稿和逐页自审；本地脚本填充固定模板。无需OpenAI API密钥，也没有额外GPT付费请求或外部终审门槛。
 
-## 执行方式
+客户资料 → “问题、引用截图、答案”三列人工采集表 → 回传任一平台回答 → 固定8页诊断PDF和9页执行PDF。保留0.11.0的分类规划：权威媒体、行业媒体、自媒体，不推荐具体媒体，不生成推荐表。旧报价资料和历史客户文件保留。
 
-- 本地MCP调用GPT `gpt-6.1-sol`，推理`max`、后台提交。返回pending后每15至30秒用`geo_resume_task(run_dir)`查询同一任务，只有completed且业务产物齐备才推进。
-- 使用实际客户资料、原答和截图，区分品牌点名认知、自然候选与明确推荐；不编造未调查平台或未经证实的事实。
-- 按权威媒体、行业媒体、自媒体三类安排传播用途与计划刊次，但不列具体媒体、账号或栏目。普通、高权重两档同内容、同稿数、同刊次；具体媒体、刊发条件和两档实际权益差异待确认，不能冒称已落实或保证效果。
-- 两档各计划媒体费最低12,000元，写作默认单列原价200元/篇、打包100元/独立稿；客户供稿不收写作费。`budget_target`为意向预算，只有客户明确不能超过才设`budget_limit`。
-- 两份PDF先在客户`.work`生成；GPT独立终审读取实际17页和原模板，只有`status=completed`且`passed=true`、审后哈希未变才能`geo_publish`到新的交付目录。
-- 原资料、采集表、旧候选和旧成品保留。客户数据、原答、截图、请求结果与成品不上传公共仓库。
+## 保留的业务规则
 
-完整规则：[SKILL.md](.codebuddy/skills/ruanwenjie-geo/SKILL.md)、[本地MCP安装与续跑](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)、[固定页式生成说明](.codebuddy/skills/ruanwenjie-geo/references/template-generation.md)。
+- 比较实际品牌印象、相关同行选择理由和客户真实优势，区分点名认知、自然候选与明确推荐；不编造未调查的平台或未经证实的事实。
+- 固定旧版背景、版式、坐标及字号，只改内容。客户只收到情况、分析、安排、分工和费用；原答、采样条件、制作过程和内部核算留`.work`。
+- 普通、高权重两档同内容、同稿数、同刊次。每档媒体费最低12,000元，写作另收费，默认原价200元／篇、打包100元／独立稿；客户供稿不收写作费。意向预算是参考，明确不能超过的预算才作为媒体与写作总额硬上限。
+- 媒体按三类说明用途、计划刊次和费用；分类单价沿用450／200／200元及600／300／300元。具体媒体、刊发条件和两档实际权益差异待确认，不承诺AI采用或推荐。
+- 两份PDF先在`.work`生成，另轮逐页检查17页后复制到新的正式输出目录。客户原件、旧成品、密钥和历史请求检查点不动。
 
-## 在WorkBuddy安装
+规则：[SKILL.md](.codebuddy/skills/ruanwenjie-geo/SKILL.md)、[本地执行命令](.codebuddy/skills/ruanwenjie-geo/references/commands.md)、[固定页式生成说明](.codebuddy/skills/ruanwenjie-geo/references/template-generation.md)。
 
-从[GitHub仓库](https://github.com/zhuyi041107-cloud/geo-skill)获取0.11.0，或下载[0.11.0完整技能ZIP](dist/ruanwenjie-geo-0.11.0.zip)。备份旧技能后，把`.codebuddy/skills/ruanwenjie-geo`完整复制到项目相同路径；ZIP顶层`ruanwenjie-geo`即技能目录。仓库为历史兼容仍保留旧媒体脚本及目录，0.11.0 ZIP不包含这些文件，新MCP也不使用它们。客户工作目录和旧成品不动。安装后按[本地MCP说明](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)配置并重连，密钥仅使用本机环境变量或DPAPI隐藏输入，不在聊天中展示。
+## 在WorkBuddy安装或更新
 
-可交给WorkBuddy：
+下载[0.12.0完整技能ZIP](https://github.com/zhuyi041107-cloud/geo-skill/raw/refs/heads/main/dist/ruanwenjie-geo-0.12.0.zip)，解压后的`ruanwenjie-geo`完整目录放到项目`.codebuddy/skills/`。先备份旧技能，使用新目录替换，避免混入旧版文件。Python 3.10以上，只需安装技能目录的`requirements.txt`，不安装`requirements-mcp.txt`。
 
-> 从GitHub获取0.11.0并备份更新当前项目的ruanwenjie-geo技能；保留客户原件、已有分析、候选和旧成品。按references/local-mcp.md重连本地MCP，确认gpt-6.1-sol、max、background和geo_resume_task。本版不检索或推荐具体媒体，不传候选文件、不生成推荐表，仅在通过GPT终审后交付两份PDF。先检查现有run状态；失败、过期或未知时停止，不自动发起新的付费请求。
+已装旧MCP时，仅停用或移除名为`ruanwenjie-geo`的服务条目，保留其他服务与配置备份；不用删除密钥或旧任务。新开对话，让WorkBuddy按新版技能直接执行。仓库保留旧API/MCP源文件供历史查阅，本版ZIP不含这些服务、安装脚本、配置或依赖；日常安装使用完整ZIP。
 
-已有失败方案若要复用分析继续，只有用户明确授权新付费请求，才在`geo_create_plan`传入与当前失败检查点匹配的`retry_failed_response_id`；原任务与检查点保留，pending继续查新任务。失败、过期、未知或没有ID的情况不可通过篡改文件绕过。详细步骤见[本地MCP说明](.codebuddy/skills/ruanwenjie-geo/references/local-mcp.md)。
+把下面这段发给WorkBuddy即可：
+
+> 从 https://github.com/zhuyi041107-cloud/geo-skill 下载dist/ruanwenjie-geo-0.12.0.zip，先备份旧ruanwenjie-geo技能，再完整替换当前项目.codebuddy/skills/ruanwenjie-geo，核对SKILL.md版本0.12.0。只安装requirements.txt。若当前项目或用户配置仍启用旧ruanwenjie-geo MCP，备份配置并仅停用或移除该服务条目，保留其他MCP、密钥、客户资料、旧报告和历史任务。后续由你直接判读、分析、成稿和逐页自审，按references/commands.md运行本地脚本，不调用geo_* MCP工具，不等待外部GPT。保留三类媒体、两档费用、最低媒体费1.2万元与写作另收费规则。此次仅更新技能，不重做客户报告；完成后提示我新开对话使用。
 
 ## 验证
 
-旧版0.10.2曾通过真实API续跑、付费修正和两轮终审生成三件旧版成品；另一次真实任务因海量媒体候选触发上下文超限。0.11.0采用新的无候选流程，不能把旧版真实运行冒称新版真实验收。[0.11.0验收记录](.codebuddy/skills/ruanwenjie-geo/references/local-mcp-verification-0.11.0.json)记录154项自动化测试通过；未运行新版真实付费全流程，也未验证WorkBuddy界面。维护时使用虚构资料，不重做或覆盖真实客户报告。
+维护使用虚构资料，不重做客户报告。[0.12.0验证记录](.codebuddy/skills/ruanwenjie-geo/references/standalone-verification-0.12.0.json)记录69项测试通过，覆盖实际ZIP解压安装、三列表导入与判读副本、统计、固定模板导出、17页页数与尺寸、费用边界、客户语言和原件保护；同时禁止导入MCP/API模块及网络连接，证明本地执行不依赖服务。模板和渲染器未变，沿用已有版式视觉验收，不冒称本次重新人工逐页看图。WorkBuddy界面安装与实际客户成稿质量仍由用户安装验收。
 
 ```text
-python -m pip install -r .codebuddy/skills/ruanwenjie-geo/requirements-mcp.txt
-python -m unittest discover -s tests -v
+python -m pip install -r .codebuddy/skills/ruanwenjie-geo/requirements.txt
+python -m unittest discover -s tests -p "test_geo_data.py" -v
+python -m unittest discover -s tests -p "test_gpt_evidence.py" -v
+python -m unittest discover -s tests -p "test_export_pdf.py" -v
+python -m unittest discover -s tests -p "test_render_layout.py" -v
+python -m unittest discover -s tests -p "test_client_language.py" -v
+python -m unittest discover -s tests -p "test_skill_portability.py" -v
 python tools/package_skill.py
 ```
+
+`test_gpt_evidence.py`验证纯本地证据与判读副本，历史命名不代表调用GPT。旧MCP测试与历史运行记录留在仓库，不属于本版基础依赖或验收前提。真实客户数据、截图、回答、密钥与成品不得上传公开仓库。

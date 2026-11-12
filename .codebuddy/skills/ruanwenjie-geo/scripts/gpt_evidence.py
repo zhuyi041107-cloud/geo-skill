@@ -1,4 +1,4 @@
-"""Read local evidence and apply GPT judgments to a new internal workbook."""
+"""Read local evidence and apply supplied judgments; no model or network calls."""
 from __future__ import annotations
 
 from io import BytesIO
@@ -62,23 +62,23 @@ def judged_copy(internal_path, judgments, out_path):
     if not expected:
         raise ValueError("没有可判读的成功原始回答")
     if not isinstance(judgments, list):
-        raise ValueError("GPT判读结果须为列表")
+        raise ValueError("判读结果须为列表")
     by_id = {}
     for item in judgments:
         if not isinstance(item, dict) or set(item) != {"sample_id", "mention", "recommendation", "reason"}:
-            raise ValueError("GPT判读项须包含sample_id、mention、recommendation、reason四字段")
+            raise ValueError("判读项须包含sample_id、mention、recommendation、reason四字段")
         sample_id = item["sample_id"]
         if not isinstance(sample_id, str) or not sample_id.strip() or sample_id in by_id:
-            raise ValueError("GPT判读sample_id缺失或重复")
+            raise ValueError("判读sample_id缺失或重复")
         if any(not isinstance(item[key], str) or item[key] not in {"是", "否"} for key in ("mention", "recommendation")):
             raise ValueError("品牌提及与推荐判读须为是或否")
         if item["recommendation"] == "是" and item["mention"] != "是":
             raise ValueError("推荐品牌却未提及品牌，判读自相矛盾")
         if not isinstance(item["reason"], str) or not item["reason"].strip():
-            raise ValueError("GPT判读须保留具体理由")
+            raise ValueError("判读须保留具体理由")
         by_id[sample_id] = item
     if set(by_id) != expected:
-        raise ValueError("GPT判读须与成功原始回答的sample_id全集一对一，存在缺失或额外项")
+        raise ValueError("判读须与成功原始回答的sample_id全集一对一，存在缺失或额外项")
 
     book = openpyxl.load_workbook(source)
     try:
@@ -93,7 +93,7 @@ def judged_copy(internal_path, judgments, out_path):
                 cell.data_type = "s"
             note = sheet.cell(row[0].row, columns["备注"])
             original = geo_data.text(note.value)
-            note.value = "\n".join(value for value in (original, "GPT判读：" + item["reason"].strip()) if value)
+            note.value = "\n".join(value for value in (original, "回答判读：" + item["reason"].strip()) if value)
             note.data_type = "s"
             if len(note.value) > 32767:
                 raise ValueError("判读理由与原备注合计超过Excel单元格长度")

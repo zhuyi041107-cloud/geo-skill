@@ -1,0 +1,28 @@
+{
+  "skill_version": "0.12.0",
+  "verified_on": "2026-11-12",
+  "base_commit": "00083acb352cc1137d865de54f94cc41c8b04367",
+  "execution": "WorkBuddy direct reasoning and writing, local Python data handling and fixed-template rendering; no MCP or provider calls",
+  "automated_checks": {
+    "result": "passed",
+    "cases": 69,
+    "core_cases": 65,
+    "packaged_install_cases": 4,
+    "suites": ["test_geo_data", "test_gpt_evidence", "test_export_pdf", "test_render_layout", "test_client_language", "test_skill_portability"],
+    "skill_creator_frontmatter": "passed",
+    "installed_pipeline": "Actual release ZIP extracted to a Chinese and space-containing path; prepare, normalize, supplied judgments, analyze with category plan, fixed PDF export",
+    "service_independence": "Runtime has no mcp package; child processes reject MCP/API imports and socket connections; no API credentials or paid requests used",
+    "dependencies": "openpyxl, ReportLab, PyMuPDF and their normal dependencies only",
+    "input_preservation": "Collection and original internal workbook hashes unchanged after judgment processing",
+    "delivery": {"files": ["GEO诊断报告.pdf", "品牌传播与GEO执行方案.pdf"], "pages": [8, 9], "page_size": [1200, 675]},
+    "business_rules": "Three media categories; same-scope two-tier quotes; minimum media fee 12000 CNY per option; writing charged separately; explicit ceiling only",
+    "fixed_resources": "Nine sealed resources match byte sizes and SHA256; renderer, schemas, backgrounds, fonts and example templates unchanged from base commit",
+    "release_contents": "31 allowlisted files; no MCP/API server, client, dependency file, setup script or MCP configuration"
+  },
+  "visual_review": "No layout code or fixed resource changed. Reused existing fixed-template visual review; this release re-rendered fictional reports and checked page counts, dimensions, layout audits and client language. No new manual all-page visual review claimed.",
+  "not_verified": [
+    "WorkBuddy application UI installation and complete agent execution",
+    "Real customer analysis or report quality under the user's chosen WorkBuddy model"
+  ],
+  "privacy": "Only fictional test data; no customer files, credentials, request checkpoints or real reports modified or uploaded."
+}
