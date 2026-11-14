@@ -152,6 +152,9 @@ def service_scope(plan, content_count, budgets):
 
 
 def prepare_document(kind, report, project=None, plan=None, analysis=None):
+    if report.get("schema_version") == "3.0":
+        from brand_plan import prepare_document as prepare_brand_document
+        return prepare_brand_document(kind, report, project, plan, analysis)
     errors = renderer.validate_report(report)
     if errors:
         raise ValueError("; ".join(errors))
@@ -272,8 +275,10 @@ def prepare_document(kind, report, project=None, plan=None, analysis=None):
     return config
 
 
-def export_reports(report, output_dir, kinds=("diagnosis", "execution"), project=None, plan=None, analysis=None, png_scale=1.15, review_root=None):
-    verify_assets()
+def export_reports(report, output_dir, kinds=("diagnosis", "execution"), project=None, plan=None, analysis=None, png_scale=1.15, review_root=None, asset_root=None):
+    branded = report.get("schema_version") == "3.0"
+    if not branded:
+        verify_assets()
     out = Path(output_dir)
     review_root = Path(review_root) if review_root is not None else out.parent / ".work" / "pdf-review"
     resolved_out, resolved_review = out.resolve(), review_root.resolve()
@@ -287,8 +292,15 @@ def export_reports(report, output_dir, kinds=("diagnosis", "execution"), project
     # Render the complete batch before publishing any requested PDF.
     with tempfile.TemporaryDirectory(prefix="geo-report-",dir=out.parent) as folder:
         staged = Path(folder)
+        page_counts = {}
         for kind in kinds:
-            renderer.render(configs[kind],staged,kind,png_scale=png_scale)
+            if branded:
+                import render_brand_report as brand_renderer
+                brand_renderer.render(configs[kind], staged, kind, png_scale=png_scale, asset_root=asset_root)
+            else:
+                renderer.render(configs[kind],staged,kind,png_scale=png_scale)
+            audit = load_json(staged / (kind + "_layout_audit.json"))
+            page_counts[kind] = len(audit["rendered_pages"])
         if out.exists() and any((out/FILES[kind]).exists() for kind in kinds):
             raise FileExistsError("输出目录存在同名文件，拒绝覆盖")
         review_root.mkdir(parents=True,exist_ok=True)
@@ -304,7 +316,7 @@ def export_reports(report, output_dir, kinds=("diagnosis", "execution"), project
                 destination = out if path.suffix == ".pdf" else review
                 with (destination/path.name).open("xb") as stream:
                     stream.write(path.read_bytes())
-        return {kind:{"pdf":str(out/FILES[kind]),"pages":len(configs[kind]["pages"]),
+        return {kind:{"pdf":str(out/FILES[kind]),"pages":page_counts[kind],
                       "audit":str(review/(kind+"_layout_audit.json")),"review_dir":str(review)} for kind in kinds}
 
 
@@ -325,7 +337,7 @@ def main():
     kinds = tuple(FILES) if args.kind == "both" else (args.kind,)
     report_path = Path(args.report).resolve()
     review_root = None if report_path.is_relative_to(ROOT.resolve()) else report_path.parent/"pdf-review"
-    result = export_reports(report,args.output_dir,kinds,project,plan,analysis,review_root=review_root)
+    result = export_reports(report,args.output_dir,kinds,project,plan,analysis,review_root=review_root,asset_root=report_path.parent)
     print(json.dumps(result,ensure_ascii=False,indent=2))
 
 

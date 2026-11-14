@@ -1,0 +1,290 @@
+{
+  "version": "0.13.0",
+  "date": "2026-11-14",
+  "scope": "本地虚构客户验证；平台观察为人工构造的测试输入，不是真实客户或真实平台采集结果。",
+  "tests": {
+    "tests": 94,
+    "failures": 0,
+    "errors": 0,
+    "passed": true,
+    "patterns": [
+      "test_brand*.py",
+      "test_geo_data.py",
+      "test_gpt_evidence.py",
+      "test_export_pdf.py",
+      "test_render_layout.py",
+      "test_client_language.py",
+      "test_skill_portability.py"
+    ]
+  },
+  "runtime": {
+    "python": "3.12.14",
+    "reportlab": "4.4.9",
+    "pymupdf": "1.25.5",
+    "openpyxl": "3.1.5"
+  },
+  "customers": [
+    {
+      "type": "珠宝消费",
+      "brand": "瑾澜金艺",
+      "theme": {
+        "primary": "#641E34",
+        "accent": "#D3AD6D",
+        "background": "#FFF9F0",
+        "text": "#302723",
+        "cover_style": "editorial"
+      },
+      "fictional": true,
+      "documents": [
+        {
+          "kind": "diagnosis",
+          "pages": 4,
+          "sha256": "3fe01e91f4aa0de1daa4ea716d7ba2b86ca8948078038860ca1b4c3dd08e1b2f",
+          "all_pages_visually_reviewed": true,
+          "page_reviews": [
+            {
+              "page": 1,
+              "title": "品牌认知与需求机会",
+              "visual_review": "pass"
+            },
+            {
+              "page": 2,
+              "title": "品牌已被看见，选择理由仍需建立",
+              "visual_review": "pass"
+            },
+            {
+              "page": 3,
+              "title": "把场景与可信信息接起来",
+              "visual_review": "pass"
+            },
+            {
+              "page": 4,
+              "title": "消费者的三个判断，决定内容的三条主线",
+              "visual_review": "pass"
+            }
+          ]
+        },
+        {
+          "kind": "execution",
+          "pages": 8,
+          "sha256": "da7db4a359984f2cbc1c09d9ecce4a2ce9d7604ce334eb633b81cb7d03814cdd",
+          "all_pages_visually_reviewed": true,
+          "page_reviews": [
+            {
+              "page": 1,
+              "title": "季度品牌传播与GEO执行方案",
+              "visual_review": "pass"
+            },
+            {
+              "page": 2,
+              "title": "本季度要解决的三个业务问题",
+              "visual_review": "pass"
+            },
+            {
+              "page": 3,
+              "title": "第一步：统一品牌事实与可信表达",
+              "visual_review": "pass"
+            },
+            {
+              "page": 4,
+              "title": "第二步：用选购与场景内容支撑选择",
+              "visual_review": "pass"
+            },
+            {
+              "page": 5,
+              "title": "三类媒体各有任务，合计12次发布",
+              "visual_review": "pass"
+            },
+            {
+              "page": 6,
+              "title": "按决策顺序推进本季度内容",
+              "visual_review": "pass"
+            },
+            {
+              "page": 7,
+              "title": "双方分工与服务范围",
+              "visual_review": "pass"
+            },
+            {
+              "page": 8,
+              "title": "本季度费用与包含范围",
+              "visual_review": "pass"
+            }
+          ]
+        }
+      ],
+      "price_check": {
+        "options": 1,
+        "total": "20000.00",
+        "tax": "含税",
+        "hard_limit": "20000.00",
+        "writing": "12篇写作已含整包",
+        "publications": 12,
+        "review": "一次季度复盘已含"
+      }
+    },
+    {
+      "type": "工业B2B",
+      "brand": "衡拓传感",
+      "theme": {
+        "primary": "#183D55",
+        "accent": "#D87A35",
+        "background": "#F5F8FA",
+        "text": "#152A36",
+        "cover_style": "technical"
+      },
+      "fictional": true,
+      "documents": [
+        {
+          "kind": "diagnosis",
+          "pages": 5,
+          "sha256": "045a7f26a5416449a1543ab5b37c8cc214b2daf11cb5508e31842ca69e188cb7",
+          "all_pages_visually_reviewed": true,
+          "page_reviews": [
+            {
+              "page": 1,
+              "title": "工业选型认知与品牌机会",
+              "visual_review": "pass"
+            },
+            {
+              "page": 2,
+              "title": "当前差距：有业务介绍，缺场景适配",
+              "visual_review": "pass"
+            },
+            {
+              "page": 3,
+              "title": "可用基础：把真实协作过程说清楚",
+              "visual_review": "pass"
+            },
+            {
+              "page": 4,
+              "title": "工程与采购需要看见什么",
+              "visual_review": "pass"
+            },
+            {
+              "page": 5,
+              "title": "优先机会：先降低选型沟通的不确定性",
+              "visual_review": "pass"
+            }
+          ]
+        },
+        {
+          "kind": "execution",
+          "pages": 10,
+          "sha256": "bed12171931182516fe318fae23cb02dffba0115bd8dc28f8403a6e4b3b6c878",
+          "all_pages_visually_reviewed": true,
+          "page_reviews": [
+            {
+              "page": 1,
+              "title": "年度品牌传播与GEO执行方案",
+              "visual_review": "pass"
+            },
+            {
+              "page": 2,
+              "title": "本年度要解决的两个选择障碍",
+              "visual_review": "pass"
+            },
+            {
+              "page": 3,
+              "title": "从选型缺口到内容任务",
+              "visual_review": "pass"
+            },
+            {
+              "page": 4,
+              "title": "官方资料并行，实证主张有条件推进",
+              "visual_review": "pass"
+            },
+            {
+              "page": 5,
+              "title": "20篇独立内容的四组任务",
+              "visual_review": "pass"
+            },
+            {
+              "page": 6,
+              "title": "三类媒体各自承担什么",
+              "visual_review": "pass"
+            },
+            {
+              "page": 7,
+              "title": "季度推进与复核节点",
+              "visual_review": "pass"
+            },
+            {
+              "page": 8,
+              "title": "工作分工与费用包含范围",
+              "visual_review": "pass"
+            },
+            {
+              "page": 9,
+              "title": "两档年度费用与包含范围",
+              "visual_review": "pass"
+            },
+            {
+              "page": 10,
+              "title": "怎样验收，怎样调整",
+              "visual_review": "pass"
+            }
+          ]
+        }
+      ],
+      "price_check": {
+        "options": 2,
+        "totals": [
+          "10320.00",
+          "22960.00"
+        ],
+        "tax": "不含税",
+        "hard_limit": "25000.00",
+        "writing": "每档20篇×180=3600.00元，分别另计后计入总价",
+        "publications": [
+          20,
+          40
+        ],
+        "drafts": 20,
+        "media_totals": [
+          "6720.00",
+          "19360.00"
+        ],
+        "quote_comparison_pages": 1
+      }
+    }
+  ],
+  "reference_library": {
+    "cases": 12,
+    "source_documents": 24,
+    "bytes": 110189430,
+    "text_and_metadata_minimal_redaction": true,
+    "full_image_ocr_privacy_audit": false
+  },
+  "total_visually_reviewed_pages": 27,
+  "protections": {
+    "existing_customer_reports_regenerated": false,
+    "existing_reports_overwritten": false,
+    "test_outputs_published": false,
+    "authorized_historical_reference_copies_packaged": true,
+    "media_recommend_skill_changed": false
+  },
+  "installation_checks": {
+    "relocated_chinese_space_directory": true,
+    "all_reference_pack_hashes": true,
+    "local_pipeline_with_network_and_mcp_api_imports_forbidden": true,
+    "workbuddy_client_installation": "not_tested"
+  },
+  "release_parts": [
+    {
+      "file": "ruanwenjie-geo-0.13.0.zip",
+      "bytes": 2338850,
+      "sha256": "bee4a92340a5c5efa5669822621b331a9d0c47ef3564a739b9ffaac08210f538"
+    },
+    {
+      "file": "ruanwenjie-geo-0.13.0-references-01.zip",
+      "bytes": 62915761,
+      "sha256": "fede5e0936fca82e493700b5005ab7ae12c1b89e42bc338405b8aea736adf7e1"
+    },
+    {
+      "file": "ruanwenjie-geo-0.13.0-references-02.zip",
+      "bytes": 47280799,
+      "sha256": "e4cb978af57a1b9630d5bf3e96f3bb258162992f8fb0ad46cc51fd56c4403ce2"
+    }
+  ]
+}

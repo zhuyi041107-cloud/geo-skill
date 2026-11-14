@@ -1,5 +1,5 @@
 {
-  "version": "0.12.0",
+  "version": "0.13.0",
   "font": {
     "name": "Droid Sans Fallback Regular",
     "file": "assets/geo-diagnosis-template/font.ttf"
@@ -7,8 +7,8 @@
   "files": [
     {
       "path": "assets/client-report-process-patterns.json",
-      "sha256": "b31293eaf5af08fafc8d3ed38306ad08a333fe1b1e3fdd72269ddd13d523c4d3",
-      "bytes": 2015
+      "sha256": "d003c9613a8f45f7478c2d8ba7c7fcec71e523e94880752c5967e230a1b8ddfb",
+      "bytes": 2074
     },
     {
       "path": "assets/geo-diagnosis-template/backgrounds.pdf",

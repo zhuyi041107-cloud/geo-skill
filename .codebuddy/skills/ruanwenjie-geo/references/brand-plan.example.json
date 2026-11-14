@@ -1,0 +1,158 @@
+{
+  "schema_version": "3.0",
+  "evidence": [
+    {
+      "id": "E1",
+      "summary": "需求推荐围绕同业方案展开",
+      "source": "豆包采集记录"
+    },
+    {
+      "id": "E2",
+      "summary": "客户材料列明项目协作流程",
+      "source": "客户素材表"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "observation": "自然需求中品牌尚未进入候选",
+      "analysis": "公开内容对选型条件和适用场景说明不足",
+      "business_impact": "目标采购方难以将品牌与实际需求关联",
+      "priority": "high",
+      "evidence_ids": [
+        "E1"
+      ]
+    },
+    {
+      "id": "F2",
+      "observation": "项目协作流程有现成业务基础",
+      "analysis": "可将过程事实整理为可检索的案例内容",
+      "business_impact": "帮助客户比较交付与协作方式",
+      "priority": "medium",
+      "evidence_ids": [
+        "E2"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "A1",
+      "finding_ids": [
+        "F1",
+        "F2"
+      ],
+      "task": "形成材料选型与案例内容",
+      "content": "从项目要求、选型判断和协作过程展开",
+      "keywords": [
+        "材料选型",
+        "项目协作"
+      ],
+      "media_role": "行业媒体",
+      "stage": "首批",
+      "owner": "软文街策划，客户审核",
+      "deliverable": "四篇选型与案例稿件及刊发链接",
+      "review": "关注需求候选与选择理由变化"
+    },
+    {
+      "id": "A2",
+      "finding_ids": [
+        "F2"
+      ],
+      "task": "统一官方流程说明",
+      "content": "由客户核实并更新项目协作流程",
+      "keywords": [],
+      "media_role": "官方信息",
+      "stage": "与首批并行",
+      "owner": "客户负责实际更新",
+      "deliverable": "核准后的流程说明",
+      "review": "核对主体和服务口径"
+    }
+  ],
+  "service_scope": [
+    {
+      "id": "S1",
+      "task": "内容策划与阶段复核",
+      "provider": "确定选题和阶段调整方向",
+      "client": "提供事实材料并审核",
+      "action_ids": [
+        "A1"
+      ]
+    },
+    {
+      "id": "S2",
+      "task": "行业媒体发布",
+      "provider": "按约定组织刊发并汇总链接",
+      "client": "确认定稿与授权",
+      "action_ids": [
+        "A1"
+      ]
+    },
+    {
+      "id": "S3",
+      "task": "正文撰写",
+      "provider": "按约定撰写四篇正文",
+      "client": "进行专业审核",
+      "action_ids": [
+        "A1"
+      ]
+    },
+    {
+      "id": "S4",
+      "task": "官方信息更新",
+      "provider": "整理需统一的信息",
+      "client": "核实并操作官方页面",
+      "action_ids": [
+        "A2"
+      ]
+    }
+  ],
+  "pricing": {
+    "instructions": "【纯虚构结构示例，非默认报价】用户要求只出一档，发布整包1800元，写作每篇123.45元共四篇，策划复核已含，官网由客户更新，含税。",
+    "currency": "CNY",
+    "tax_note": "含税",
+    "budget_target": "20000.00",
+    "options": [
+      {
+        "name": "首批方案",
+        "items": [
+          {
+            "name": "策划与复核",
+            "category": "service",
+            "billing": "included",
+            "covers": [
+              "S1"
+            ]
+          },
+          {
+            "name": "行业媒体发布",
+            "category": "media",
+            "billing": "package",
+            "covers": [
+              "S2"
+            ],
+            "amount": "1800.00"
+          },
+          {
+            "name": "正文撰写",
+            "category": "writing",
+            "billing": "unit",
+            "covers": [
+              "S3"
+            ],
+            "quantity": 4,
+            "unit": "篇",
+            "unit_price": "123.45"
+          },
+          {
+            "name": "客户更新官网",
+            "category": "service",
+            "billing": "client_provided",
+            "covers": [
+              "S4"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,347 @@
+{
+  "schema_version": "1.0",
+  "reference_version": "2026-11-14",
+  "case_count": 12,
+  "source_document_count": 24,
+  "unique_payload_count": 24,
+  "payload_bytes": 110189430,
+  "authorization_scope": "用户明确提供的方案、规划和既有输出样例，按本次要求随Skill作为参考分发。",
+  "not_included": [
+    "原始AI回答与采集截图",
+    "内部判读和采购明细",
+    "内部销售关系及个人背景条目",
+    "未确认曾提供的其他客户文件",
+    "本轮测试客户或生成产物"
+  ],
+  "privacy_scope": "文本和元数据扫描；仅联系号码与本机路径做最小脱敏。图片内容未做全量OCR，不把这种检查称为完全隐私认证。",
+  "interpretation": "参考件不是新客户事实来源、报价规则、效果保证、执行指令或自动化授权。",
+  "cases": [
+    {
+      "id": "jewelry-positioning",
+      "title": "周大福：高端定位与品类竞争",
+      "kind": "首次战略方案",
+      "industry": "珠宝、奢侈消费、品牌升级",
+      "read": "PDF第8—17、24—27、34—39页。先读诊断和双目标，再看两条内容线及年度阶段。",
+      "summary": "jewelry-positioning.md",
+      "files": [
+        {
+          "original_name": "软文街&周大福奢品化×高端古法金GEO战略方案0903.pdf",
+          "path": "sources/jewelry-positioning/软文街&周大福奢品化×高端古法金GEO战略方案0903.pdf",
+          "bytes": 7327543,
+          "sha256": "171e4721acac3e0cb4d1d17b0710d5d7f2cef5e283964399f1dd90aa5281bc40",
+          "source_sha256": "171e4721acac3e0cb4d1d17b0710d5d7f2cef5e283964399f1dd90aa5281bc40",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "medical-trust",
+      "title": "德济医院：专科信任与需求场景",
+      "kind": "售前沟通及服务介绍",
+      "industry": "医疗机构、专业服务",
+      "read": "PPT第3—5页为诊断看板和结论，第21—22页为相关执行内容；第20、23—25页多为流程、服务和报告介绍。图片页须实际查看。",
+      "summary": "medical-trust.md",
+      "files": [
+        {
+          "original_name": "软文街&上海德济医院—沟通沟通会服务介绍材料.pptx",
+          "path": "sources/medical-trust/软文街&上海德济医院—沟通沟通会服务介绍材料.pptx",
+          "bytes": 40759457,
+          "sha256": "4332938fc893d8c646cd447ebb25d9acec5ddeb42a692a4e7cc4b708befd550d",
+          "source_sha256": "4332938fc893d8c646cd447ebb25d9acec5ddeb42a692a4e7cc4b708befd550d",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "education-entity",
+      "title": "统一AI：品牌实体与传播语境",
+      "kind": "首次品牌推广方案",
+      "industry": "教育科技、同名品牌、招商业务",
+      "read": "PPT第5—12、17—18页；先看重名、口径和传播语境，再看业务内容与实体关联。",
+      "summary": "education-entity.md",
+      "files": [
+        {
+          "original_name": "统一AI品牌推广方案.pptx",
+          "path": "sources/education-entity/统一AI品牌推广方案.pptx",
+          "bytes": 4712947,
+          "sha256": "863a94f001173f193f25381d161417884a3bfdc03cd56cd814c51ab5ce0c5b63",
+          "source_sha256": "863a94f001173f193f25381d161417884a3bfdc03cd56cd814c51ab5ce0c5b63",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "group-review",
+      "title": "爱昕集团：执行复盘与下一阶段",
+      "kind": "阶段效果复盘",
+      "industry": "集团、多品牌、消费健康、招商",
+      "read": "PPT第3—4、6—14页；配套Excel用于理解执行明细和复盘结构，金额和计数以新项目底表为准。",
+      "summary": "group-review.md",
+      "files": [
+        {
+          "original_name": "爱昕集团GEO优化效果汇报_2026.08-10.pptx",
+          "path": "sources/group-review/爱昕集团GEO优化效果汇报_2026.08-10.pptx",
+          "bytes": 5284009,
+          "sha256": "fcc52575538f5cf5e5630017650759de319681caf0c617d39ff3f1a92da3fbea",
+          "source_sha256": "fcc52575538f5cf5e5630017650759de319681caf0c617d39ff3f1a92da3fbea",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "软文街—爱昕集团GEO优化效果汇报_2026.08-10.xlsx",
+          "path": "sources/group-review/软文街—爱昕集团GEO优化效果汇报_2026.08-10.xlsx",
+          "bytes": 14115801,
+          "sha256": "ddd203f8bf6a6f5ea8f4e424004de864ed25d28ad7424f0b7b7f2e5a743207af",
+          "source_sha256": "ddd203f8bf6a6f5ea8f4e424004de864ed25d28ad7424f0b7b7f2e5a743207af",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "local-opening",
+      "title": "维晏：本地开业与持续曝光",
+      "kind": "开业传播提案及媒体规划",
+      "industry": "本地服务、空间、开业活动",
+      "read": "PPT第3—4页为需求背景，第5—18页为维晏方案；重点看第11、13、15页三轮选题及第17页媒体分工。Excel按原Sheet阅读。",
+      "summary": "local-opening.md",
+      "files": [
+        {
+          "original_name": "10月工作报告及11月计划｜夜来202611.pptx",
+          "path": "sources/local-opening/10月工作报告及11月计划｜夜来202611.pptx",
+          "bytes": 11712284,
+          "sha256": "2ddd4cfd1541d533fe03571b388f97997e7ec52ed6f3f5154e04b00f0df1c4db",
+          "source_sha256": "d2583336699e4a4321b66df9b4b6038276654a238e257efde56f2b226d90c252",
+          "reference_copy_adjustments": [
+            "ppt/slideLayouts/slideLayout1.xml：移除1处本机路径描述。",
+            "ppt/slideLayouts/slideLayout2.xml：移除1处本机路径描述。",
+            "ppt/slideLayouts/slideLayout3.xml：移除1处本机路径描述。",
+            "ppt/slideLayouts/slideLayout4.xml：移除1处本机路径描述。",
+            "ppt/slideLayouts/slideLayout5.xml：移除1处本机路径描述。",
+            "ppt/slideLayouts/slideLayout6.xml：移除1处本机路径描述。",
+            "ppt/slideLayouts/slideLayout7.xml：移除1处本机路径描述。",
+            "ppt/slideLayouts/slideLayout8.xml：移除1处本机路径描述。",
+            "ppt/slideLayouts/slideLayout9.xml：移除1处本机路径描述。",
+            "ppt/slideMasters/slideMaster1.xml：移除1处本机路径描述。"
+          ]
+        },
+        {
+          "original_name": "维晏艺术中心开业前媒体投放计划表2026_10_16.xlsx",
+          "path": "sources/local-opening/维晏艺术中心开业前媒体投放计划表2026_10_16.xlsx",
+          "bytes": 62598,
+          "sha256": "474b05ce2c09e8bd8c4b2922e5f1cc102cfc33c349a66dadb4e58f76f8624ae5",
+          "source_sha256": "474b05ce2c09e8bd8c4b2922e5f1cc102cfc33c349a66dadb4e58f76f8624ae5",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "industrial-b2b",
+      "title": "兰宝传感：技术、应用与项目证明",
+      "kind": "年度品牌与GEO执行规划",
+      "industry": "工业制造、B2B、传感器",
+      "read": "“品牌软文推广方案（2.5W预算）”的现状说明；“兰宝内容投放规划”第3—8、11—21行。",
+      "summary": "industrial-b2b.md",
+      "files": [
+        {
+          "original_name": "软文街方案-兰宝传感-品牌软文推广投放年度策划方案(1).xlsx",
+          "path": "sources/industrial-b2b/软文街方案-兰宝传感-品牌软文推广投放年度策划方案(1).xlsx",
+          "bytes": 2673114,
+          "sha256": "8089c2597387ce3a80b25df2814419406a7667823cbf528696da55be1d588a61",
+          "source_sha256": "8089c2597387ce3a80b25df2814419406a7667823cbf528696da55be1d588a61",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "generic-checklist",
+      "title": "通用品牌方案：业务要素检查",
+      "kind": "通用业务表样例",
+      "industry": "跨行业，仅作完整性检查",
+      "read": "主方案Sheet的现状、建议、目标、策略、稿件与费用行；关键词参考、媒体表和服务明细按需要读取。",
+      "summary": "generic-checklist.md",
+      "files": [
+        {
+          "original_name": "【】品牌软文推广投放策划方案（2026年6月11）.xlsx",
+          "path": "sources/generic-checklist/【】品牌软文推广投放策划方案（2026年6月11）.xlsx",
+          "bytes": 9811351,
+          "sha256": "f8c4a0c220c8e4713268eb0f7a3bbdfc98d7ec439dbedb7bb32ae9b2228106bd",
+          "source_sha256": "4a3087d74b1376a7ce8d76a8c55655dd035085dc0b3344a261c05d00f9cec31e",
+          "reference_copy_adjustments": [
+            "xl/sharedStrings.xml：遮蔽1处非URL联系号码或邮箱。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "proposal-thinking",
+      "title": "方案思路：从客户问题到执行",
+      "kind": "工作思路参考",
+      "industry": "跨行业",
+      "read": "阅读此案例摘要后，可读业务参考副本；内部销售关键人与利益诉求条目不随库分发。",
+      "summary": "proposal-thinking.md",
+      "files": [
+        {
+          "original_name": "方案思路.txt",
+          "path": "sources/proposal-thinking/方案思路_业务参考副本.txt",
+          "bytes": 2338,
+          "sha256": "13ea763ccb06c8437360eae70f42ea302fb8ffa59ae03edfbb1496326aaab733",
+          "source_sha256": "ddd43eca0cf558ae38718f626e5eca9387388c270f92e5ff04deef9398225e77",
+          "reference_copy_adjustments": [
+            "移除内部销售关系、个人背景及利益诉求条目；保留业务思路，标明历史参数不生效。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "education-original",
+      "title": "旧羊驼舍：服务印象与选择理由",
+      "kind": "原始诊断及落地执行样例",
+      "industry": "教育服务、学术辅导、升学咨询",
+      "read": "诊断的品牌印象、同行对比、业务优势与场景；执行的目标认知、内容、阶段、分工与费用页。",
+      "summary": "education-original.md",
+      "files": [
+        {
+          "original_name": "羊驼舍_GEO品牌诊断报告_20261105.pdf",
+          "path": "sources/education-original/羊驼舍_GEO品牌诊断报告_20261105.pdf",
+          "bytes": 1920667,
+          "sha256": "455d06606330b075d6055c41c338429da9a617bcf940ac51f317923800d491d5",
+          "source_sha256": "455d06606330b075d6055c41c338429da9a617bcf940ac51f317923800d491d5",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "羊驼舍_GEO落地执行方案_20261105.pdf",
+          "path": "sources/education-original/羊驼舍_GEO落地执行方案_20261105.pdf",
+          "bytes": 1871768,
+          "sha256": "d995dd8ff7c73be61e6e8384fca24ab4f641d14afcf55ee4118fb19cd663d933",
+          "source_sha256": "d995dd8ff7c73be61e6e8384fca24ab4f641d14afcf55ee4118fb19cd663d933",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "legacy-visuals",
+      "title": "原包与0.12版式：组件参考",
+      "kind": "旧视觉示例",
+      "industry": "跨行业组件参考",
+      "read": "按需要看封面、对比卡、内容表、时间轴、分工与费用组件；原包诊断PDF仅背景，不是有事实内容的报告。",
+      "summary": "legacy-visuals.md",
+      "files": [
+        {
+          "original_name": "backgrounds.pdf",
+          "path": "sources/legacy-visuals/原包_诊断背景.pdf",
+          "bytes": 1782967,
+          "sha256": "b43194bdda68dc63927062dbb1fc93feea3e9e6f06dd10d9b7284426f43508c6",
+          "source_sha256": "b43194bdda68dc63927062dbb1fc93feea3e9e6f06dd10d9b7284426f43508c6",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "geo-execution-template-example.pdf",
+          "path": "sources/legacy-visuals/原包_执行方案示例.pdf",
+          "bytes": 3543203,
+          "sha256": "db82a4bf46da256378a0a2f550e7d7bf86b3b3bd39a6266d0ba8421db6647974",
+          "source_sha256": "db82a4bf46da256378a0a2f550e7d7bf86b3b3bd39a6266d0ba8421db6647974",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "GEO诊断报告版式示例.pdf",
+          "path": "sources/legacy-visuals/0.12_诊断版式示例.pdf",
+          "bytes": 166639,
+          "sha256": "ae8e3c2f9d0c5bbdbb438e80083fb0d8cdfc7149cf29ab16076a37f8443fd95f",
+          "source_sha256": "ae8e3c2f9d0c5bbdbb438e80083fb0d8cdfc7149cf29ab16076a37f8443fd95f",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "品牌传播与GEO执行方案版式示例.pdf",
+          "path": "sources/legacy-visuals/0.12_执行版式示例.pdf",
+          "bytes": 172955,
+          "sha256": "196a6c48fd8d99613f5ba87b0fbf707ea17501fd46bfd2d2127f57d38c811ac7",
+          "source_sha256": "196a6c48fd8d99613f5ba87b0fbf707ea17501fd46bfd2d2127f57d38c811ac7",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "counterexample-huaxiaopin",
+      "title": "花小聘历史输出：问题与反例",
+      "kind": "生成结果反例",
+      "industry": "蓝领招聘、平台服务",
+      "read": "先读本反例摘要；仅为核对旧输出问题时打开原文件，不以旧报告代替新客户素材。",
+      "summary": "counterexample-huaxiaopin.md",
+      "files": [
+        {
+          "original_name": "GEO诊断报告.pdf",
+          "path": "sources/counterexample-huaxiaopin/花小聘_历史诊断输出.pdf",
+          "bytes": 1877811,
+          "sha256": "5c6aed994f1b461115dc87262b2f3c61a0706a2d5d0fbd966d48bb58ed9046ea",
+          "source_sha256": "5c6aed994f1b461115dc87262b2f3c61a0706a2d5d0fbd966d48bb58ed9046ea",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "品牌传播与GEO执行方案.pdf",
+          "path": "sources/counterexample-huaxiaopin/花小聘_历史执行输出.pdf",
+          "bytes": 179353,
+          "sha256": "705273f6bf22aa521b2aa06d2b6f8029f8d347831586e513d482bab9afe5df00",
+          "source_sha256": "705273f6bf22aa521b2aa06d2b6f8029f8d347831586e513d482bab9afe5df00",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "客户诊断与执行明细.xlsx",
+          "path": "sources/counterexample-huaxiaopin/花小聘_历史客户明细.xlsx",
+          "bytes": 24598,
+          "sha256": "0b121a0f8e7a20173f4a914c4c176fc07a0e9bc663f3960a6042ea2eace5f54f",
+          "source_sha256": "0b121a0f8e7a20173f4a914c4c176fc07a0e9bc663f3960a6042ea2eace5f54f",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "推荐媒体.docx",
+          "path": "sources/counterexample-huaxiaopin/花小聘_历史推荐媒体.docx",
+          "bytes": 58225,
+          "sha256": "05fc031aad5d4c4e98020c3b0323db1b06ca11bedcaaae6914973b068becec73",
+          "source_sha256": "05fc031aad5d4c4e98020c3b0323db1b06ca11bedcaaae6914973b068becec73",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "推荐媒体.xlsx",
+          "path": "sources/counterexample-huaxiaopin/花小聘_历史推荐媒体.xlsx",
+          "bytes": 21626,
+          "sha256": "3a0d2b43caff9a4f0782575bb98b1280cefda9b17a51ce8f01baf677246029db",
+          "source_sha256": "3a0d2b43caff9a4f0782575bb98b1280cefda9b17a51ce8f01baf677246029db",
+          "reference_copy_adjustments": []
+        }
+      ]
+    },
+    {
+      "id": "counterexample-yangtuoshe",
+      "title": "羊驼舍后续输出：固定版式反例",
+      "kind": "生成结果反例",
+      "industry": "教育服务",
+      "read": "与“旧羊驼舍”原始样例对照阅读；只借问题识别，不套当前品牌事实或费用。",
+      "summary": "counterexample-yangtuoshe.md",
+      "files": [
+        {
+          "original_name": "GEO诊断报告.pdf",
+          "path": "sources/counterexample-yangtuoshe/羊驼舍_WorkBuddy历史诊断.pdf",
+          "bytes": 1896005,
+          "sha256": "41f8be1661ed6fc6b6eae384a8365800b163192785976ebd684720e5301e8eda",
+          "source_sha256": "41f8be1661ed6fc6b6eae384a8365800b163192785976ebd684720e5301e8eda",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "品牌传播与GEO执行方案.pdf",
+          "path": "sources/counterexample-yangtuoshe/羊驼舍_WorkBuddy历史执行.pdf",
+          "bytes": 195835,
+          "sha256": "97944cf77a5c702e80dbf6c7aa8c6f76e78cfd3f542435d46dd29463839a210a",
+          "source_sha256": "97944cf77a5c702e80dbf6c7aa8c6f76e78cfd3f542435d46dd29463839a210a",
+          "reference_copy_adjustments": []
+        },
+        {
+          "original_name": "推荐媒体.xlsx",
+          "path": "sources/counterexample-yangtuoshe/羊驼舍_WorkBuddy历史推荐媒体.xlsx",
+          "bytes": 16336,
+          "sha256": "733df9e6a737a6e22364b8c46ee4f5aa39763949a356bd590ee20dfc29396f5b",
+          "source_sha256": "733df9e6a737a6e22364b8c46ee4f5aa39763949a356bd590ee20dfc29396f5b",
+          "reference_copy_adjustments": []
+        }
+      ]
+    }
+  ]
+}

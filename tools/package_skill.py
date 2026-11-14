@@ -4,7 +4,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
+from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile
 
 
 def main():
@@ -28,6 +28,28 @@ def main():
         "assets/geo-diagnosis-template/deepseek.png",
         "scripts/gpt_evidence.py",
     }
+    required.update({
+        "scripts/brand_plan.py", "scripts/render_brand_report.py",
+        "references/brand-report.schema.json", "references/brand-report.example.json",
+        "references/brand-plan.example.json", "references/pricing-contract.md",
+        "references/strategy-playbook.md", "references/legacy-fixed-rules.md",
+    })
+    library = skill / "references/case-library"
+    library_manifest = json.loads((library / "manifest.json").read_text(encoding="utf-8"))
+    required.update(path.relative_to(skill).as_posix() for path in library.glob("*.md"))
+    required.add("references/case-library/manifest.json")
+    reference_files = []
+    for case in library_manifest["cases"]:
+        for info in case["files"]:
+            path = (library / info["path"]).resolve()
+            if not path.is_relative_to((library / "sources").resolve()) or not path.is_file():
+                raise ValueError("Invalid reference resource: " + info["path"])
+            raw = path.read_bytes()
+            if len(raw) != info["bytes"] or hashlib.sha256(raw).hexdigest() != info["sha256"]:
+                raise ValueError("Reference changed after review: " + info["path"])
+            reference_files.append(path)
+    if len(reference_files) != library_manifest["source_document_count"] or len(set(reference_files)) != len(reference_files):
+        raise ValueError("Reference manifest contains missing or duplicate documents")
     # Only ship the standalone workflow; historical API/MCP tools stay in the repository.
     files = sorted(skill / name for name in required if (skill / name).is_file())
     relative = {p.relative_to(skill).as_posix() for p in files}
@@ -59,11 +81,43 @@ def main():
         assert len(archive.namelist()) == len(files)
         for path in files:
             assert archive.read("ruanwenjie-geo/" + path.relative_to(skill).as_posix()) == path.read_bytes()
-        assert not any(name.endswith(".pptx") for name in archive.namelist()), "PPT is no longer a release output"
+        assert not any(name.endswith(".pptx") for name in archive.namelist()), "PPT belongs only in reference packs"
+    # Reference originals are already compressed; split them below GitHub's per-file limit.
+    packs = [[]]
+    max_pack_bytes = 60 * 1024 * 1024
+    for path in sorted(reference_files, key=lambda p: (-p.stat().st_size, p.as_posix())):
+        if path.stat().st_size > max_pack_bytes:
+            raise ValueError("Reference exceeds pack limit: " + path.name)
+        for pack in packs:
+            if sum(p.stat().st_size for p in pack) + path.stat().st_size <= max_pack_bytes:
+                pack.append(path)
+                break
+        else:
+            packs.append([path])
+    targets = [target]
+    for number, pack in enumerate(packs, 1):
+        part = dist / f"ruanwenjie-geo-{version.group(1)}-references-{number:02}.zip"
+        with ZipFile(part, "w", ZIP_STORED) as archive:
+            for path in sorted(pack):
+                archive.write(path, "ruanwenjie-geo/" + path.relative_to(skill).as_posix())
+        with ZipFile(part) as archive:
+            assert archive.testzip() is None
+            for path in pack:
+                assert archive.read("ruanwenjie-geo/" + path.relative_to(skill).as_posix()) == path.read_bytes()
+        targets.append(part)
+    installation = {"version": version.group(1), "root": "ruanwenjie-geo", "required_parts": []}
+    for part in targets:
+        if part.stat().st_size >= 100 * 1024 * 1024:
+            raise ValueError("Release exceeds GitHub file limit: " + part.name)
+        part_digest = hashlib.sha256(part.read_bytes()).hexdigest()
+        part.with_suffix(".zip.sha256").write_text(part_digest + "  " + part.name + "\n", encoding="ascii")
+        installation["required_parts"].append({"file": part.name, "bytes": part.stat().st_size, "sha256": part_digest})
+    install_path = dist / f"ruanwenjie-geo-{version.group(1)}-install.json"
+    install_path.write_text(json.dumps(installation, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     digest = hashlib.sha256(target.read_bytes()).hexdigest()
     target.with_suffix(".zip.sha256").write_text(digest + "  " + target.name + "\n", encoding="ascii")
     print(json.dumps({"archive": str(target), "files": len(files), "bytes": target.stat().st_size,
-                      "unpacked_bytes": sum(p.stat().st_size for p in files), "sha256": digest}, ensure_ascii=False))
+                      "unpacked_bytes": sum(p.stat().st_size for p in files + reference_files), "sha256": digest, "parts": installation["required_parts"]}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

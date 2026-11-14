@@ -70,12 +70,27 @@ class SkillPortabilityTests(unittest.TestCase):
                 requirements = archive.read(prefix + "requirements.txt").decode("utf-8")
                 self.assertNotIn("mcp", requirements.lower())
                 self.assertNotIn("openai", requirements.lower())
+                all_names = set(archive.namelist())
+                library_manifest = json.loads(archive.read(prefix + "references/case-library/manifest.json"))
+                parts = json.loads((repo / "dist" / f"ruanwenjie-geo-{version}-install.json").read_text(encoding="utf-8"))["required_parts"]
+                for part in parts:
+                    raw = (repo / "dist" / part["file"]).read_bytes()
+                    self.assertEqual(len(raw), part["bytes"])
+                    self.assertEqual(hashlib.sha256(raw).hexdigest(), part["sha256"])
+                    with ZipFile(repo / "dist" / part["file"]) as extension:
+                        all_names.update(extension.namelist())
+                        for case in library_manifest["cases"]:
+                            for info in case["files"]:
+                                name = prefix + "references/case-library/" + info["path"]
+                                if name in extension.namelist():
+                                    self.assertEqual(hashlib.sha256(extension.read(name)).hexdigest(), info["sha256"])
                 for name in archive.namelist():
                     if name.endswith(".md"):
-                        for target in re.findall(r'\]\(([^)#]+)(?:#[^)]*)?\)', archive.read(name).decode("utf-8")):
+                        for target in re.findall(r'\]\((<[^>]+>|[^)#]+)(?:#[^)]*)?\)', archive.read(name).decode("utf-8")):
+                            target = target.strip("<>")
                             if "://" not in target:
                                 linked = posixpath.normpath(posixpath.join(posixpath.dirname(name), target))
-                                self.assertIn(linked, archive.namelist(), (name, target))
+                                self.assertIn(linked, all_names, (name, target))
                 self.assertFalse(any(name.endswith(".html") for name in archive.namelist()))
 
     def test_packaged_manual_judgment_pipeline_without_mcp_api_or_network(self):
@@ -85,7 +100,7 @@ class SkillPortabilityTests(unittest.TestCase):
             shutil.copytree(SKILL, source, ignore=shutil.ignore_patterns("__pycache__"))
             with patch.object(packager, "__file__", str(repo / "tools/package_skill.py")):
                 packager.main()
-            archive = next((repo / "dist").glob("*.zip"))
+            archive = next(p for p in (repo / "dist").glob("*.zip") if "-references-" not in p.name)
             install = Path(temp) / "install"
             install.mkdir()
             with ZipFile(archive) as z:
@@ -146,6 +161,20 @@ print("installed manual pipeline ok")
                 with self.assertRaisesRegex(ValueError, "Fixed resource changed"):
                     packager.main()
 
+    def test_changed_reference_is_rejected_before_packaging(self):
+        with tempfile.TemporaryDirectory(prefix="geo-reference-invalid-") as temp:
+            repo = Path(temp)
+            skill = repo / ".codebuddy/skills/ruanwenjie-geo"
+            shutil.copytree(SKILL, skill, ignore=shutil.ignore_patterns("__pycache__"))
+            library = skill / "references/case-library"
+            manifest = json.loads((library / "manifest.json").read_text(encoding="utf-8"))
+            source = library / manifest["cases"][0]["files"][0]["path"]
+            with source.open("ab") as stream:
+                stream.write(b"changed")
+            with patch.object(packager, "__file__", str(repo / "tools/package_skill.py")):
+                with self.assertRaisesRegex(ValueError, "Reference changed"):
+                    packager.main()
+
     def test_relocated_install_generates_both_fixed_reports_without_browser_path(self):
         with tempfile.TemporaryDirectory(prefix="geo-install-") as temp:
             root = Path(temp) / "安装验收 中文 空格"
@@ -153,7 +182,7 @@ print("installed manual pipeline ok")
             shutil.copytree(SKILL, source, ignore=shutil.ignore_patterns("__pycache__"))
             with patch.object(packager, "__file__", str(root / "tools/package_skill.py")):
                 packager.main()
-            with ZipFile(next((root / "dist").glob("*.zip"))) as archive:
+            with ZipFile(next(p for p in (root / "dist").glob("*.zip") if "-references-" not in p.name)) as archive:
                 archive.extractall(root / "安装技能")
             skill = root / "安装技能/ruanwenjie-geo"
             output = root / "客户文件夹" / "正式输出"
@@ -179,6 +208,29 @@ print("installed manual pipeline ok")
                     self.assertNotIn("本轮以豆包网页端联网", visible)
             self.assertFalse(list(output.glob("*.xlsx")))
             self.assertFalse((skill/"references/pdf-review").exists(),"Generating an example must not write into the installed skill")
+            for part in (root / "dist").glob("*-references-*.zip"):
+                with ZipFile(part) as archive:
+                    archive.extractall(root / "安装技能")
+            reference_manifest = json.loads((skill / "references/case-library/manifest.json").read_text(encoding="utf-8"))
+            for case in reference_manifest["cases"]:
+                for info in case["files"]:
+                    path = skill / "references/case-library" / info["path"]
+                    self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), info["sha256"])
+            adaptive_output = root / "新客户文件夹" / "正式输出"
+            adaptive = subprocess.run([
+                sys.executable, "-X", "utf8", "-c", NO_SERVICES + "\nimport runpy; sys.path.insert(0, str(__import__('pathlib').Path(sys.argv[1]).parent)); sys.argv=sys.argv[1:]; runpy.run_path(sys.argv[0], run_name='__main__')", str(skill / "scripts/export_pdf.py"),
+                "--plan", str(skill / "references/brand-plan.example.json"),
+                "--report", str(skill / "references/brand-report.example.json"),
+                "--output-dir", str(adaptive_output),
+            ], cwd=root, env=env, capture_output=True, text=True, encoding="utf-8", timeout=120)
+            self.assertEqual(adaptive.returncode, 0, adaptive.stdout + adaptive.stderr)
+            brand = json.loads((skill / "references/brand-report.example.json").read_text(encoding="utf-8"))["customer"]["brand"]
+            for filename in ["GEO诊断报告.pdf", "品牌传播与GEO执行方案.pdf"]:
+                with fitz.open(adaptive_output / filename) as pdf:
+                    self.assertGreater(len(pdf), 0)
+                    self.assertIn(brand, "\n".join(page.get_text() for page in pdf))
+            self.assertFalse(list(adaptive_output.glob("*.xlsx")))
+
 
 
 if __name__ == "__main__":

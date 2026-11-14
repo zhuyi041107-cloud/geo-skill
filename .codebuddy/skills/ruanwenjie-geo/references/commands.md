@@ -1,41 +1,41 @@
 # 数据与本地执行命令
 
-WorkBuddy直接完成问题设计、原答判读、品牌分析、分类方案、客户成稿和另轮自审。本地脚本只处理表格、统计、费用和模板填充，不调用模型或联网服务；无需MCP、API密钥或GPT终审。
+WorkBuddy直接完成问题设计、原答判读、品牌分析、执行计划、客户成稿和另轮自审。本地脚本处理表格、统计、关联校验、费用核算与PDF渲染；全流程无需MCP、API密钥或GEO云端工具。
 
-替换“技能目录”和“工作目录”为实际路径，保留路径引号。Python须为3.10或更新版；只安装基础依赖：
+替换“技能目录”和“工作目录”为实际路径，保留路径引号。Python须为3.10或更新版：
 
 ```text
 python -m pip install -r "技能目录/requirements.txt"
 ```
 
-客户资料、原答、内部JSON和核算放客户工作目录，不写入技能目录。原件及旧成品不覆盖，重做使用新的版本目录和文件名。JSON为UTF-8。
+客户资料、原答、内部JSON与核算放客户工作目录，JSON为UTF-8。原件及旧成品保留；修改后使用新的版本目录。以下1—3步继续使用三列人工采集流程，4—6步使用品牌版schema3.0。
 
-## 1. 读取资料与生成采集表
+## 1. 读取资料与生成三列采集表
 
 ```text
 python "技能目录/scripts/geo_data.py" inspect-client --input "工作目录/软文街_GEO客户素材收集表.xlsx" --out "工作目录/.work/client-fields.json"
 python "技能目录/scripts/geo_data.py" prepare --project "工作目录/.work/project.json" --out "工作目录/豆包-AI回答采集表.xlsx"
 ```
 
-WorkBuddy按[project.example.json](project.example.json)填写本案project，问题按[问题生成流程](workflow.md)筛选，三列表只含问题、引用截图和答案。`budget_target`只记录意向预算；只有明确不能超过时设`budget_limit`。未确定的项目起止日期不冒称已确认。按平台可用`--out-dir`生成多份表，收到任一平台即可继续，不强制补采。
+WorkBuddy按[project.example.json](project.example.json)填写本案project，按[问题生成流程](workflow.md)选择真正影响客户业务选择的问题。采集表只含问题、引用截图和答案，用户在AI网页端手工收集。`budget_target`只记录意向预算；明确不能超过时才填写`budget_limit`。按平台可用`--out-dir`生成多份表，收到任一平台即可继续。
 
-## 2. 导入、读取原答与截图
+## 2. 导入并读取完整原答与截图
 
 ```text
 python "技能目录/scripts/geo_data.py" normalize --input "工作目录/豆包-AI回答采集表.xlsx" --project "工作目录/.work/project.json" --context 1 --out "工作目录/.work/内部原答-豆包.xlsx"
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部原答-豆包.xlsx" --out "工作目录/.work/analysis-raw.json"
 ```
 
-可用`--base`合并另一平台。图片偏到相邻列按问题行处理，原件保留。读取analysis-raw中的完整`samples`与`citations`，实际打开`回答证据路径`、`证据路径`和`project.unlocated_screenshots`所指的截图；不能只看统计或截断后的摘要。长回答按表中附件路径读取完整文本。没有完整URL仍可分析可见站点、标题和来源结构，不强制补模式、时间或其他平台。
+可用`--base`合并另一平台。图片偏到相邻列按问题行处理，原件保留。读取analysis-raw的完整`samples/citations`，实际打开`回答证据路径`、`证据路径`和`project.unlocated_screenshots`所指截图；长回答按附件路径读取完整文本。没有完整URL仍可分析可见站点、标题与来源结构，不强制补模式、时间或其他平台。
 
-## 3. WorkBuddy直接判读并保存副本
+## 3. WorkBuddy判读并保存副本
 
-按每条已完成且有完整回答的`sample_id`，WorkBuddy判读品牌提及、明确推荐和具体理由，写入`.work/judgments.json`。提及不等于推荐，点名介绍不等于自然候选；知识建议题没出现品牌不自动算推荐失败。结构为列表，每项恰好四字段：
+按每条成功且有完整回答的`sample_id`判读品牌提及、明确推荐和理由，写入`.work/judgments.json`。提及不等于推荐，点名介绍不等于自然候选；知识建议题未出现品牌不自动算推荐失败。列表每项恰好四字段：
 
 ```json
 [
   {
-    "sample_id": "从analysis-raw逐项复制实际ID",
+    "sample_id": "从analysis-raw复制实际ID",
     "mention": "是",
     "recommendation": "否",
     "reason": "原答介绍品牌服务，没有将其列为可选择的机构。"
@@ -43,43 +43,43 @@ python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/�
 ]
 ```
 
-`mention`和`recommendation`只允许“是／否”，推荐必须同时提及；理由对应原答，覆盖所有成功回答且不重复、不加虚构ID。运行本地命令写入新副本，再计算已判统计：
+`mention/recommendation`只允许“是／否”，推荐须同时提及。覆盖全部成功回答，不重复、不新增虚构ID；理由对应原答。写入新副本，再计算已判统计：
 
 ```text
 python "技能目录/scripts/geo_data.py" judge --input "工作目录/.work/内部原答-豆包.xlsx" --judgments "工作目录/.work/judgments.json" --out "工作目录/.work/内部判读-豆包.xlsx"
 python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --out "工作目录/.work/analysis-judged.json"
 ```
 
-judge只写入已给判读，不调用模型；随包的gpt_evidence.py仅是复用的本地读写与校验模块。未判记录不能冒充已判结果。来源无URL不妨碍业务分析，不能据此编造已核验引用率。
+judge只写入已给判读，不调用模型；随包`gpt_evidence.py`仅用于本地读写与校验。未判结果不计作已判，来源无URL不编造已核验引用率。新流程中analyze只用于统计，**不将新品牌plan传入旧`--plan`参数**，也不从其旧预算字段生成报价。
 
-## 4. 分类计划与预算
+## 4. 建立诊断—动作—分工—报价计划
 
-读[报告分析思路](report-thinking.md)及[证据与规划](evidence-and-planning.md)，WorkBuddy按[plan-category.example.json](plan-category.example.json)的结构填写本案`.work/plan.json`。示例的业务、篇数、阶段和日期均须按本案重写，不能整份照抄。本版不检索具体媒体，不生成媒体推荐表。
+完整读[分析思路](strategy-playbook.md)、[证据与规划](evidence-and-planning.md)及[PDF契约](pdf-output.md)。按[品牌计划示例](brand-plan.example.json)在`.work/plan.json`填写本案的`evidence/findings/actions/service_scope/pricing`。示例仅为虚构结构验证，重写客户事实、证据、优先级、稿量、阶段和价格。
 
-`plan_mode=category_only`；每项placement包含内容ID、传播类别、用途依据、计划刊次、日期与客户单价，不包含媒体名、媒体ID、来源或采购价。三类为权威媒体、行业媒体、自媒体；两档同内容、类别和刊次，具体媒体与实际权益差异待确认。
+每项诊断有证据、业务影响和对应动作；执行工作有负责方、客户配合、交付物及复核方向。媒体按权威媒体、行业媒体、自媒体说明各自用途，客户官方更新与配合另列实际任务。有证据才设竞品、冲突或舆情模块；与本案无关的模块省略。
 
-主plan为普通档，高权重在`quote_options`，两档类别报价分别为450／200／200元和600／300／300元每次。每档计划媒体费最低12,000元，写作另收费，默认原价200元／篇、打包100元／独立稿；客户供稿不收写作费。基本服务和客户分工来自`service_scope`。明确硬预算约束适用于媒体与写作总额，意向预算不自动转为上限。最终导出会核算数量、费用和一致性，报错时修正实际计划，不改校验器绕过。
+`pricing.instructions`记录本次报价指令；单档或多档、明确单价×数量或整包价、税费、服务已含与另计、供稿与写作均按本次约定。`budget_target`作意向参考，`budget_limit`才是硬上限；两处内部project/pricing上限须按最新指令一致。缺价使用`unquoted`，不能用零元或意向预算冒充报价。旧版固定两档、媒体最低费及写作单价不自动带入新方案。
 
-计划完成后，用同一plan生成含预算的最终分析，再用于PDF导出：
+本地导出时按Decimal核算并校验重复收费、未说明范围、无效数量和硬上限。整包已含的工作与另收费工作使用清晰、不重叠的scope；分项合计与客户页报价同源。校验报错时修正实际计划，不绕过校验。
 
-```text
-python "技能目录/scripts/geo_data.py" analyze --input "工作目录/.work/内部判读-豆包.xlsx" --plan "工作目录/.work/plan.json" --out "工作目录/.work/analysis-final.json"
-```
+## 5. 按客户品牌组织模块并导出
 
-## 5. 填充固定模板
-
-完整阅读[逐页生成说明](template-generation.md)与[PDF契约](pdf-output.md)，按[客户配置示例](report.example.json)及[schema](customer-report.schema.json)填写本案`.work/report.json`。report只含客户可见内容；不照搬示例客户文字，不手填自动核算字段。导出内部草稿：
+读[版式生成说明](template-generation.md)，按[品牌报告示例](brand-report.example.json)及[3.0 schema](brand-report.schema.json)填写`.work/report.json`。选择本品牌主题和章节，不设固定页数。必须的源模块、可用layout与字段见[PDF契约](pdf-output.md#4-必须从计划注入的源模块)：诊断呈现全部发现；执行呈现高优先级发现、全部动作、分工与已核报价。
 
 ```text
-python "技能目录/scripts/export_pdf.py" --analysis "工作目录/.work/analysis-final.json" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --output-dir "工作目录/.work/草稿-v1/客户PDF"
+python "技能目录/scripts/export_pdf.py" --plan "工作目录/.work/plan.json" --report "工作目录/.work/report.json" --output-dir "工作目录/.work/草稿-v1/客户PDF"
 python "技能目录/scripts/check_client_report.py" "工作目录/.work/草稿-v1/客户PDF/GEO诊断报告.pdf"
 python "技能目录/scripts/check_client_report.py" "工作目录/.work/草稿-v1/客户PDF/品牌传播与GEO执行方案.pdf"
 ```
 
-若改动plan，先用同一plan重新analyze生成新的analysis，再导出，不能混用旧预算。保留原背景、坐标、字号和1200×675页面；文字溢出时精简表述，不缩字、截断、增页或改模板。两档价格、三类数量及双方分工由同源plan注入。已有同名PDF会拒绝覆盖；修改后用草稿-v2等新目录。
+入口默认生成两PDF，也可用`--kind diagnosis`或`--kind execution`单独导出。品牌诊断需要有证据的plan，执行需要完整plan；无需先带新plan运行analyze。可按需加`--project "工作目录/.work/project.json"`，或`--analysis "工作目录/.work/analysis-judged.json"`交叉核项目；同时传两者时其project内容须一致。新报价始终来自`plan.pricing`，不继承旧analysis预算。
 
-## 6. 另轮自审与交付
+`source=findings/action-map/service-scope/quotes`从plan注入客户内容，内部ID被移除。`findings/action-map`可用`ids`拆分指定条目，报价与分工完整显示。自由模块用来解释业务情况、分析与策略，费用与计费数量放pricing，由quotes源模块输出。
 
-读取导出结果的`audit`及`review_dir`，另轮按生成说明核事实、分析、三类用途、数量、费用与分工；实际逐页查看诊断8张、执行9张PNG，对照随包两份版式示例PDF。文字检查清零不代替语义与页面检查，不能声称外部GPT已审。
+导出会自动分页并返回实际页数、`audit`和`review_dir`；同名PDF拒绝覆盖。内容修正后用草稿-v2等新目录。客户PDF目录只放`GEO诊断报告.pdf`、`品牌传播与GEO执行方案.pdf`，预览与审计留内部目录。
 
-修正后重导并复查变动页、关联汇总和费用页；通过后只把两份已审PDF复制到新的正式输出目录，核复制前后文件一致。JSON、判读、截图、PNG、审计及核算留.work。不生成客户Excel、PPT或推荐表，不要求用户补URL、模式、联网和其他平台才交付。
+## 6. 另轮全页自审与交付
+
+读取导出结果中两个audit的全部`rendered_pages`，实际逐张打开全部PNG，不按旧固定页数抽查。确认品牌主题合适、字可读、标题有层次、表格续页完整、无截字遮挡；再逐项核证据与分析、诊断动作对应、三类媒体用途、执行范围、分工、供稿、各档价格及合计。客户正文只写情况、分析与安排，不出现采集、制作或工具过程话术。
+
+文本检查清零后仍完成语义和视觉自审。修正后重新导出，查看全部新画面及关联汇总；通过后仅把两份已审PDF复制到新的正式输出目录，并核复制前后文件一致。判读表、内部JSON、截图、预览、审计及核算留`.work`。不生成额外客户Excel或PPT，不要求补其他平台才交付；也不声称已做外部模型审核或WorkBuddy安装实测。

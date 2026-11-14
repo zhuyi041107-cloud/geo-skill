@@ -1,83 +1,114 @@
-# 固定模板PDF填写规范
+# 品牌版PDF生成契约
 
-两个PDF均为1200×675横版：诊断固定8页、执行固定9页，保留用户认可旧版的背景、表格、卡片、标题与字号。`scripts/export_pdf.py`是本地渲染入口，共享渲染器只填固定文字区；ReportLab绘制文字层，PyMuPDF合成背景和预览。WorkBuddy直接分析、成稿与逐页自审；全流程无需MCP、API密钥、浏览器渲染或GEO云端工具。
+新客户使用`schema_version: "3.0"`：按客户品牌、业务和本次诊断设计两份1200×675横版PDF，内容模块自动分页，页数随内容确定。WorkBuddy直接分析、成稿和另轮自审；`scripts/export_pdf.py`在本地校验并渲染，不需要MCP、API密钥或GEO云端工具。旧schema的固定版导出仅保留兼容，不作为新客户的目录与价格默认值。
 
-## 客户配置与内部计划
+先读[分析与执行思路](strategy-playbook.md)及[版式生成说明](template-generation.md)，再按[计划示例](brand-plan.example.json)、[报告示例](brand-report.example.json)和[报告schema](brand-report.schema.json)填写本案。示例客户与报价均为虚构测试数据，只说明结构，不代表行业事实、统一售价或默认方案。
 
-先完整读[逐页生成说明](template-generation.md)，再参考[客户示例](report.example.json)和[schema](customer-report.schema.json)填写：
+## 1. 内部计划与客户稿分开
+
+`.work/plan.json`是诊断、动作、分工和报价的唯一结构化来源。内部编号与证据留在计划中，生成器将其转换为客户能读懂的情况、分析和安排。
+
+| 字段 | 填写规则 |
+| --- | --- |
+| `evidence` | 可选的`{id, summary, source?}`列表，摘要能回到本次客户材料、原答或截图。 |
+| `findings` | 非空列表，每项`id, observation, analysis, business_impact, priority`；`priority`为`high/medium/low`。每项用`evidence_ids`关联证据，或用`evidence`文字摘要列表说明依据。 |
+| `actions` | 执行方案必填非空列表，每项`id, finding_ids, task, content, keywords, media_role, stage, owner, deliverable, review`。`keywords`可为空列表；`status`默认`planned`，`deferred`须加`defer_reason`。 |
+| `service_scope` | 非空列表，每项`id, task, provider, client, action_ids`，分别说明工作事项、软文街负责、客户配合和对应动作。同一工作不要换编号重复收费。 |
+| `pricing` | 本次用户指令与明确费用，详见下一节。 |
+
+所有诊断均须对应执行或有理由的暂缓动作；每个实际执行动作须在`service_scope`说明负责方及费用范围。一个诊断可对应多动作，多诊断也可共用同一动作。可以并行或暂缓，按业务理由安排。`media_role`按实际用途写权威媒体、行业媒体、自媒体；官方页面、客户配合等动作可写实际工作角色。
+
+诊断稿至少呈现全部`findings`；执行稿至少呈现全部高优先级诊断、全部动作、双方分工及已核报价。程序校验关联是否存在，WorkBuddy仍须核对证据是否真正支持该结论、动作能否解决所述问题。
+
+## 2. 报价只按当前用户指令核算
+
+`pricing.instructions`记录本次原意；`currency`为三位大写代码，如`CNY`；`tax_note`明确含税、未税或尚未约定的税费口径。可选字段如下：
+
+| 字段 | 含义 |
+| --- | --- |
+| `budget_target` | 意向预算，只作参考，不制造成交报价，也不自动限制候选与方案。 |
+| `budget_limit` | 用户明确不能超过的硬上限。若内部`project.budget_limit`已有值，两处必须按最新指令同步一致。 |
+| `minimum_total` / `minimum_media_total` | 仅用户本次明确最低总价或最低媒体费时填写。 |
+| `required_option_count` | 仅用户明确要求报价档数时填写正整数。 |
+| `options` | 单档或多档列表，每档只能含`name`与`items`。 |
+
+每条`items`含`name, category, billing, covers`，可加`note`。`category`为`media/writing/service/package`；`covers`列本项覆盖的`service_scope`编号。同档内每项工作恰好说明一次费用归属，避免整包已含写作后再另收写作费。不同媒体角色的独立刊发工作分别建scope。
+
+| `billing` | 允许的计价字段 | 客户含义 |
+| --- | --- | --- |
+| `unit` | `quantity`正整数、`unit`单位、`unit_price`明确单价 | 数量×单价。 |
+| `package` | `amount`明确整包金额 | 按约定整包收费，范围由`covers`说明。 |
+| `included` | 无金额字段 | 已含。 |
+| `client_provided` | 无金额字段 | 客户提供或操作。 |
+| `not_included` | 无金额字段 | 不在本次范围。 |
+| `unquoted` | 无金额字段 | 待确认价格，不能记作零元。 |
+
+金额建议用十进制字符串，按分核算；缺价、负价、非有限值及无效数量会被拒绝。存在`unquoted`时只显示已明确费用小计，方案总价与余额保持待确认。整包包含多种费用但未拆分媒体金额时，不编造媒体费小计；若用户又要求最低媒体费，先补明确分项后核验。
+
+没有用户约定就不继承旧版最低媒体费、固定两档、分类单价或写作单价。用户只给预算时先保留预算性质，未明确的价格使用待确认。费用包含范围、供稿、正文写作、修改、刊发及复核均按本次约定记录。内部project与pricing上限冲突时，按最新指令修正派生工作副本，不改客户原件。
+
+## 3. 品牌与内容模块
+
+`.work/report.json`只存客户可见稿和源模块指令，根结构为：
 
 ```json
 {
-  "schema_version": "2.0",
-  "customer": {
-    "brand": "客户品牌",
-    "company": "客户运营主体",
-    "date": "2026-11-11",
-    "observed_platforms": ["豆包"]
-  },
+  "schema_version": "3.0",
+  "customer": {"brand": "客户品牌", "company": "客户主体", "date": "2026-11-14"},
+  "theme": {"primary": "#224F6B", "accent": "#BD985F", "cover_style": "technical"},
   "purpose": "本案业务目标",
   "diagnosis": {"pages": []},
   "execution": {"pages": []}
 }
 ```
 
-这是根结构，空pages不能导出。实际页标题、顺序、layout和字段按当前schema与示例，不从旧0.8客户JSON直接复用不同布局。`observed_platforms`只列实际有回答的平台；已知平台用图标，其他平台用文字，不能保留未调查平台标识。
+两组`pages`须为非空模块列表。`customer.observed_platforms`可选，只列实际已有回答的平台。`theme`可加`background`、`text`六位十六进制颜色；`cover_style`选`editorial`或`technical`。可加本地PNG/JPG的`logo`路径，限report文件所在目录内及其子目录。无内容的可选字段直接省略，不写空字符串。
 
-report只存客户可见稿；内部原答、截图、来源链、条件、ID、核算与logic_links保留.work。客户稿不手填computed数据，也不用额外字段夹带内部资料。
+| `layout` | 主要内容字段 |
+| --- | --- |
+| `cover` | `title`必填；可加`headline, body`。 |
+| `text` | `title, paragraphs:[文字]`；可加`lead, note`。 |
+| `insights` / `cards` | `title, items:[{heading, body, impact?, action?}]`；可加`lead, note`。 |
+| `timeline` | `title, items:[{period, title, body}]`；可加`lead, note`。 |
+| `table` / `quotes` | `title, headers:[文字], rows:[[文字]]`；每行列数与表头一致，可加`lead, note`。 |
 
-## 固定layout与作者填写范围
+品牌主题、章节和模块顺序根据本案组织；品牌定位、竞品、冲突与舆情等页面按证据和任务选择，不凑页数。客户稿写当前情况、原因分析、业务影响、具体安排和费用，不放采集过程、内部ID、制作步骤或工具状态。
 
-| 诊断页 | layout | 作者填写职责 |
+## 4. 必须从计划注入的源模块
+
+源模块仅填写`layout, title, source`及可选`lead, note, ids`；不同时填写`items/headers/rows`。生成器会从plan填入正文并移除`source/ids`。以下四种`source`是完整枚举：
+
+| `source` | 可用layout | 注入内容与覆盖要求 |
 | --- | --- | --- |
-| 1 | cover | 品牌业务、总体判断及封面文字 |
-| 2 | cards3 | 实际品牌印象、业务选择表现及主要影响 |
-| 3 | comparison3 | 相关同行与自身三卡比较，label／heading／body／footer |
-| 4 | table3 | 已有基础／贵司提供的服务信息／内容使用建议，三列表 |
-| 5 | table4 | 对比项／当前状态／具体差异／调整建议，四列表 |
-| 6 | scenes4 | 重点商业场景及首批、随后、暂缓理由 |
-| 7 | customer-items3 | headers与rows，工作事项／软文街负责／贵司配合 |
-| 8 | summary4 | 四项title／body，起步、首阶段、后续、持续复核 |
+| `findings` | `insights/cards/table` | 当前情况、分析、业务影响；卡片还显示关联动作摘要。`ids`可选诊断编号，不填显示全部。诊断稿合计覆盖全部发现，执行稿合计覆盖高优先级发现。 |
+| `action-map` | `table` | 对应诊断、动作与内容、媒体阶段、分工交付、复核重点。`ids`可选动作编号，执行稿合计覆盖全部动作。 |
+| `service-scope` | `table` | 工作事项、软文街负责、客户配合和各档费用范围，须完整呈现。 |
+| `quotes` | `quotes/table` | 仅注入已核算的分项、数量、单价、整包价、合计和预算余额，须完整呈现。 |
 
-| 执行页 | layout | 作者填写与自动内容 |
-| --- | --- | --- |
-| 1 | cover | 目标、核心选择理由、本期执行重点 |
-| 2 | cards3 | 当前印象／同行差异／目标认知 |
-| 3 | steps4-grid | 四步2×2，体现选择差距到内容发布及调整 |
-| 4 | content-plan | 与contents.content_group同名groups的name／detail／role；稿数自动 |
-| 5 | media-cards3 | 三items固定category为权威媒体／行业媒体／自媒体，作者role／focus；resources／quantity／amount自动 |
-| 6 | stages3 | 1至4实际阶段，作者工作和客户配合；日期、稿数、三类刊次和两档金额自动 |
-| 7 | customer-items3 | headers／rows从plan.service_scope.work_items注入，report不手填 |
-| 8 | review-table | 三列表的复核方向／观察重点／后续调整，明确实际复核节点 |
-| 9 | quotes | 两items固定name为普通权重方案／高权重方案，作者只写tag；total／scale／media自动，页级writing／services自动 |
+诊断必须含`findings`源模块；执行必须含这四种源模块。可拆成多个源模块组织长内容，但`service-scope/quotes`不接受`ids`截取。金额与计费数量统一在pricing中填写，客户报价页面使用`quotes`源模块，不另写一套费用表或自由报价正文。
 
-所有表头、行数和必填文字以当前schema为准。自动字段也必须经过客户语言检查；出现制作规则时改成对应客户事项，不把内部说明缩小藏进页底。
+报价为2—3档且各项名称、费用类别、覆盖工作、计价方式、单位和说明完全相同时，程序自动按项目横向比较各档；数量、单价与金额可以不同，同一范围只写一行。每档保留实际计价式、小计、总价、税费和硬上限信息，未报价保持待确认。范围或说明不同、以及超过3档时，按各档明细分别显示；单档格式不变。
 
-## 分类汇总，不指定具体媒体
+例如：
 
-`placements.strategy_role`为权威媒体、行业媒体、自媒体三类，`strategy_basis`说明该类别的传播用途，不填写具体媒体、账号、栏目或来源。媒体页自动显示三类计划刊次和两档小计，并提示具体媒体待确认；两档实际资源与权益差异尚未确定，不能表述为已选定或保证效果。无推荐Excel。
-
-## 同源数量、服务和两档费用
-
-project、contents、stages、主placements、quote_options及service_scope是核算来源，作者只写业务解释。主plan为普通档，quote_options严格一项高权重分类报价，内容、独立稿数和每稿刊次相同。每档媒体费按计划刊次核算且最低12,000元，不虚加补差，写作另收费。固定客户单价、写作费和预算边界统一见[费用规则](evidence-and-planning.md#普通与高权重两档客户报价)。
-
-入口向内容组注入稿数，向三类媒体卡注入计划刊次和金额，向阶段注入日期、三类数量和两档费用。第9页同时给两档三类媒体费用、媒体费已含服务、独立写作费和含写作总价；客户JSON不得手填另一套合计或收费scope覆盖同源数据。
-
-执行7从service_scope.work_items生成双方表，执行9按included项列基本服务；这些基础工作只含选题、大纲与素材方向等约定服务，不含执行文章的AI起草、正文撰稿或人工修改。service_scope.writing_mode=separate为默认写作单独收费分支，从manual_writing按原价200元／篇、打包100元／独立稿核写作费；client_provided时显示客户供稿且不收写作费。旧ai_assisted免费含起草模式不再适用。review_schedule明确复核节点。任务正文和服务范围有矛盾时先修计划，不用“另议”掩盖已承诺工作。
-
-budget_target为意向预算，不自动成为硬上限；客户明确不能超过时才设budget_limit。无明确硬上限按完整任务核两档，每档实际媒体费均须达到12,000元。任一档超硬上限时重新配置实际范围，不改固定单价或藏写作费；最低媒体费与硬上限无法同时满足时明确说明冲突，不导出不合规报价。72稿与24／36／12是公式验算例，不是通用篇数或固定媒体比例。
-
-## 生成和成品检查
-
-Python 3.10或更新版本，按requirements.txt安装openpyxl、ReportLab、PyMuPDF。字体、背景、图标随包；无需Node、Chrome、Edge或Codex私有运行时。
-
-```text
-python "技能目录/scripts/export_pdf.py" --analysis "客户目录/.work/analysis-final.json" --plan "客户目录/.work/plan.json" --report "客户目录/.work/report.json" --output-dir "客户目录/正式输出/客户PDF"
+```json
+{"layout":"cards","title":"关键诊断与执行重点","source":"findings","ids":["F1"]}
 ```
 
-`--report`、`--output-dir`必填；默认`--kind both`，另可选diagnosis或execution。诊断可独立生成；执行需要plan，项目取`--project`或analysis.project。提供analysis时预算须和当前计划一致，实际参数用`--help`核对。
+## 5. 本地导出与逐页确认
 
-客户PDF目录只新增两PDF。PNG与审计自动放report同级pdf-review（通常在.work），结果返回review_dir和audit；直接使用技能示例时放输出父目录.work，不写回技能。同名成果拒绝覆盖，使用新版本目录。
+Python 3.10或更新版，使用随包`requirements.txt`中的依赖与字体。标准入口直接识别3.0，不需要运行MCP：
 
-背景与schema由assets/report-assets-manifest.json按字节数及SHA256封版。客户生成只改数据，溢出时精简重复表达，不换模板、不截字、不缩字号或自动增页。导出后逐页看17张实际画面，核固定标题、表格、三类卡、分工、双档费用和中文；再核全部数量和服务范围，文本提取不能替代视觉。
+```text
+python "技能目录/scripts/export_pdf.py" --plan "客户目录/.work/plan.json" --report "客户目录/.work/report.json" --output-dir "客户目录/.work/草稿-v1/客户PDF"
+```
 
-公开仓库只放清除客户文字的背景、配套资源和虚构示例，真实客户PDF、截图、回答和本地审计不上传。修改skill以虚构资料验证，不重做客户旧报告。本地渲染、迁移安装和WorkBuddy界面实测分别记录。
+`--report`、`--output-dir`必填；默认`--kind both`，另可选`diagnosis/execution`。品牌诊断需要有证据的plan；执行需要完整plan。可传`--project`或`--analysis`交叉核对项目，但新pricing只从plan计算，不继承旧`analysis.budget`。若同时传`--project`和`--analysis`，两者project内容须一致。
+
+`geo_data.py analyze`在新流程中仅生成统计：不把3.0新plan传入其旧`--plan`参数。统计中的旧预算字段不参与新报价。业务判读与结论由WorkBuddy读原答、截图和客户资料完成。
+
+导出先生成完整批次，再把两PDF放到目标目录；同名文件拒绝覆盖，修改后使用新版本目录。`GEO诊断报告.pdf`与`品牌传播与GEO执行方案.pdf`是默认文件名。PNG、审计JSON及页数在结果的`review_dir/audit/pages`中；通常存report同级`pdf-review`，使用技能自带示例时存输出父目录的`.work/pdf-review`，不写回技能资源。
+
+模块按需要自动续页，结果`pages`是实际物理页数。查看每个audit的全部`rendered_pages`，逐张打开诊断和执行的全部PNG，检查封面、标题层级、中文、留白、表格续页、颜色及Logo。再对照plan核诊断依据、动作关联、三类媒体用途、分工、供稿、全部报价和费用范围。长内容优先精简重复表达或合理拆模块，不能藏字、裁字或通过缩小字体挤入单页。
+
+运行`check_client_report.py`清除制作话术，再做完整语义与视觉自审；文本检查通过不能代替全页查看。所有问题修正后重新导出，复查全部新画面及关联合计，通过后仅交付两份已审PDF。JSON、判读、截图、PNG和审计留客户内部工作目录。测试用虚构资料，真实客户原件与现有报告保持不动；本地导出、WorkBuddy实际安装与用户验收分别记录。

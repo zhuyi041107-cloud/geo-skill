@@ -10,3 +10,4 @@
 *.zip binary
 *.ttf binary
 *.png binary
+.codebuddy/skills/ruanwenjie-geo/references/case-library/sources/** binary

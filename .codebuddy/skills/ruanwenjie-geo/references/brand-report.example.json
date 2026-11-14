@@ -1,0 +1,65 @@
+{
+  "schema_version": "3.0",
+  "customer": {
+    "brand": "澄光研材",
+    "company": "澄光研材服务有限公司",
+    "date": "2026-11-14",
+    "observed_platforms": [
+      "豆包"
+    ]
+  },
+  "theme": {
+    "primary": "#224F6B",
+    "accent": "#BD985F",
+    "background": "#F7FAFC",
+    "text": "#172633",
+    "cover_style": "technical"
+  },
+  "purpose": "让材料选型需求连接真实项目证据",
+  "diagnosis": {
+    "pages": [
+      {
+        "layout": "cover",
+        "title": "品牌认知与需求机会",
+        "headline": "以项目事实说明选择理由"
+      },
+      {
+        "layout": "insights",
+        "title": "当前认知与业务机会",
+        "source": "findings"
+      }
+    ]
+  },
+  "execution": {
+    "pages": [
+      {
+        "layout": "cover",
+        "title": "品牌传播与执行方案",
+        "headline": "以选型和案例内容承接采购判断"
+      },
+      {
+        "layout": "cards",
+        "title": "关键诊断与执行重点",
+        "source": "findings",
+        "ids": [
+          "F1"
+        ]
+      },
+      {
+        "layout": "table",
+        "title": "诊断对应执行安排",
+        "source": "action-map"
+      },
+      {
+        "layout": "table",
+        "title": "双方分工与配合",
+        "source": "service-scope"
+      },
+      {
+        "layout": "quotes",
+        "title": "费用与包含范围",
+        "source": "quotes"
+      }
+    ]
+  }
+}

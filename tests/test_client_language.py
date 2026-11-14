@@ -17,6 +17,7 @@ class ClientLanguageTests(unittest.TestCase):
             '不额外补造报价档位。',
             '按照原模板填写客户内容。',
             '这些数据留在内部底稿。',
+            '本报告的制作过程包含采集与整理。',
         ]
         for value in examples:
             with self.subTest(value=value):
@@ -29,6 +30,7 @@ class ClientLanguageTests(unittest.TestCase):
             '普通权重方案包括内容策划、AI起草与人工简单修改、媒体发布和阶段复核。',
             '产品支持API接口集成，适用于已有知识库的团队。',
             '人工撰写按独立稿数计费，同稿增加刊发不增加写稿费。',
+            '用可核对的首饰制作过程说明工艺细节。',
         ]
         for value in examples:
             with self.subTest(value=value):
